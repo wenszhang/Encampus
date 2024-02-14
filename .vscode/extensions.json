@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "rust-lang.rust-analyzer",
+        "bradlc.vscode-tailwindcss",
+        "streetsidesoftware.code-spell-checker",
+        "vadimcn.vscode-lldb",
+        "eamodio.gitlens",
+        "tamasfe.even-better-toml"
+    ]
+}
