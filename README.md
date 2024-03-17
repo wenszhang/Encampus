@@ -1,13 +1,9 @@
-<picture>
-    <source srcset="https://raw.githubusercontent.com/leptos-rs/leptos/main/docs/logos/Leptos_logo_Solid_White.svg" media="(prefers-color-scheme: dark)">
-    <img src="https://raw.githubusercontent.com/leptos-rs/leptos/main/docs/logos/Leptos_logo_RGB.svg" alt="Leptos Logo">
-</picture>
+# Encampus 
 
-# Leptos Axum Starter Template
+Encampus is a tool with the main purpose of streamlining communication within university classes, enabling students to ask both public and private questions to course staff outside of regular course hours. See [Abstract](https://capstone-cs.eng.utah.edu/groups/encampus/-/wikis/Design-Document#abstract) for more details.
 
-This is a template for use with the [Leptos](https://github.com/leptos-rs/leptos) web framework and the [cargo-leptos](https://github.com/akesson/cargo-leptos) tool using [Axum](https://github.com/tokio-rs/axum).
 
-## Creating your template repo
+## Requirements
 
 If you don't have `cargo-leptos` installed you can install it with
 
@@ -15,35 +11,11 @@ If you don't have `cargo-leptos` installed you can install it with
 cargo install cargo-leptos
 ```
 
-Then run
-```bash
-cargo leptos new --git leptos-rs/start-axum
-```
-
-to generate a new project template.
-
-```bash
-cd encampus
-```
-
-to go to your newly created project.  
-Feel free to explore the project structure, but the best place to start with your application code is in `src/app.rs`.  
-Addtionally, Cargo.toml may need updating as new versions of the dependencies are released, especially if things are not working after a `cargo update`.
-
-## Running your project
+## Running Encampus locally
 
 ```bash
 cargo leptos watch
 ```
-
-## Installing Additional Tools
-
-By default, `cargo-leptos` uses `nightly` Rust, `cargo-generate`, and `sass`. If you run into any trouble, you may need to install one or more of these tools.
-
-1. `rustup toolchain install nightly --allow-downgrade` - make sure you have Rust nightly
-2. `rustup target add wasm32-unknown-unknown` - add the ability to compile Rust to WebAssembly
-3. `cargo install cargo-generate` - install `cargo-generate` binary (should be installed automatically in future)
-4. `npm install -g sass` - install `dart-sass` (should be optional in future
 
 ## Compiling for Release
 ```bash
@@ -52,7 +24,7 @@ cargo leptos build --release
 
 Will generate your server binary in target/server/release and your site package in target/site
 
-## Testing Your Project
+## Testing Encampus
 ```bash
 cargo leptos end-to-end
 ```
