@@ -3,5 +3,20 @@
     "cSpell.words": [
         "encampus",
         "leptos"
+    ],
+    "files.associations": {
+        "*.rs": "rust"
+    },
+    "tailwindCSS.includeLanguages": {
+        "rust": "html"
+    },
+    "tailwindCSS.experimental.classRegex": [
+        "C!\\[\"([^\\]]+)\"\\]"
+    ],
+    "editor.quickSuggestions": {
+        "strings": "on"
+    },
+    "rust-analyzer.linkedProjects": [
+        "./Cargo.toml"
     ]
 }
