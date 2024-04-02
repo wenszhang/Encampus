@@ -9,7 +9,7 @@ pub fn TestPage() -> impl IntoView {
 
         <div class="bg-red-600 p-4 flex justify-between items-center text-white">
             <div class="flex items-center">
-                <img src="/logo.png" alt="ENCAMPUS" class="h-8 mr-2"/> //TODO: Add logo
+                <img src="logo.png" alt="ENCAMPUS" class="h-8 mr-2"/>
                 <span class="text-lg font-semibold">"ENCAMPUS"</span>
             </div>
             <div class="relative">
