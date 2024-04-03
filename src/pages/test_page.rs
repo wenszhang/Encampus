@@ -1,3 +1,4 @@
+use crate::svg::DropDownBars::*;
 use leptos::{component, view, IntoView};
 
 #[component]
@@ -23,7 +24,7 @@ fn NavBar() -> impl IntoView {
             <div class="flex items-center">
                 // TODO: Replace with vh/vw for dynamic size
                 <span class="text-xl font-bold mr-4">"LONGNAME"</span>
-                <div class="p-2">"☰"</div>
+                <DropDownBars size="20px"/>
             </div>
         </div>
     }
