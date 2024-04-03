@@ -46,7 +46,7 @@ fn HomePage() -> impl IntoView {
     view! {
         <h1>"Welcome to Leptos!"</h1>
         <button on:click=on_click>"Click Me: " {count}</button>
-        
+
         <div class="bg-gray-200 p-4 rounded-md shadow-md hover:shadow-lg text-gray-700 max-w-md mx-auto">
             <h2 class="font-bold text-xl pb-2">"Tailwind Test Delete later"</h2>
         </div>
