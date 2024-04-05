@@ -1,4 +1,4 @@
-use crate::svg::DropDownBars::*;
+use crate::svgs::drop_down_bars::*;
 use leptos::{component, view, IntoView};
 
 #[component]
