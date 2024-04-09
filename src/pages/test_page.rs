@@ -1,5 +1,5 @@
-use crate::svgs::drop_down_bars::*;
 use crate::components::class_card::*;
+use crate::svgs::drop_down_bars::*;
 use leptos::{component, view, IntoView};
 
 #[component]
