@@ -4,12 +4,17 @@ use leptos_router::use_params_map;
 use crate::components::header::Header;
 use crate::components::question_tile::QuestionTile;
 
+/**
+ * Page showing all questions in a class
+ */
 #[component]
 pub fn ClassPage() -> impl IntoView {
+    // Fetch params in the format of "class/:class_id"
     let params = use_params_map();
     let class_id: String =
         params.with(|params| params.get("class_id").cloned().unwrap_or_default());
 
+    // Dummy data
     let titles = vec![
         "Question 1".to_string(),
         "Question 2".to_string(),

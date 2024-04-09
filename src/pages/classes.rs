@@ -3,6 +3,9 @@ use leptos::{component, view, For, IntoView};
 use crate::components::class_tile::ClassTile;
 use crate::components::header::Header;
 
+/**
+ * Page showing all classes registered to the user
+ */
 #[component]
 pub fn ClassesPage() -> impl IntoView {
     //TODO: Load this based on user data
