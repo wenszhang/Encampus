@@ -1,7 +1,8 @@
 {
     "cSpell.words": [
         "encampus",
-        "leptos"
+        "leptos",
+        "sqlx"
     ],
     "files.associations": {
         "*.rs": "rust"
