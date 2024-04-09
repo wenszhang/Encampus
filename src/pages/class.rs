@@ -1,24 +1,30 @@
-use leptos::{component, view, IntoView};
-use leptos_meta::Stylesheet;
+use leptos::{component, view, For, IntoView, SignalWith};
+use leptos_router::use_params_map;
 
 use crate::components::header::Header;
 use crate::components::question_tile::QuestionTile;
 
 #[component]
-pub fn ClassesPage() -> impl IntoView {
+pub fn ClassPage() -> impl IntoView {
+    let params = use_params_map();
+    let class_id: String =
+        params.with(|params| params.get("class_id").cloned().unwrap_or_default());
+
+    let titles = vec![
+        "Question 1".to_string(),
+        "Question 2".to_string(),
+        "Question 3".to_string(),
+        "Question 4".to_string(),
+        "Question 5".to_string(),
+    ];
+
     view! {
-        <div class="bg-gray-200 min-h-screen">
-            <Stylesheet id="leptos" href="/pkg/encampus.css"/>
+        <Header text={class_id} logo="logo.png".to_string() />
 
-            <Header text="ENCAMPUS".to_string() logo="logo.png".to_string() />
-
-            <div class="grid grid-cols-3 gap-4 p-10 mx-20">
-                <QuestionTile title="Math 3210".to_string() />
-                <QuestionTile title="Class 3124".to_string() />
-                <QuestionTile title="Class 4123".to_string() />
-                <QuestionTile title="Class 3214".to_string() />
-                <QuestionTile title="Class 1243".to_string() />
-            </div>
+        <div class="grid grid-cols-3 gap-4 p-10 mx-20">
+            <For each=move || titles.clone() key=|id| id.clone() let:class_id>
+                <QuestionTile title={class_id} />
+            </For>
         </div>
     }
 }
