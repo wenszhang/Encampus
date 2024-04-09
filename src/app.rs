@@ -1,6 +1,6 @@
 use crate::{
     error_template::{AppError, ErrorTemplate},
-    pages::test_page::TestPage,
+    pages::classes::ClassesPage,
 };
 use leptos::*;
 use leptos_meta::*;
@@ -31,7 +31,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes>
                     <Route path="" view=HomePage/>
-                    <Route path="/test" view=TestPage/>
+                    <Route path="/classes" view=ClassesPage/>
                 </Routes>
             </main>
         </Router>
@@ -53,6 +53,6 @@ fn HomePage() -> impl IntoView {
             <h2 class="font-bold text-xl pb-2">"Tailwind Test Delete later"</h2>
         </div>
 
-        <A href="/test">"Test"</A>
+        <A href="/classes">"Classes Page"</A>
     }
 }
