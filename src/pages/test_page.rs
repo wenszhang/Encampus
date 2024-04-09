@@ -1,14 +1,6 @@
 use crate::svgs::drop_down_bars::*;
+use crate::components::class_card::*;
 use leptos::{component, view, IntoView};
-
-#[component]
-fn ClassCard(class_name: &'static str) -> impl IntoView {
-    view! {
-        <div class="bg-white rounded shadow p-4 flex items-center justify-center font-bold h-32">
-            {class_name}
-        </div>
-    }
-}
 
 #[component]
 fn NavBar() -> impl IntoView {

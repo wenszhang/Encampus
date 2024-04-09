@@ -4,6 +4,7 @@ pub mod error_template;
 pub mod fileserv;
 pub mod pages;
 pub mod svgs;
+pub mod components;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]
