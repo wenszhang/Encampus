@@ -1,5 +1,7 @@
 use crate::{
+    components::page::Page,
     error_template::{AppError, ErrorTemplate},
+    pages::class::ClassPage,
     pages::classes::ClassesPage,
 };
 use leptos::*;
@@ -30,8 +32,12 @@ pub fn App() -> impl IntoView {
         }>
             <main>
                 <Routes>
-                    <Route path="" view=HomePage/>
-                    <Route path="/classes" view=ClassesPage/>
+                    <Route path="/dev" view=DevPage/>
+                    <Route path="" view=move || view! { <Page/> }>
+                        <Route path="" view=HomePage/>
+                        <Route path="/class/:class_id" view=ClassPage/>
+                        <Route path="/classes" view=ClassesPage/>
+                    </Route>
                 </Routes>
             </main>
         </Router>
@@ -41,6 +47,15 @@ pub fn App() -> impl IntoView {
 /// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
+    view! {
+        <A href="/dev">"Dev Page"</A>
+        <p></p>
+        <A href="/classes">"Classes Page"</A>
+    }
+}
+
+#[component]
+fn DevPage() -> impl IntoView {
     // Creates a reactive value to update the button
     let (count, set_count) = create_signal(0);
     let on_click = move |_| set_count.update(|count| *count += 1);

@@ -1,5 +1,4 @@
 use leptos::{component, view, For, IntoView};
-use leptos_meta::Stylesheet;
 
 use crate::components::class_tile::ClassTile;
 use crate::components::header::Header;
@@ -16,16 +15,12 @@ pub fn ClassesPage() -> impl IntoView {
     ];
 
     view! {
-        <div class="bg-gray-200 min-h-screen">
-            <Stylesheet id="leptos" href="/pkg/encampus.css"/>
+        <Header text="ENCAMPUS".to_string() logo="logo.png".to_string() />
 
-            <Header text="ENCAMPUS".to_string() logo="logo.png".to_string() />
-
-            <div class="grid grid-cols-3 gap-4 p-10 mx-20">
-                <For each=move || class_ids.clone() key=|id| id.clone() let:class_id>
-                    <ClassTile class_id={class_id} />
-                </For>
-            </div>
+        <div class="grid grid-cols-3 gap-4 p-10 mx-20">
+            <For each=move || class_ids.clone() key=|id| id.clone() let:class_id>
+                <ClassTile class_id={class_id} />
+            </For>
         </div>
     }
 }
