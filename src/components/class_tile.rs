@@ -1,13 +1,12 @@
 use leptos::*;
 
 #[component]
-pub fn ClassTile(title: String) -> impl IntoView {
-    let onclick = move |_| {};
-
+pub fn ClassTile(class_id: String) -> impl IntoView {
     view! {
-        <div class="tile bg-white rounded shadow p-4 flex items-center justify-center font-bold h-32"
-             on:click=onclick>
-            {title}
+        <a href=&format!("/class?class_id={}", class_id)>
+        <div class="tile bg-white rounded shadow p-4 flex items-center justify-center font-bold h-32">
+            {class_id} //TODO: get title from DB
         </div>
+        </a>
     }
 }
