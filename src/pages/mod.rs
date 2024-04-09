@@ -1,2 +1,3 @@
 // pages/mod.rs
-pub mod test_page;
+pub mod class;
+pub mod classes;
