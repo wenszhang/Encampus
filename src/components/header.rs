@@ -1,6 +1,6 @@
-use leptos::*;
 use crate::svgs::drop_down_bars::DropDownBars;
 use crate::svgs::magnifying_glass::MagnifyingGlass;
+use leptos::*;
 
 #[component]
 pub fn Header(text: String, logo: String) -> impl IntoView {
