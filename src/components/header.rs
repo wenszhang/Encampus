@@ -1,3 +1,5 @@
+use crate::svgs::drop_down_bars::DropDownBars;
+use crate::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 
 #[component]
@@ -8,15 +10,16 @@ pub fn Header(text: String, logo: String) -> impl IntoView {
                 <img src={logo} alt="Logo" class="h-8 mr-2"/>
                 <span class="text-xl font-bold">{text}</span>
             </div>
-            <div class="relative">
-                <input type="text" placeholder="Ask me anything..." class="p-2 rounded-full border border-gray-300 w-64"/>
-                <button class="absolute right-0 top-0 mr-2 text-black">
-                    <i class="fas fa-search"/>
+            <div class="relative p-2 rounded-full border border-gray-300 w-64">
+                <input type="text" placeholder="Ask me anything..."/>
+                // TODO clean up styling
+                <button class="absolute mt-1 mr-3 text-black">
+                    <MagnifyingGlass size="20px"/>
                 </button>
             </div>
             <div class="flex items-center">
                 <span class="text-xl font-bold mr-4">"LONGNAME"</span> // Todo: Replace with vh/vw for dynamic size
-                <div class="p-2">"☰"</div>
+                <DropDownBars size="20px"/>
             </div>
         </div>
     }
