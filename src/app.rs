@@ -1,4 +1,5 @@
 use crate::error_template::{AppError, ErrorTemplate};
+use crate::pages::login_page::*;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -30,6 +31,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes>
                     <Route path="" view=HomePage/>
+                    <Route path="/login" view=LoginPage/>
                 </Routes>
             </main>
         </Router>
