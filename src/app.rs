@@ -33,7 +33,7 @@ pub fn App() -> impl IntoView {
             <main>
                 <Routes>
                     <Route path="/dev" view=DevPage/>
-                    <Route path="" view=move || view! { <Page/> }>
+                    <Route path="" view=Page>
                         <Route path="" view=HomePage/>
                         <Route path="/classes" view=ClassesPage/>
                         <Route path="/class/:class_id" view=ClassPage/>
