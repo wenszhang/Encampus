@@ -4,9 +4,7 @@ use leptos_router::use_params_map;
 
 use crate::components::header::Header;
 
-/**
- * Page showing all questions in a class
- */
+// Page showing all questions in a class
 #[component]
 pub fn ClassPage() -> impl IntoView {
     // Fetch params in the format of "class/:class_id"
@@ -42,6 +40,7 @@ pub fn ClassPage() -> impl IntoView {
     }
 }
 
+// A single tile showing the question
 #[component]
 pub fn QuestionTile<F>(title: String, on_click_handler: F) -> impl IntoView
 where
@@ -55,21 +54,25 @@ where
     }
 }
 
+// Data structure for a reply
 struct Reply {
     pub author: String,
     pub reply: String,
 }
 
+// Display a single question with replies
 #[component]
 pub fn QuestionDisplay(class_id: String, question_id: String) -> impl IntoView {
     // Get info...
     let question_title = class_id + " Question " + &question_id;
+    // Dummy data
     let responses = vec![
         Reply {author: "Alice".to_string(), reply: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.".to_string()},
         Reply {author: "Bob".to_string(), reply: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.".to_string()},
         Reply {author: "Charlie".to_string(), reply: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.".to_string()},
     ];
 
+    // Build the reply list beforehand
     let replies_list = responses
         .into_iter()
         .map(|response| {
@@ -79,6 +82,7 @@ pub fn QuestionDisplay(class_id: String, question_id: String) -> impl IntoView {
         })
         .collect_view();
 
+    // Actual view
     view! {
         <div class="mx-auto p-4">
             // Column container
@@ -95,6 +99,7 @@ pub fn QuestionDisplay(class_id: String, question_id: String) -> impl IntoView {
     }
 }
 
+// A single reply showing author and text
 #[component]
 pub fn SingleReplyBox(author: String, reply: String) -> impl IntoView {
     view! {
