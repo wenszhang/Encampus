@@ -74,10 +74,6 @@ pub fn ClassesPage() -> impl IntoView {
 #[derive(sqlx::FromRow)]
 struct Classname(String);
 
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-struct ClassNumPosts(i32);
-
 #[server(GetClassName)]
 async fn get_class_name() -> Result<Vec<String>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
@@ -95,19 +91,3 @@ async fn get_class_name() -> Result<Vec<String>, ServerFnError> {
     let names: Vec<String> = rows.into_iter().map(|row| row.0).collect();
     Ok(names)
 }
-
-// #[server(GetNumClasses)]
-// async fn get_num_classes() -> Result<i32, ServerFnError> {
-//     use leptos::{server_fn::error::NoCustomError, use_context};
-//     use sqlx::postgres::PgPool;
-
-//     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-//         "Unable to complete Request".to_string(),
-//     ))?;
-
-//     let ClassNumPosts(num_posts) = sqlx::query_as("SELECT COUNT(*) FROM classes;")
-//         .fetch_one(&pool)
-//         .await
-//         .expect("select should work");
-//     Ok(num_posts)
-// }
