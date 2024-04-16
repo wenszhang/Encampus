@@ -49,7 +49,7 @@ pub fn App() -> impl IntoView {
 fn HomePage() -> impl IntoView {
     view! {
         <A href="/dev">"Dev Page"</A>
-        <p></p>
+        <br/>
         <A href="/classes">"Classes Page"</A>
     }
 }

@@ -1,8 +1,13 @@
-use leptos::{component, view, For, IntoView, SignalWith};
-use leptos_router::use_params_map;
+use leptos::{component, view, For, IntoView, Params, SignalWith};
+use leptos_router::{use_params, Params};
 
 use crate::components::header::Header;
 use crate::components::question_tile::QuestionTile;
+
+#[derive(Params, PartialEq)]
+struct ClassParams {
+    class_id: String,
+}
 
 /**
  * Page showing all questions in a class
@@ -10,9 +15,13 @@ use crate::components::question_tile::QuestionTile;
 #[component]
 pub fn ClassPage() -> impl IntoView {
     // Fetch params in the format of "class/:class_id"
-    let params = use_params_map();
-    let class_id: String =
-        params.with(|params| params.get("class_id").cloned().unwrap_or_default());
+    let params = use_params::<ClassParams>();
+    let class_id: String = params.with(|params| {
+        params
+            .as_ref()
+            .map(|params| params.class_id.clone())
+            .unwrap_or_default()
+    });
 
     // Dummy data
     let titles = vec![
