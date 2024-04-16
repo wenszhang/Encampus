@@ -18,24 +18,6 @@ pub fn ClassTile(class_id: String) -> impl IntoView {
     }
 }
 
-// #[component]
-// fn ClassCard() -> impl IntoView {
-//     let class_names = create_resource(
-//         || {},
-//         |_| async move { get_class_name().await.unwrap_or(vec!["Failed".to_string()]) },
-//     );
-
-//     let classes_list = class_names()
-//         .unwrap_or_default()
-//         .into_iter()
-//         .map(|class| {
-//             view! {
-//                     <ClassTile class_id=class.clone()/>
-//             }
-//         })
-//         .collect_view();
-// }
-
 /**
  * Page showing all classes registered to the user
  */
