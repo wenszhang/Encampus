@@ -1,5 +1,11 @@
-use crate::error_template::{AppError, ErrorTemplate};
-use crate::pages::login_page::*;
+use crate::{
+    components::page::Page,
+    error_template::{AppError, ErrorTemplate},
+    pages::class::ClassPage,
+    pages::classes::ClassesPage,
+    pages::login_page::*,
+};
+
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -10,8 +16,6 @@ pub fn App() -> impl IntoView {
     provide_meta_context();
 
     view! {
-
-
         // injects a stylesheet into the document <head>
         // id=leptos means cargo-leptos will hot-reload this stylesheet
         <Stylesheet id="leptos" href="/pkg/encampus.css"/>
@@ -32,15 +36,30 @@ pub fn App() -> impl IntoView {
                 <Routes>
                     <Route path="" view=HomePage/>
                     <Route path="/login" view=LoginPage/>
+                    <Route path="/dev" view=DevPage/>
+                    <Route path="" view=Page>
+                        <Route path="" view=HomePage/>
+                        <Route path="/classes" view=ClassesPage/>
+                        <Route path="/class/:class_id" view=ClassPage/>
+                    </Route>
                 </Routes>
             </main>
         </Router>
     }
 }
 
-/// Renders the home page of your application.
+// Renders the home page of your application.
 #[component]
 fn HomePage() -> impl IntoView {
+    view! {
+        <A href="/dev">"Dev Page"</A>
+        <p></p>
+        <A href="/classes">"Classes Page"</A>
+    }
+}
+
+#[component]
+fn DevPage() -> impl IntoView {
     // Creates a reactive value to update the button
     let (count, set_count) = create_signal(0);
     let on_click = move |_| set_count.update(|count| *count += 1);
@@ -52,5 +71,7 @@ fn HomePage() -> impl IntoView {
         <div class="bg-gray-200 p-4 rounded-md shadow-md hover:shadow-lg text-gray-700 max-w-md mx-auto">
             <h2 class="font-bold text-xl pb-2">"Tailwind Test Delete later"</h2>
         </div>
+
+        <A href="/classes">"Classes Page"</A>
     }
 }
