@@ -51,10 +51,17 @@ pub fn ClassesPage() -> impl IntoView {
     }
 }
 
+/**
+ * Struct to hold the class name
+ */
 #[cfg(feature = "ssr")]
 #[derive(sqlx::FromRow)]
 struct Classname(String);
 
+/**
+ * Get all class names from the database
+ * Will eventually have a user added and so query will be modified to get only the classes the user is registered to
+ */
 #[server(GetClassName)]
 async fn get_class_name() -> Result<Vec<String>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
