@@ -1,8 +1,4 @@
-use leptos::{
-    component, create_resource, server, view, CollectView, For, IntoView, ServerFnError, SignalSet,
-    Suspense,
-};
-//use leptos::{component, view, For, IntoView};
+use leptos::{component, create_resource, server, view, For, IntoView, ServerFnError, Suspense};
 
 //use crate::components::class_tile::ClassTile;
 use crate::components::header::Header;
@@ -30,10 +26,10 @@ pub fn ClassesPage() -> impl IntoView {
 
     // let classes_list = class_names()
     //     .unwrap_or_default()
+    //     .clone()
     //     .into_iter()
     //     .map(|class| {
     //         view! {
-    //             {println!("class names: {:?}", class_names());}
     //             <ClassTile class_id=class.clone()/>
     //         }
     //     })
@@ -43,11 +39,14 @@ pub fn ClassesPage() -> impl IntoView {
         <Header text="ENCAMPUS".to_string() logo="logo.png".to_string() />
 
         <div class="grid grid-cols-3 gap-4 p-10 mx-20">
-            <For each=move || class_names().unwrap_or_default().clone() key=|id| id.clone() let:class_id>
-                <ClassTile class_id={class_id} />
-            </For>
-
-           //{classes_list}
+            <Suspense
+                fallback=move || view! { <p>"Loading..."</p> }
+            >
+                <For each=move ||class_names().unwrap_or_default().clone() key=|id| id.clone() let:class_id>
+                    <ClassTile class_id={class_id} />
+                </For>
+            </Suspense>
+        //    {classes_list}
         </div>
     }
 }
