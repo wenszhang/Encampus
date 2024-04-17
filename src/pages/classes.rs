@@ -1,15 +1,16 @@
 use leptos::{component, create_resource, server, view, For, IntoView, ServerFnError, Suspense};
+use serde::{Deserialize, Serialize};
 
 //use crate::components::class_tile::ClassTile;
 use crate::components::header::Header;
 
 #[component]
-pub fn ClassTile(class_id: String) -> impl IntoView {
+pub fn ClassTile(class: ClassInfo) -> impl IntoView {
     view! {
-        <a href=&format!("class/{}", class_id.replace(" ", ""))>
-        <div class="tile bg-white rounded shadow p-4 flex items-center justify-center font-bold h-32">
-            {class_id} //TODO: get title from DB
-        </div>
+        <a href=&format!("class/{}", class.id)>
+            <div class="tile bg-white rounded shadow p-4 flex items-center justify-center font-bold h-32">
+                {class.name}
+            </div>
         </a>
     }
 }
@@ -19,10 +20,7 @@ pub fn ClassTile(class_id: String) -> impl IntoView {
  */
 #[component]
 pub fn ClassesPage() -> impl IntoView {
-    let class_names = create_resource(
-        || {},
-        |_| async move { get_class_name().await.unwrap_or(vec!["Failed".to_string()]) },
-    );
+    let classes = create_resource(|| {}, |_| async { get_class_list().await.unwrap() });
 
     // let classes_list = class_names()
     //     .clone()
@@ -42,8 +40,8 @@ pub fn ClassesPage() -> impl IntoView {
             <Suspense
                 fallback=move || view! { <p>"Loading..."</p> }
             >
-                <For each=move ||class_names().unwrap_or_default().clone() key=|id| id.clone() let:class_id>
-                    <ClassTile class_id={class_id} />
+                <For each=move || classes().unwrap_or_default() key=|class| class.id let:class>
+                    <ClassTile class={class} />
                 </For>
 
                 // {classes_list}
@@ -53,18 +51,22 @@ pub fn ClassesPage() -> impl IntoView {
 }
 
 /**
- * Struct to hold the class name
+ * Struct to hold the class info
  */
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-struct Classname(String);
+
+#[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct ClassInfo {
+    id: i32,
+    name: String,
+}
 
 /**
  * Get all class names from the database
  * Will eventually have a user added and so query will be modified to get only the classes the user is registered to
  */
 #[server(GetClassName)]
-async fn get_class_name() -> Result<Vec<String>, ServerFnError> {
+async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -72,11 +74,11 @@ async fn get_class_name() -> Result<Vec<String>, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let rows: Vec<Classname> = sqlx::query_as("SELECT coursename from classes")
-        .fetch_all(&pool)
-        .await
-        .expect("select should work");
+    let classes: Vec<ClassInfo> =
+        sqlx::query_as("SELECT courseid as id, coursename as name from classes")
+            .fetch_all(&pool)
+            .await
+            .expect("select should work");
 
-    let names: Vec<String> = rows.into_iter().map(|row| row.0).collect();
-    Ok(names)
+    Ok(classes)
 }

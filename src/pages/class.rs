@@ -1,11 +1,16 @@
 use leptos::{
-    component, create_resource, server, view, For, IntoView, ServerFnError, SignalWith, Suspense,
+    component, create_resource, server, view, For, IntoView, Params, ServerFnError, Suspense,
 };
 // use leptos::{component, view, For, IntoView, SignalWith};
-use leptos_router::use_params_map;
+use leptos_router::{use_params, Params};
 
 use crate::components::header::Header;
 use crate::components::question_tile::QuestionTile;
+
+#[derive(Params, PartialEq, Clone)]
+struct ClassId {
+    class_id: i32,
+}
 
 /**
  * Page showing all questions in a class
@@ -13,34 +18,33 @@ use crate::components::question_tile::QuestionTile;
 #[component]
 pub fn ClassPage() -> impl IntoView {
     // Fetch params in the format of "class/:class_id"
-    let params = use_params_map();
-    let class_id: String =
-        params.with(|params| params.get("class_id").cloned().unwrap_or_default());
+    let class_id = use_params::<ClassId>();
 
-    // let class_name: String = class_id.clone();
+    let titles = create_resource(class_id, |class_id| async {
+        get_posts(class_id.unwrap().class_id)
+            .await
+            .unwrap_or_else(|_| vec!["Failed".to_string()])
+    });
 
-    let titles = create_resource(
-        || {},
-        move |_| {
-            let class_name = class_id.replace("-", " ");
-
-            async move {
-                get_posts(class_name.clone())
-                    .await
-                    .unwrap_or_else(|_| vec!["Failed".to_string()])
-            }
-        },
-    );
+    let class_name = create_resource(class_id, |class_id| async {
+        get_class_name(class_id.unwrap().class_id)
+            .await
+            .unwrap_or_else(|_| "Failed".to_string())
+    });
 
     view! {
-        <Header text={"class_id".to_string()} logo="logo.png".to_string() />
+        <Suspense
+            fallback=move || view! { <p>"Loading..."</p> }
+            >
+            <Header text={class_name().unwrap_or_default()} logo="logo.png".to_string() />
+        </Suspense>
 
         <div class="grid grid-cols-3 gap-4 p-10 mx-20">
             <Suspense
                     fallback=move || view! { <p>"Loading..."</p> }
                 >
-                <For each=move || titles().unwrap_or_default().clone() key=|id| id.clone() let:class_id>
-                    <QuestionTile title={class_id} />
+                <For each=move || titles().unwrap_or_default() key=|post_title| post_title.clone() let:post_title>
+                    <QuestionTile title={post_title} />
                 </For>
             </Suspense>
         </div>
@@ -51,8 +55,12 @@ pub fn ClassPage() -> impl IntoView {
 #[derive(sqlx::FromRow)]
 struct Post(String);
 
+#[cfg(feature = "ssr")]
+#[derive(sqlx::FromRow)]
+struct Classname(String);
+
 #[server(GetPosts)]
-async fn get_posts(class_name: String) -> Result<Vec<String>, ServerFnError> {
+async fn get_posts(class_id: i32) -> Result<Vec<String>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -60,16 +68,29 @@ async fn get_posts(class_name: String) -> Result<Vec<String>, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let query = format!(
-        "select title from posts join classes on posts.classid = classes.courseid where classes.coursename = '{}'",
-        "Math 3210"
-    );
-
-    let rows: Vec<Post> = sqlx::query_as(&query)
+    let rows: Vec<Post> = sqlx::query_as( "select title from posts join classes on posts.classid = classes.courseid where classes.courseid = $1")
+        .bind(class_id)
         .fetch_all(&pool)
         .await
         .expect("select should work");
 
     let post_titles: Vec<String> = rows.into_iter().map(|row| row.0).collect();
     Ok(post_titles)
+}
+
+#[server(GetClassName)]
+async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let Classname(name) = sqlx::query_as("select coursename from classes where courseid = $1")
+        .bind(class_id)
+        .fetch_one(&pool)
+        .await
+        .expect("select should work");
+    Ok(name)
 }
