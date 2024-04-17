@@ -25,8 +25,8 @@ pub fn ClassesPage() -> impl IntoView {
     );
 
     // let classes_list = class_names()
-    //     .unwrap_or_default()
     //     .clone()
+    //     .unwrap_or_default()
     //     .into_iter()
     //     .map(|class| {
     //         view! {
@@ -45,8 +45,9 @@ pub fn ClassesPage() -> impl IntoView {
                 <For each=move ||class_names().unwrap_or_default().clone() key=|id| id.clone() let:class_id>
                     <ClassTile class_id={class_id} />
                 </For>
+
+                // {classes_list}
             </Suspense>
-        //    {classes_list}
         </div>
     }
 }
