@@ -57,7 +57,7 @@ struct Post(String);
 
 #[cfg(feature = "ssr")]
 #[derive(sqlx::FromRow)]
-struct Classname(String);
+struct ClassName(String);
 
 #[server(GetPosts)]
 async fn get_posts(class_id: i32) -> Result<Vec<String>, ServerFnError> {
@@ -87,7 +87,7 @@ async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let Classname(name) = sqlx::query_as("select coursename from classes where courseid = $1")
+    let ClassName(name) = sqlx::query_as("select coursename from classes where courseid = $1")
         .bind(class_id)
         .fetch_one(&pool)
         .await
