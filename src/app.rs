@@ -37,7 +37,7 @@ pub fn App() -> impl IntoView {
                         <Route path="" view=HomePage/>
                         <Route path="/classes" view=ClassesPage/>
                         <Route path="/class/:class_id" view=ClassPage/>
-
+                        <Route path="/login" view=LoginPage/>
                     </Route>
                 </Routes>
             </main>
@@ -52,6 +52,8 @@ fn HomePage() -> impl IntoView {
         <A href="/dev">"Dev Page"</A>
         <br/>
         <A href="/classes">"Classes Page"</A>
+        <A href="/login">"Login Page"</A>
+        <br/>
     }
 }
 
