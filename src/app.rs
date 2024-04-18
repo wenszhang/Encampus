@@ -3,6 +3,7 @@ use crate::{
     error_template::{AppError, ErrorTemplate},
     pages::class::ClassPage,
     pages::classes::ClassesPage,
+    pages::login_page::LoginPage,
 };
 use leptos::*;
 use leptos_meta::*;
