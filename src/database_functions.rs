@@ -4,7 +4,6 @@ use serde::{Deserialize, Serialize};
 /**
  * Struct to hold the class info
  */
-
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct ClassInfo {
@@ -12,10 +11,16 @@ pub struct ClassInfo {
     pub name: String,
 }
 
+/**
+ * Struct to hold the post info
+ */
 #[cfg(feature = "ssr")]
 #[derive(sqlx::FromRow)]
 pub struct Post(String);
 
+/**
+ * Struct to hold the class name
+ */
 #[cfg(feature = "ssr")]
 #[derive(sqlx::FromRow)]
 pub struct ClassName(String);
@@ -42,6 +47,9 @@ pub async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
     Ok(classes)
 }
 
+/**
+ * Get all posts for a class given the class id
+ */
 #[server(GetPosts)]
 pub async fn get_posts(class_id: i32) -> Result<Vec<String>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
@@ -61,6 +69,9 @@ pub async fn get_posts(class_id: i32) -> Result<Vec<String>, ServerFnError> {
     Ok(post_titles)
 }
 
+/**
+ * Get the class name given the class id
+ */
 #[server(GetClassName)]
 pub async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
