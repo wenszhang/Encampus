@@ -1,15 +1,15 @@
-use leptos::{
-    component, create_resource, server, view, For, IntoView, Params, ServerFnError, Suspense,
-};
+use leptos::{component, create_resource, view, For, IntoView, Params, Suspense};
 // use leptos::{component, view, For, IntoView, SignalWith};
 use leptos_router::{use_params, Params};
 
 use crate::components::header::Header;
 use crate::components::question_tile::QuestionTile;
+use crate::database_functions::get_class_name;
+use crate::database_functions::get_posts;
 
 #[derive(Params, PartialEq, Clone)]
-struct ClassId {
-    class_id: i32,
+pub struct ClassId {
+    pub class_id: i32,
 }
 
 /**
@@ -49,48 +49,4 @@ pub fn ClassPage() -> impl IntoView {
             </Suspense>
         </div>
     }
-}
-
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-struct Post(String);
-
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-struct ClassName(String);
-
-#[server(GetPosts)]
-async fn get_posts(class_id: i32) -> Result<Vec<String>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to complete Request".to_string(),
-    ))?;
-
-    let rows: Vec<Post> = sqlx::query_as( "select title from posts join classes on posts.classid = classes.courseid where classes.courseid = $1")
-        .bind(class_id)
-        .fetch_all(&pool)
-        .await
-        .expect("select should work");
-
-    let post_titles: Vec<String> = rows.into_iter().map(|row| row.0).collect();
-    Ok(post_titles)
-}
-
-#[server(GetClassName)]
-async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to complete Request".to_string(),
-    ))?;
-
-    let ClassName(name) = sqlx::query_as("select coursename from classes where courseid = $1")
-        .bind(class_id)
-        .fetch_one(&pool)
-        .await
-        .expect("select should work");
-    Ok(name)
 }
