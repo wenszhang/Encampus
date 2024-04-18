@@ -29,5 +29,7 @@ pub fn LoginPage() -> impl IntoView {
                 </div>
             </div>
         </form>
+        <div>
+        </div>
     }
 }
