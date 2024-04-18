@@ -12,6 +12,14 @@ pub struct ClassInfo {
     pub name: String,
 }
 
+#[cfg(feature = "ssr")]
+#[derive(sqlx::FromRow)]
+pub struct Post(String);
+
+#[cfg(feature = "ssr")]
+#[derive(sqlx::FromRow)]
+pub struct ClassName(String);
+
 /**
  * Get all class names from the database
  * Will eventually have a user added and so query will be modified to get only the classes the user is registered to
@@ -33,14 +41,6 @@ pub async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
 
     Ok(classes)
 }
-
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct Post(String);
-
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct ClassName(String);
 
 #[server(GetPosts)]
 pub async fn get_posts(class_id: i32) -> Result<Vec<String>, ServerFnError> {

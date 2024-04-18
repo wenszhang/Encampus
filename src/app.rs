@@ -3,7 +3,6 @@ use crate::{
     error_template::{AppError, ErrorTemplate},
     pages::class::ClassPage,
     pages::classes::ClassesPage,
-    pages::db_server_fn_example_page::TestPage,
 };
 use leptos::*;
 use leptos_meta::*;
@@ -38,7 +37,6 @@ pub fn App() -> impl IntoView {
                         <Route path="" view=HomePage/>
                         <Route path="/classes" view=ClassesPage/>
                         <Route path="/class/:class_id" view=ClassPage/>
-                    <Route path="/test" view=TestPage/>
 
                     </Route>
                 </Routes>
@@ -54,8 +52,6 @@ fn HomePage() -> impl IntoView {
         <A href="/dev">"Dev Page"</A>
         <p></p>
         <A href="/classes">"Classes Page"</A>
-        <p></p>
-        <A href="/test">"Test Page"</A>
     }
 }
 

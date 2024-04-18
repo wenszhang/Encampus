@@ -22,17 +22,6 @@ pub fn ClassTile(class: ClassInfo) -> impl IntoView {
 pub fn ClassesPage() -> impl IntoView {
     let classes = create_resource(|| {}, |_| async { get_class_list().await.unwrap() });
 
-    // let classes_list = class_names()
-    //     .clone()
-    //     .unwrap_or_default()
-    //     .into_iter()
-    //     .map(|class| {
-    //         view! {
-    //             <ClassTile class_id=class.clone()/>
-    //         }
-    //     })
-    //     .collect_view();
-
     view! {
         <Header text="ENCAMPUS".to_string() logo="logo.png".to_string() />
 
