@@ -12,6 +12,11 @@ pub struct ClassId {
     pub class_id: i32,
 }
 
+#[derive(Params, PartialEq)]
+struct ClassParams {
+    class_id: String,
+}
+
 /**
  * Page showing all questions in a class
  */
