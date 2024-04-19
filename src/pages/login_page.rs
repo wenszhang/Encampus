@@ -21,7 +21,9 @@ pub fn LoginPage() -> impl IntoView {
                         <input type="password" id="password" placeholder="Enter your Password" required class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500" />
                     </div>
                     <div>
-                        <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Submit</button>
+                        <a href=&format!("classes")>
+                            <button type="submit" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">Submit</button>
+                        </a>
                     </div>
                     <div class="mt-4 text-sm text-gray-600 text-center">
                         Dont have an account? <a href="#" class="text-blue-500 hover:underline">Sign up here</a>

@@ -3,7 +3,7 @@ use crate::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 
 #[component]
-pub fn Header(text: String, logo: String) -> impl IntoView {
+pub fn Header(text: String, logo: String, user: String) -> impl IntoView {
     view! {
         <div class="bg-white p-4 flex justify-between items-center text-gray-600">
             <div class="flex items-center">
@@ -18,7 +18,7 @@ pub fn Header(text: String, logo: String) -> impl IntoView {
                 </button>
             </div>
             <div class="flex items-center">
-                <span class="text-xl font-bold mr-4">"LONGNAME"</span> // Todo: Replace with vh/vw for dynamic size
+                <span class="text-xl font-bold mr-4">{user}</span> // Todo: Replace with vh/vw for dynamic size
                 <DropDownBars size="20px"/>
             </div>
         </div>

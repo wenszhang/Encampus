@@ -25,6 +25,11 @@ pub struct Post(String);
 #[derive(sqlx::FromRow)]
 pub struct ClassName(String);
 
+#[cfg(feature = "ssr")]
+pub struct CurrentUser {
+    pub name: String,
+}
+
 /**
  * Get all class names from the database
  * Will eventually have a user added and so query will be modified to get only the classes the user is registered to
@@ -112,5 +117,9 @@ pub async fn add_student(name: String) -> Result<(), ServerFnError> {
         .execute(&pool)
         .await
         .expect("msg");
+
+    let user = CurrentUser { name: name.clone() };
+
+    //CurrentUser(name) = name;
     Ok(())
 }
