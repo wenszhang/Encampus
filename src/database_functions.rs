@@ -88,3 +88,29 @@ pub async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
         .expect("select should work");
     Ok(name)
 }
+
+/**
+ * Add a student to the system
+ */
+#[server(AddStudent)]
+pub async fn add_student(name: String) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("insert into users(name) values($1)")
+        .bind(name.clone())
+        .execute(&pool)
+        .await
+        .expect("msg");
+
+    sqlx::query("insert into students(name) values($1)")
+        .bind(name.clone())
+        .execute(&pool)
+        .await
+        .expect("msg");
+    Ok(())
+}

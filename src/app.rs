@@ -53,8 +53,8 @@ fn HomePage() -> impl IntoView {
         <A href="/dev">"Dev Page"</A>
         <br/>
         <A href="/classes">"Classes Page"</A>
-        <A href="/login">"Login Page"</A>
         <br/>
+        <A href="/login">"Login Page"</A>
     }
 }
 
