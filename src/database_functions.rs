@@ -25,14 +25,8 @@ pub struct Post(String);
 #[derive(sqlx::FromRow)]
 pub struct ClassName(String);
 
-#[cfg(feature = "ssr")]
-impl CurrentUser {
-    pub fn user(name: String) {
-        User { name: name }
-    }
-}
-
-#[cfg(feature = "ssr")]
+#[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct CurrentUser {
     pub name: String,
 }
@@ -125,8 +119,5 @@ pub async fn add_student(name: String) -> Result<(), ServerFnError> {
         .await
         .expect("msg");
 
-    let user = CurrentUser { name: name.clone() };
-
-    //CurrentUser(name) = name;
     Ok(())
 }
