@@ -26,6 +26,13 @@ pub struct Post(String);
 pub struct ClassName(String);
 
 #[cfg(feature = "ssr")]
+impl CurrentUser {
+    pub fn user(name: String) {
+        User { name: name }
+    }
+}
+
+#[cfg(feature = "ssr")]
 pub struct CurrentUser {
     pub name: String,
 }

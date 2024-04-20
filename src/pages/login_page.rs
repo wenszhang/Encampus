@@ -6,7 +6,9 @@ pub fn LoginPage() -> impl IntoView {
         <form>
             <div class="flex flex-col justify-center items-center h-screen">
                 <div class="bg-white p-20 rounded-lg shadow-md">
-                <div class="text-center"> LOGO HERE </div>
+                    <div class="text-center">
+                        <img src={format!("/{}", "logo.png".to_string())} alt="Logo" class="h-8 mr-2"/>
+                    </div>
                     <h1 class="text-2xl font-semibold text-center mb-4">Login</h1>
                     <div class="mb-4">
                         <label for="username" class="block text-gray-700 font-bold mb-2">
