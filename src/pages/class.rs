@@ -1,9 +1,12 @@
-use leptos::{component, create_resource, view, For, IntoView, Params, Suspense};
+use leptos::ev::MouseEvent;
+use leptos::{
+    component, create_resource, create_signal, view, CollectView, For, IntoView, Params, Show,
+    Suspense,
+};
 // use leptos::{component, view, For, IntoView, SignalWith};
 use leptos_router::{use_params, Params};
 
 use crate::components::header::Header;
-use crate::components::question_tile::QuestionTile;
 use crate::database_functions::get_class_name;
 use crate::database_functions::get_posts;
 
@@ -25,6 +28,7 @@ pub fn ClassPage() -> impl IntoView {
     // Fetch params in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
 
+    // Database resources
     let titles = create_resource(class_id, |class_id| async {
         get_posts(class_id.unwrap().class_id)
             .await
@@ -37,21 +41,97 @@ pub fn ClassPage() -> impl IntoView {
             .unwrap_or_else(|_| "Failed".to_string())
     });
 
+    // Modal state
+    let (is_modal_open, set_modal_open) = create_signal(false);
+
+    // Page view
     view! {
-        <Suspense
-            fallback=move || view! { <p>"Loading..."</p> }
-            >
+        <Suspense fallback=move || view! { <p>"Loading..."</p> }>
             <Header text={class_name().unwrap_or_default()} logo="logo.png".to_string() />
         </Suspense>
 
-        <div class="grid grid-cols-3 gap-4 p-10 mx-20">
-            <Suspense
-                    fallback=move || view! { <p>"Loading..."</p> }
-                >
-                <For each=move || titles().unwrap_or_default() key=|post_title| post_title.clone() let:post_title>
-                    <QuestionTile title={post_title} />
-                </For>
-            </Suspense>
+        <div class="mx-20">
+            <Show when=is_modal_open>
+                <QuestionDisplay question_id="1".to_string()/>
+            </Show>
+            <div class="grid grid-cols-3 gap-4 p-10">
+                <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+                    <For each=move || titles().unwrap_or_default() key=|post_title| post_title.clone() let:post_title>
+                        <QuestionTile title={post_title.clone()} on_click_handler=move |_| set_modal_open(true)/>
+                    </For>
+                </Suspense>
+            </div>
+        </div>
+    }
+}
+
+/// A single tile showing the question
+#[component]
+pub fn QuestionTile<F>(title: String, on_click_handler: F) -> impl IntoView
+where
+    F: Fn(MouseEvent) + 'static,
+{
+    view! {
+        <div class="tile bg-white rounded shadow p-4 flex items-center justify-center font-bold h-32"
+            on:click = on_click_handler>
+            {title}
+        </div>
+    }
+}
+
+/// Data structure for a reply
+struct Reply {
+    pub author: String,
+    pub reply: String,
+}
+
+/// Display a single question with replies
+#[component]
+pub fn QuestionDisplay(question_id: String) -> impl IntoView {
+    // Get info...
+    let question_title = "Question ".to_owned() + &question_id;
+
+    // Dummy data
+    let responses = vec![
+        Reply {author: "Alice".to_string(), reply: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.".to_string()},
+        Reply {author: "Bob".to_string(), reply: "Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.".to_string()},
+        Reply {author: "Charlie".to_string(), reply: "Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.".to_string()},
+    ];
+
+    // Build the reply list beforehand
+    let replies_list = responses
+        .into_iter()
+        .map(|response| {
+            view! {
+                <SingleReplyBox author=response.author.clone() reply=response.reply.clone()/>
+            }
+        })
+        .collect_view();
+
+    // Actual view
+    view! {
+        <div class="mx-auto p-4">
+            // Column container
+            <div class="space-y-4">
+                // Question box
+                <div class="bg-white shadow rounded-lg p-6">
+                    <h2 class="text-lg font-semibold mb-2">{question_title}</h2>
+                    <p class="text-gray-600">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+                </div>
+                // Replies
+                <div>{replies_list}</div>
+            </div>
+        </div>
+    }
+}
+
+/// A single reply showing author and text
+#[component]
+pub fn SingleReplyBox(author: String, reply: String) -> impl IntoView {
+    view! {
+        <div class="bg-white shadow rounded-lg p-4">
+            <h2 class="text-lg font-semibold mb-2">{author}</h2>
+            <p class="text-gray-600">{reply}</p>
         </div>
     }
 }
