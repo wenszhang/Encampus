@@ -1,4 +1,7 @@
-use leptos::{component, create_resource, view, For, IntoView, Params, Suspense};
+use leptos::leptos_dom;
+use leptos::{
+    component, create_effect, create_resource, create_signal, view, For, IntoView, Params, Suspense,
+};
 // use leptos::{component, view, For, IntoView, SignalWith};
 use leptos_router::{use_params, Params};
 
@@ -35,6 +38,21 @@ pub fn ClassPage() -> impl IntoView {
         get_class_name(class_id.unwrap().class_id)
             .await
             .unwrap_or_else(|_| "Failed".to_string())
+    });
+
+    // TODO: Use signal to store the question title when clicking a tile
+    let (question_title, _set_question_title) = create_signal("".to_string());
+
+    // Reactively update the document title when class_name or question_title changes.
+    create_effect(move |_| {
+        let current_class_name = class_name().unwrap_or_else(|| "Unknown Class".to_string());
+        // Only show question title if it is not empty
+        let title = if question_title().is_empty() {
+            current_class_name
+        } else {
+            format!("{} - {}", current_class_name, question_title())
+        };
+        leptos_dom::document().set_title(&title);
     });
 
     view! {
