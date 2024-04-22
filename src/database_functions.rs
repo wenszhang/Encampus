@@ -25,9 +25,14 @@ pub struct Post(String);
 #[derive(sqlx::FromRow)]
 pub struct ClassName(String);
 
+/**
+ * Struct to hold user
+ */
 #[cfg(feature = "ssr")]
-pub struct CurrentUser {
+#[derive(sqlx::FromRow)]
+pub struct User {
     pub name: String,
+    pub id: i32,
 }
 
 /**
@@ -118,8 +123,31 @@ pub async fn add_student(name: String) -> Result<(), ServerFnError> {
         .await
         .expect("msg");
 
-    let user = CurrentUser { name: name.clone() };
-
-    //CurrentUser(name) = name;
     Ok(())
+}
+
+/**
+ * Check if a user exists
+ */
+#[server(CheckUser)]
+pub async fn check_user(name: String) -> Result<(String, i32), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let user_result: User = sqlx::query_as("select * from users where name = $1")
+        .bind(name)
+        .fetch_one(&pool)
+        .await
+        .expect("No user found");
+
+    // let user = User {
+    //     name: user_result.0,
+    //     id: user_result.1,
+    // };
+
+    Ok((user_result.name, user_result.id))
 }
