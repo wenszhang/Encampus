@@ -2,8 +2,11 @@ use crate::svgs::drop_down_bars::DropDownBars;
 use crate::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 
+use crate::util::global_state::GlobalState;
+
 #[component]
 pub fn Header(text: String, logo: String) -> impl IntoView {
+    let global_state = expect_context::<GlobalState>();
     view! {
         <div class="bg-white p-4 flex justify-between items-center text-gray-600">
             <div class="flex items-center">
@@ -17,7 +20,7 @@ pub fn Header(text: String, logo: String) -> impl IntoView {
                 </button>
             </div>
             <div class="flex items-center relative">
-                <span class="text-xl font-bold mr-4 flex items-center">"LONGNAME"</span>
+                <span class="text-xl font-bold mr-4 flex items-center">{global_state.user_name.get()}</span>
                 <div class="flex items-center relative group">
                     <button>
                         <DropDownBars size="1.3rem"/>
