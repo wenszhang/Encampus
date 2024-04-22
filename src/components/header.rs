@@ -27,13 +27,13 @@ pub fn Header(text: String, logo: String) -> impl IntoView {
                         group-hover:visible">
                         <ul class="py-1 text-gray-700 w-36 text-left text-lg">
                             <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <a href="/option-1" class="block">"Profile"</a>
+                                <div class="block">"Profile"</div>
                             </li>
                             <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <a href="/option-2" class="block">"Settings"</a>
+                                <div class="block">"Settings"</div>
                             </li>
                             <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <a href="/option-3" class="block">"Logout"</a> //Todo: Register/login?
+                                <div class="block">"Logout"</div> //Todo: Register/login?
                             </li>
                         </ul>
                     </div>
