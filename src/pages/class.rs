@@ -41,7 +41,7 @@ pub fn ClassPage() -> impl IntoView {
     });
 
     // TODO: Use signal to store the question title when clicking a tile
-    let (question_title, set_question_title) = create_signal("".to_string());
+    let (question_title, _set_question_title) = create_signal("".to_string());
 
     // Reactively update the document title when class_name or question_title changes.
     create_effect(move |_| {
