@@ -25,12 +25,6 @@ pub struct Post(String);
 #[derive(sqlx::FromRow)]
 pub struct ClassName(String);
 
-#[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct CurrentUser {
-    pub name: String,
-}
-
 /**
  * Get all class names from the database
  * Will eventually have a user added and so query will be modified to get only the classes the user is registered to
