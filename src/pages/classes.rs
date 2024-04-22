@@ -25,7 +25,7 @@ pub fn ClassesPage() -> impl IntoView {
     let classes = create_resource(|| {}, |_| async { get_class_list().await.unwrap() });
 
     view! {
-        <Header text="ENCAMPUS".to_string() logo="logo.png".to_string() />
+        <Header text="ENCAMPUS".to_string() logo="logo.png".to_string()/>
 
         <div class="grid grid-cols-3 gap-4 p-10 mx-20">
             <Suspense
@@ -34,8 +34,6 @@ pub fn ClassesPage() -> impl IntoView {
                 <For each=move || classes().unwrap_or_default() key=|class| class.id let:class>
                     <ClassTile class={class} />
                 </For>
-
-                // {classes_list}
             </Suspense>
         </div>
     }
