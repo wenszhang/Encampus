@@ -47,7 +47,7 @@ pub fn ClassPage() -> impl IntoView {
 
     view! {
         <Suspense fallback=move || view! { <p>"Loading..."</p> } >
-            <Header text={class_name().unwrap_or_default()} logo={None} class_id={None} />
+            <Header text={class_name().unwrap_or_default()} logo={None} class_id={class_id.get().ok().map(|c| c.class_id)}/>
         </Suspense>
 
         <div class="flex align mx-20 my-10 flex-col gap-4">

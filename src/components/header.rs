@@ -7,7 +7,7 @@ use leptos::*;
 use crate::util::global_state::GlobalState;
 
 #[component]
-pub fn Header(text: String, logo: Option<String>, class_id: Option<String>) -> impl IntoView {
+pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
     let logo_src = logo.as_deref().unwrap_or("logo.png");
     let header_text_href = if let Some(id) = &class_id {
