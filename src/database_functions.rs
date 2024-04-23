@@ -26,6 +26,16 @@ pub struct Post(String);
 pub struct ClassName(String);
 
 /**
+ * Struct to hold user
+ */
+#[cfg(feature = "ssr")]
+#[derive(sqlx::FromRow)]
+pub struct User {
+    pub name: String,
+    pub id: i32,
+}
+
+/**
  * Get all class names from the database
  * Will eventually have a user added and so query will be modified to get only the classes the user is registered to
  */
@@ -90,10 +100,10 @@ pub async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
 }
 
 /**
- * Add a student to the system
+ * Login a user or sign them up if they don't exist
  */
-#[server(AddStudent)]
-pub async fn add_student(name: String) -> Result<(), ServerFnError> {
+#[server(LoginSignUp)]
+pub async fn login_signup(name: String) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -101,17 +111,24 @@ pub async fn add_student(name: String) -> Result<(), ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    sqlx::query("insert into users(name) values($1)")
+    let user_result: Option<User> = sqlx::query_as("select name, id from users where name = $1")
         .bind(name.clone())
-        .execute(&pool)
-        .await
-        .expect("msg");
+        .fetch_optional(&pool)
+        .await?;
 
-    sqlx::query("insert into students(name) values($1)")
-        .bind(name.clone())
-        .execute(&pool)
-        .await
-        .expect("msg");
+    if user_result.is_none() {
+        sqlx::query("insert into users(name) values($1)")
+            .bind(name.clone())
+            .execute(&pool)
+            .await
+            .expect("Failed adding user");
+
+        sqlx::query("insert into students(name) values($1)")
+            .bind(name.clone())
+            .execute(&pool)
+            .await
+            .expect("Failed adding student");
+    }
 
     Ok(())
 }
