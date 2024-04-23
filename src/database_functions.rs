@@ -132,3 +132,36 @@ pub async fn login_signup(name: String) -> Result<(), ServerFnError> {
 
     Ok(())
 }
+
+/**
+ * Add a post to a class
+ */
+#[server(AddPost)]
+pub async fn add_post(
+    title: String,
+    contents: String,
+    anonymous: bool,
+    limited_visibility: bool,
+    classid: i32,
+    authorid: i32,
+) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6);")
+    .bind(title)
+    .bind(contents)
+    .bind(authorid)
+    .bind(anonymous)
+    .bind(limited_visibility)
+    .bind(classid)
+    .execute(&pool)
+    .await
+    .expect("failed adding post");
+
+    Ok(())
+}
