@@ -1,11 +1,7 @@
 use crate::{
-    components::page::Page,
+    components::{focused_post::FocusedPost, page::Page},
     error_template::{AppError, ErrorTemplate},
-    pages::class::ClassPage,
-    pages::classes::ClassesPage,
-    pages::dev::Dev,
-    pages::home::Home,
-    pages::login_page::LoginPage,
+    pages::{class::ClassPage, classes::ClassesPage, dev::Dev, home::Home, login_page::LoginPage},
     util::global_state::GlobalState,
 };
 
@@ -42,7 +38,11 @@ pub fn App() -> impl IntoView {
                     <Route path="" view=Page>
                         <Route path="" view=Home/>
                         <Route path="/classes" view=ClassesPage/>
-                        <Route path="/class/:class_id" view=ClassPage/>
+                        <Route path="/classes/:class_id" view=ClassPage>
+                            <Route path="" view=|| {}/>
+                            // <Route path="/new" view=CreatePost/>
+                            <Route path="/:post_id" view=FocusedPost/>
+                        </Route>
                         <Route path="/login" view=LoginPage/>
                     </Route>
                 </Routes>

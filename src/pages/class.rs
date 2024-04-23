@@ -1,23 +1,13 @@
-use leptos::leptos_dom;
-use leptos::{
-    component, create_effect, create_resource, create_signal, view, For, IntoView, Params, Suspense,
-};
-// use leptos::{component, view, For, IntoView, SignalWith};
-use leptos_router::{use_params, Params};
-
 use crate::components::header::Header;
 use crate::components::question_tile::QuestionTile;
 use crate::database_functions::get_class_name;
 use crate::database_functions::get_posts;
+use leptos::*;
+use leptos_router::{use_params, Outlet, Params};
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {
     pub class_id: i32,
-}
-
-#[derive(Params, PartialEq)]
-struct ClassParams {
-    class_id: String,
 }
 
 /**
@@ -25,10 +15,10 @@ struct ClassParams {
  */
 #[component]
 pub fn ClassPage() -> impl IntoView {
-    // Fetch params in the format of "class/:class_id"
+    // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
 
-    let titles = create_resource(class_id, |class_id| async {
+    let post_titles = create_resource(class_id, |class_id| async {
         get_posts(class_id.unwrap().class_id)
             .await
             .unwrap_or_else(|_| vec!["Failed".to_string()])
@@ -58,18 +48,22 @@ pub fn ClassPage() -> impl IntoView {
     view! {
         <Suspense
             fallback=move || view! { <p>"Loading..."</p> }
-            >
+        >
             <Header text={class_name().unwrap_or_default()} logo="logo.png".to_string() />
         </Suspense>
 
-        <div class="grid grid-cols-3 gap-4 p-10 mx-20">
-            <Suspense
+        <div class="flex align mx-20 my-10 flex-col gap-4">
+            <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
+
+            <div class="grid grid-cols-3 gap-4">
+                <Suspense
                     fallback=move || view! { <p>"Loading..."</p> }
                 >
-                <For each=move || titles().unwrap_or_default() key=|post_title| post_title.clone() let:post_title>
-                    <QuestionTile title={post_title} />
-                </For>
-            </Suspense>
+                    <For each=move || post_titles().unwrap_or_default() key=|post_title| post_title.clone() let:post_title>
+                        <QuestionTile title={post_title} />
+                    </For>
+                </Suspense>
+            </div>
         </div>
     }
 }
