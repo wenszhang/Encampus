@@ -59,10 +59,11 @@ pub fn ClassPage() -> impl IntoView {
                 <Suspense
                     fallback=move || view! { <p>"Loading..."</p> }
                 >
-                <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
-                    <QuestionTile post={post} />
-                </For>
-            </Suspense>
+                    <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
+                        <QuestionTile post={post} />
+                    </For>
+                </Suspense>
+            </div> 
         </div>
     }
 }
