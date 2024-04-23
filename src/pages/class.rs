@@ -46,19 +46,15 @@ pub fn ClassPage() -> impl IntoView {
     });
 
     view! {
-        <Suspense
-            fallback=move || view! { <p>"Loading..."</p> }
-        >
-            <Header text={class_name().unwrap_or_default()} logo="logo.png".to_string() />
+        <Suspense fallback=move || view! { <p>"Loading..."</p> } >
+            <Header text={class_name().unwrap_or_default()} logo={None} class_id={None} />
         </Suspense>
 
         <div class="flex align mx-20 my-10 flex-col gap-4">
             <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
 
             <div class="grid grid-cols-3 gap-4">
-                <Suspense
-                    fallback=move || view! { <p>"Loading..."</p> }
-                >
+                <Suspense fallback=move || view! { <p>"Loading..."</p> } >
                     <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
                         <QuestionTile post={post} />
                     </For>

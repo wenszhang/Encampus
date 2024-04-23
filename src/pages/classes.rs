@@ -31,7 +31,7 @@ pub fn ClassesPage() -> impl IntoView {
     );
 
     view! {
-        <Header text="ENCAMPUS".to_string() logo="logo.png".to_string()/>
+        <Header text="ENCAMPUS".to_string() logo={None} class_id={None} />
 
         <div class="grid grid-cols-3 gap-4 p-10 mx-20">
             <Suspense
