@@ -25,7 +25,10 @@ pub fn ClassesPage() -> impl IntoView {
         leptos_dom::document().set_title("Encampus - Classes");
     });
 
-    let classes = create_resource(|| {}, |_| async { get_class_list().await.unwrap() });
+    let classes = create_resource(
+        || {},
+        |_| async { get_class_list().await.unwrap_or_default() },
+    );
 
     view! {
         <Header text="ENCAMPUS".to_string() logo="logo.png".to_string()/>

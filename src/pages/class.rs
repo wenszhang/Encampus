@@ -18,10 +18,10 @@ pub fn ClassPage() -> impl IntoView {
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
 
-    let post_titles = create_resource(class_id, |class_id| async {
+    let posts = create_resource(class_id, |class_id| async {
         get_posts(class_id.unwrap().class_id)
             .await
-            .unwrap_or_else(|_| vec!["Failed".to_string()])
+            .unwrap_or_default()
     });
 
     let class_name = create_resource(class_id, |class_id| async {
@@ -59,8 +59,8 @@ pub fn ClassPage() -> impl IntoView {
                 <Suspense
                     fallback=move || view! { <p>"Loading..."</p> }
                 >
-                    <For each=move || post_titles().unwrap_or_default() key=|post_title| post_title.clone() let:post_title>
-                        <QuestionTile title={post_title} />
+                    <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
+                        <QuestionTile post={post} />
                     </For>
                 </Suspense>
             </div>
