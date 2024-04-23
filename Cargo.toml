@@ -13,6 +13,7 @@ leptos = { version = "0.6", features = ["nightly", "serde"] }
 leptos_axum = { version = "0.6", optional = true }
 leptos_meta = { version = "0.6", features = ["nightly"] }
 leptos_router = { version = "0.6", features = ["nightly"] }
+leptos_server_signal = { version = "0.6"}
 tokio = { version = "1", features = ["rt-multi-thread"], optional = true }
 tower = { version = "0.4", optional = true }
 tower-http = { version = "0.5", features = ["fs", "trace"], optional = true }
@@ -40,6 +41,8 @@ ssr = [
     "dep:tracing",
     "dep:tracing-subscriber",
     "dep:sqlx",
+    "leptos_server_signal/ssr",
+    "leptos_server_signal/axum",
 ]
 
 # Defines a size-optimized profile for the WASM bundle in release mode

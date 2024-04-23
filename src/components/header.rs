@@ -1,6 +1,7 @@
 use crate::svgs::announcement_bell::AnnouncementBell;
 use crate::svgs::drop_down_bars::DropDownBars;
 use crate::svgs::magnifying_glass::MagnifyingGlass;
+// use crate::components::announcements::Announcements;
 use leptos::*;
 
 use crate::util::global_state::GlobalState;
@@ -21,9 +22,25 @@ pub fn Header(text: String, logo: String) -> impl IntoView {
                 </button>
             </div>
             <div class="flex items-center relative">
-                <button class="pr-2">
+                <div class="group">
+                    <button class="pr-2">
                         <AnnouncementBell size="1.3rem"/>
-                </button>
+                    </button>
+                    <div class="absolute right-full top-full mt-[-0.1rem] shadow-md rounded-lg bg-white invisible
+                        group-hover:opacity-100 group-hover:scale-100 group-hover:visible">
+                        <ul class="py-1 mx-1 text-gray-700 w-36 text-left text-lg">
+                            <li class="fit-content py-2 hover:bg-gray-100 cursor-pointer">
+                                <div class="block">"Announcement 1"</div>
+                            </li>
+                            <li class="fit-content py-2 hover:bg-gray-100 cursor-pointer">
+                                <div class="block">"Announcement 2"</div>
+                            </li>
+                            <li class="fit-content py-2 hover:bg-gray-100 cursor-pointer">
+                                <div class="block">"Announcement 3"</div>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
                 <span class="text-xl font-bold mr-4 flex items-center">{global_state.user_name.get()}</span>
                 <div class="flex items-center relative group">
                     <button>
