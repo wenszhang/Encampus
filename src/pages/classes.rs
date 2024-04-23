@@ -3,7 +3,6 @@ use leptos::{component, create_resource, view, For, IntoView, Suspense};
 use crate::components::header::Header;
 use crate::database_functions::get_class_list;
 use crate::database_functions::ClassInfo;
-//use crate::database_functions::CurrentUser;
 
 #[component]
 pub fn ClassTile(class: ClassInfo) -> impl IntoView {
