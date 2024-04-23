@@ -5,7 +5,7 @@ use leptos_router::Outlet;
 #[component]
 pub fn Page() -> impl IntoView {
     view! {
-        <Title text="Encapmus"/>
+        <Title text="Encampus"/>
         <div class="bg-gray-200 min-h-screen">
             <Outlet/>
         </div>

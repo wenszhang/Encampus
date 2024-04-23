@@ -21,7 +21,7 @@ pub fn ClassTile(class: ClassInfo) -> impl IntoView {
  */
 #[component]
 pub fn ClassesPage() -> impl IntoView {
-    leptos_dom::document().set_title("Encpamus - Classes");
+    leptos_dom::document().set_title("Encampus - Classes");
     let classes = create_resource(|| {}, |_| async { get_class_list().await.unwrap() });
 
     view! {
