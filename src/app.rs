@@ -21,9 +21,9 @@ pub fn App() -> impl IntoView {
         <Stylesheet id="leptos" href="/pkg/encampus.css"/>
 
         // sets the document title
-        <Title text="Welcome to Leptos"/>
+        <Title text="Encampus"/>
 
-        // content for this welcome page
+        // Routes
         <Router fallback=|| {
             let mut outside_errors = Errors::default();
             outside_errors.insert_with_default_key(AppError::NotFound);
@@ -36,17 +36,46 @@ pub fn App() -> impl IntoView {
                 <Routes>
                     <Route path="/dev" view=Dev/>
                     <Route path="" view=Page>
-                        <Route path="" view=Home/>
-                        <Route path="/classes" view=ClassesPage/>
-                        <Route path="/classes/:class_id" view=ClassPage>
-                            <Route path="" view=|| {}/>
-                            // <Route path="/new" view=CreatePost/>
-                            <Route path="/:post_id" view=FocusedPost/>
+                        <Route path="" view=AuthenticatedRoutes>
+                            <Route path="/classes" view=ClassesPage/>
+                            <Route path="/classes/:class_id" view=ClassPage>
+                                <Route path="" view=|| {}/>
+                                // <Route path="/new" view=CreatePost/>
+                                <Route path="/:post_id" view=FocusedPost/>
+                            </Route>
                         </Route>
-                        <Route path="/login" view=LoginPage/>
+                        <Route path="" view=UnauthenticatedRoutes>
+                            <Route path="" view=Home/>
+                            <Route path="/login" view=LoginPage/>
+                        </Route>
                     </Route>
                 </Routes>
             </main>
         </Router>
+    }
+}
+
+/// Prevent errors due to loading pages that require authentication while logged out
+#[component]
+pub fn AuthenticatedRoutes() -> impl IntoView {
+    let global_state = expect_context::<GlobalState>();
+
+    let navigate = use_navigate();
+
+    create_effect(move |_| {
+        if !global_state.authenticated.get() {
+            navigate("/login", Default::default());
+        }
+    });
+    view! {
+        <Outlet/>
+    }
+}
+
+/// General route wrapping
+#[component]
+fn UnauthenticatedRoutes() -> impl IntoView {
+    view! {
+        <Outlet/>
     }
 }
