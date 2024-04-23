@@ -63,7 +63,7 @@ pub fn ClassPage() -> impl IntoView {
                         <QuestionTile post={post} />
                     </For>
                 </Suspense>
-            </div> 
+            </div>
         </div>
     }
 }
