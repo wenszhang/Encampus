@@ -1,24 +1,21 @@
-use leptos::{
-    component, create_resource, create_signal, ev::SubmitEvent, event_target_value, expect_context,
-    view, Children, IntoView, SignalGet, WriteSignal,
-};
+use crate::{database_functions::add_post, pages::class::ClassId};
+use leptos::*;
 use leptos_router::use_params;
+use serde::{Deserialize, Serialize};
 
-use crate::{database_functions::add_post, pages::class::ClassId, util::global_state::GlobalState};
-
-#[derive(Clone, Serialize, Deserialize)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AddPostInfo {
-    title: String,
-    contents: String,
-    author_name: String,
-    anonymous: bool,
+    pub title: String,
+    pub contents: String,
+    pub anonymous: bool,
+    pub limited_visibility: bool,
+    pub classid: i32,
+    pub authorid: i32,
 }
 
 #[component]
 pub fn CreatePost() -> impl IntoView {
     let class_id = use_params::<ClassId>();
-    let global_state = expect_context::<GlobalState>();
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
             setter(event_target_value(&ev));
@@ -29,24 +26,13 @@ pub fn CreatePost() -> impl IntoView {
     let (post_title, set_post_title) = create_signal("".to_string());
     let (post_contents, set_post_contents) = create_signal("".to_string());
 
-    let add_post_action = create_action(move |(post_title: &String, post_contents String, anonymous_state: bool, limited_visibility: bool, class_id: i32,
-    author_id: i32)| {
-        let post
+    let add_post_action = create_action(move |postInfo: &AddPostInfo| {
+        let postInfo = postInfo.clone();
+        async move {
+            add_post(postInfo).await.unwrap();
+        }
     });
 
-        // let _new_post = create_resource(post_title, |post_title| async move {
-        //     add_post(
-        //         post_title.clone(),
-        //         post_contents.get().clone(),
-        //         anonymous_state.get(),
-        //         false,
-        //         class_id.get().unwrap().class_id,
-        //         2,
-        //     )
-        //     .await
-        //     .unwrap();
-        // });
-    
     view! {
         <DarkenedCard class="p-5 flex flex-col gap-2">
                     <p>"Create New Post"</p>
@@ -84,17 +70,21 @@ pub fn CreatePost() -> impl IntoView {
                                 <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-full peer-checked:bg-primary"></div>
                             </div>
                         </label>
-                        //<form on:submit=on_submit>
                         <button type="submit" class="bg-gray-500 p-2 rounded-full text-white hover:bg-gray-600"
                         on:click=move |_| add_post_action.dispatch(
-                            (post_title(), post_contents(), anonymous_state(), false, class_id.get().unwrap().class_id,
-                            2))
+                            AddPostInfo {
+                                title: post_title(),
+                                contents: post_contents(),
+                                anonymous: anonymous_state(),
+                                limited_visibility: false,
+                                classid: class_id.get().unwrap().class_id,
+                                authorid: 2
+                            })
+                        >
                         "Post"
                         </button>
-                        //</form>
                     </div>
                 </DarkenedCard>
-
     }
 }
 

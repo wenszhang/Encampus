@@ -3,7 +3,7 @@ use crate::components::question_tile::QuestionTile;
 use crate::database_functions::get_class_name;
 use crate::database_functions::get_posts;
 use leptos::*;
-use leptos_router::{use_params, Outlet, Params};
+use leptos_router::{use_params, Outlet, Params, A};
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {
@@ -51,7 +51,11 @@ pub fn ClassPage() -> impl IntoView {
         >
             <Header text={class_name().unwrap_or_default()} logo="logo.png".to_string() />
         </Suspense>
-
+        <A href="new">
+            <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                "Post +"
+            </button>
+        </A>
         <div class="flex align mx-20 my-10 flex-col gap-4">
             <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
 
