@@ -53,6 +53,8 @@ pub fn ClassPage() -> impl IntoView {
         </Suspense>
 
         <div class="flex align mx-20 my-10 flex-col gap-4">
+            <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
+
             <div class="grid grid-cols-3 gap-4">
                 <Suspense
                     fallback=move || view! { <p>"Loading..."</p> }
