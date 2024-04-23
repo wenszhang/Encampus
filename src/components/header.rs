@@ -41,7 +41,7 @@ pub fn Header(text: String, logo: String) -> impl IntoView {
                         </ul>
                     </div>
                 </div>
-                <span class="text-xl font-bold mr-4 flex items-center">{global_state.user_name.get()}</span>
+                <span class="text-xl font-bold mr-4 flex items-center">{move || global_state.user_name.get()}</span>
                 <div class="flex items-center relative group">
                     <button>
                         <DropDownBars size="1.3rem"/>

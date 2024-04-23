@@ -24,7 +24,7 @@ pub fn ClassPage() -> impl IntoView {
             .unwrap_or_default()
     });
 
-    let class_name = create_resource(class_id, |class_id| async {
+    let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
             .await
             .unwrap_or_else(|_| "Failed".to_string())
@@ -46,9 +46,7 @@ pub fn ClassPage() -> impl IntoView {
     });
 
     view! {
-        <Suspense
-            fallback=move || view! { <p>"Loading..."</p> }
-        >
+        <Suspense fallback=move || view! { <p>"Loading..."</p> }>
             <Header text={class_name().unwrap_or_default()} logo="logo.png".to_string() />
         </Suspense>
 
@@ -56,9 +54,7 @@ pub fn ClassPage() -> impl IntoView {
             <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
 
             <div class="grid grid-cols-3 gap-4">
-                <Suspense
-                    fallback=move || view! { <p>"Loading..."</p> }
-                >
+                <Suspense fallback=move || view! { <p>"Loading..."</p> }>
                     <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
                         <QuestionTile post={post} />
                     </For>
