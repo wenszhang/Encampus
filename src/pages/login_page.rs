@@ -1,7 +1,16 @@
-use leptos::{component, view, IntoView};
+use leptos::{component, expect_context, view, IntoView, SignalSet};
+
+use crate::util::global_state::GlobalState;
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
+    // Get context for global state
+    let global_state = expect_context::<GlobalState>();
+
+    // Example of setting a value in global state
+    global_state.user_name.set(Some("BillyBob".to_string()));
+    global_state.authenticated.set(true);
+
     view! {
         <form>
             <div class="flex flex-col justify-center items-center h-screen">
