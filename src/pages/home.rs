@@ -1,4 +1,3 @@
-use crate::components::header::Header;
 use leptos::{component, view, IntoView};
 use leptos_router::A;
 
@@ -6,7 +5,6 @@ use leptos_router::A;
 #[component]
 pub fn Home() -> impl IntoView {
     view! {
-        // <Header text="ENCAMPUS".to_string() logo="logo.png".to_string() />
         <div class="flex flex-col justify-center items-center h-screen">
             <div class="container mx-auto px-4 flex flex-col items-center">
                 <header class="flex justify-between items-center py-4">
