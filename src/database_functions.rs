@@ -14,9 +14,12 @@ pub struct ClassInfo {
 /**
  * Struct to hold the post info
  */
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct Post(String);
+#[derive(Clone, Serialize, Deserialize)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct Post {
+    pub title: String,
+    pub post_id: i32,
+}
 
 /**
  * Struct to hold the class name
@@ -61,7 +64,7 @@ pub async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
  * Get all posts for a class given the class id
  */
 #[server(GetPosts)]
-pub async fn get_posts(class_id: i32) -> Result<Vec<String>, ServerFnError> {
+pub async fn get_posts(class_id: i32) -> Result<Vec<Post>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -69,14 +72,14 @@ pub async fn get_posts(class_id: i32) -> Result<Vec<String>, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let rows: Vec<Post> = sqlx::query_as( "select title from posts join classes on posts.classid = classes.courseid where classes.courseid = $1")
-        .bind(class_id)
-        .fetch_all(&pool)
-        .await
-        .expect("select should work");
+    let rows: Vec<Post> =
+        sqlx::query_as("select title, postid as post_id from posts where posts.classid = $1")
+            .bind(class_id)
+            .fetch_all(&pool)
+            .await
+            .expect("select should work");
 
-    let post_titles: Vec<String> = rows.into_iter().map(|row| row.0).collect();
-    Ok(post_titles)
+    Ok(rows)
 }
 
 /**
