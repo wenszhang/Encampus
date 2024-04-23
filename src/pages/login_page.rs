@@ -1,7 +1,6 @@
-use leptos::{
-    component, create_signal, ev::SubmitEvent, event_target_value, logging::log, view, IntoView,
-    WriteSignal,
-};
+use leptos::{ev::SubmitEvent, *};
+
+use crate::database_functions::login_signup;
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
@@ -18,9 +17,10 @@ pub fn LoginPage() -> impl IntoView {
     // Form submission handler
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
-        // TODO: Add actual login logic here! Log displays in browser console
-        log!("Login attempted with username: {}", username());
-        log!("Password entered: {}", password());
+
+        let _login = create_resource(username, |username| async {
+            login_signup(username).await.unwrap()
+        });
 
         // The variable definition is required
         // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
@@ -33,7 +33,7 @@ pub fn LoginPage() -> impl IntoView {
             <div class="flex flex-col justify-center items-center h-screen">
                 <div class="bg-white p-20 rounded-lg shadow-md">
                     <div class="text-center">
-                        LOGO HERE
+                        <img src={format!("/{}", "logo.png".to_string())} alt="Logo" class="h-16 mr-0"/>
                     </div>
                     <h1 class="text-2xl font-semibold text-center mb-4">
                         Login
@@ -64,6 +64,7 @@ pub fn LoginPage() -> impl IntoView {
                             class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
                             on:input=on_input(set_password)
                             prop:value=password
+                            disabled
                         />
                     </div>
                     <button

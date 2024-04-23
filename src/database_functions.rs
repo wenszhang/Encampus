@@ -100,10 +100,10 @@ pub async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
 }
 
 /**
- * Add a student to the system
+ * Login a user or sign them up if they don't exist
  */
-#[server(AddStudent)]
-pub async fn add_student(name: String) -> Result<(), ServerFnError> {
+#[server(LoginSignUp)]
+pub async fn login_signup(name: String) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -111,43 +111,24 @@ pub async fn add_student(name: String) -> Result<(), ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    sqlx::query("insert into users(name) values($1)")
+    let user_result: Option<User> = sqlx::query_as("select name, id from users where name = $1")
         .bind(name.clone())
-        .execute(&pool)
-        .await
-        .expect("msg");
+        .fetch_optional(&pool)
+        .await?;
 
-    sqlx::query("insert into students(name) values($1)")
-        .bind(name.clone())
-        .execute(&pool)
-        .await
-        .expect("msg");
+    if user_result.is_none() {
+        sqlx::query("insert into users(name) values($1)")
+            .bind(name.clone())
+            .execute(&pool)
+            .await
+            .expect("Failed adding user");
+
+        sqlx::query("insert into students(name) values($1)")
+            .bind(name.clone())
+            .execute(&pool)
+            .await
+            .expect("Failed adding student");
+    }
 
     Ok(())
-}
-
-/**
- * Check if a user exists
- */
-#[server(CheckUser)]
-pub async fn check_user(name: String) -> Result<(String, i32), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to complete Request".to_string(),
-    ))?;
-
-    let user_result: User = sqlx::query_as("select * from users where name = $1")
-        .bind(name)
-        .fetch_one(&pool)
-        .await
-        .expect("No user found");
-
-    // let user = User {
-    //     name: user_result.0,
-    //     id: user_result.1,
-    // };
-
-    Ok((user_result.name, user_result.id))
 }
