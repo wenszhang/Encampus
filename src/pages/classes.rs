@@ -1,5 +1,5 @@
-use leptos::leptos_dom;
 use leptos::{component, create_resource, view, For, IntoView, Suspense};
+use leptos::{create_effect, leptos_dom};
 
 use crate::components::header::Header;
 use crate::database_functions::get_class_list;
@@ -21,7 +21,10 @@ pub fn ClassTile(class: ClassInfo) -> impl IntoView {
  */
 #[component]
 pub fn ClassesPage() -> impl IntoView {
-    leptos_dom::document().set_title("Encampus - Classes");
+    create_effect(move |_| {
+        leptos_dom::document().set_title("Encampus - Classes");
+    });
+
     let classes = create_resource(|| {}, |_| async { get_class_list().await.unwrap() });
 
     view! {
