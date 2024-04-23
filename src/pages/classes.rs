@@ -1,3 +1,4 @@
+use leptos::leptos_dom;
 use leptos::{component, create_resource, view, For, IntoView, Suspense};
 
 use crate::components::header::Header;
@@ -20,10 +21,11 @@ pub fn ClassTile(class: ClassInfo) -> impl IntoView {
  */
 #[component]
 pub fn ClassesPage() -> impl IntoView {
+    leptos_dom::document().set_title("Encampus - Classes");
     let classes = create_resource(|| {}, |_| async { get_class_list().await.unwrap() });
 
     view! {
-        <Header text="ENCAMPUS".to_string() logo="logo.png".to_string() user="LONGNAME".to_string() />
+        <Header text="ENCAMPUS".to_string() logo="logo.png".to_string()/>
 
         <div class="grid grid-cols-3 gap-4 p-10 mx-20">
             <Suspense

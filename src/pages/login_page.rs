@@ -1,6 +1,6 @@
 use leptos::{ev::SubmitEvent, *};
 
-use crate::database_functions::login_signup;
+use crate::{database_functions::login_signup, util::global_state::GlobalState};
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
@@ -13,14 +13,18 @@ pub fn LoginPage() -> impl IntoView {
             setter(event_target_value(&ev));
         }
     };
+    let global_state = expect_context::<GlobalState>();
 
     // Form submission handler
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
 
         let _login = create_resource(username, |username| async {
-            login_signup(username).await.unwrap()
+            login_signup(username).await.unwrap();
         });
+
+        global_state.user_name.set(Some(username.get()));
+        global_state.authenticated.set(true);
 
         // The variable definition is required
         // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
@@ -33,7 +37,7 @@ pub fn LoginPage() -> impl IntoView {
             <div class="flex flex-col justify-center items-center h-screen">
                 <div class="bg-white p-20 rounded-lg shadow-md">
                     <div class="text-center">
-                        <img src={format!("/{}", "logo.png".to_string())} alt="Logo" class="h-16 mr-0"/>
+                        <img src={format!("/{}", "logo.png")} alt="Logo" class="h-16 mr-0"/>
                     </div>
                     <h1 class="text-2xl font-semibold text-center mb-4">
                         Login
@@ -75,10 +79,7 @@ pub fn LoginPage() -> impl IntoView {
                     </button>
                     <div class="mt-4 text-sm text-gray-600 text-center">
                         Please enter your username.
-                    </div>
-                    // <div class="mt-4 text-sm text-gray-600 text-center">
-                    //     Don't have an account? <a href="#" class="text-blue-500 hover:underline">Sign up here</a>
-                    // </div>
+                        </div>
                 </div>
             </div>
         </form>
