@@ -4,6 +4,7 @@ use crate::{
     pages::class::ClassPage,
     pages::classes::ClassesPage,
     pages::login_page::LoginPage,
+    util::global_state::GlobalState,
 };
 use leptos::*;
 use leptos_meta::*;
@@ -13,6 +14,7 @@ use leptos_router::*;
 pub fn App() -> impl IntoView {
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
+    provide_context(GlobalState::new());
 
     view! {
         // injects a stylesheet into the document <head>
