@@ -8,7 +8,7 @@ use crate::database_functions::ClassInfo;
 #[component]
 pub fn ClassTile(class: ClassInfo) -> impl IntoView {
     view! {
-        <a href=&format!("class/{}", class.id)>
+        <a href=&format!("classes/{}", class.id)>
             <div class="tile bg-white rounded shadow p-4 flex items-center justify-center font-bold h-32">
                 {class.name}
             </div>
