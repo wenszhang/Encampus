@@ -18,7 +18,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl
     view! {
         <div class="bg-white p-4 flex justify-between items-center text-gray-600 ">
             <div class="flex items-center">
-                <img src={format!("/{}", logo_src)} alt="Logo" class="h-8 mr-2"/>
+                <a href="/classes"><img src={format!("/{}", logo_src)} alt="Logo" class="h-8 mr-2"/></a>
                 <a href={header_text_href} class="text-xl font-bold">{text}</a>
             </div>
             <div class="relative p-2 rounded-full border border-gray-300 focus-within:border-blue-500 w-64">
@@ -27,22 +27,22 @@ pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl
                     <MagnifyingGlass size="20px"/>
                 </button>
             </div>
-            <div class="flex items-center relative">
-                <div class="group">
+            <div class="flex items-center ">
+                <div class="group relative">
                     <button class="pr-2">
                         <AnnouncementBell size="1.3rem"/>
                     </button>
-                    <div class="absolute right-full top-full mt-[-0.1rem] shadow-md rounded-lg bg-white invisible
+                    <div class="absolute right-0 top-full mt-[-0.1rem] shadow-md rounded-lg bg-white invisible
                         group-hover:opacity-100 group-hover:scale-100 group-hover:visible">
-                        <ul class="py-1 mx-1 text-gray-700 w-36 text-left text-lg">
-                            <li class="fit-content py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">"Announcement 1"</div>
+                        <ul class="py-1 mx-1 text-gray-700 w-40 text-left text-lg">
+                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                <div class="block">"Class Cancelled!"</div>
                             </li>
-                            <li class="fit-content py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">"Announcement 2"</div>
+                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                <div class="block">"Exam Reminder!"</div>
                             </li>
-                            <li class="fit-content py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">"Announcement 3"</div>
+                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
+                                <div class="block">"Homework Update"</div>
                             </li>
                         </ul>
                     </div>

@@ -6,7 +6,7 @@ use leptos_router::Outlet;
 pub fn Page() -> impl IntoView {
     view! {
         <Title text="Encampus"/>
-        <div class="bg-gray-200 min-h-screen">
+        <div class="flex flex-col bg-gray-200 min-h-screen">
             <Outlet/>
         </div>
     }
