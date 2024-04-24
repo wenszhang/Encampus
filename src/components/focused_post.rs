@@ -66,7 +66,7 @@ pub fn FocusedPost() -> impl IntoView {
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
         async move {
-            match add_reply(reply_info, global_state.user_name.get().unwrap()).await {
+            match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
                 Ok(reply) => {
                     post_and_replies.update(|post_and_replies| {
                         if let Some(outer_option) = post_and_replies.as_mut() {
