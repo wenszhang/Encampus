@@ -157,10 +157,6 @@ fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> im
     }
 }
 
-// #[cfg(feature = "ssr")]
-// #[derive(sqlx::FromRow)]
-// struct UserId(i32);
-
 #[server(AddReply)]
 pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
     use crate::database_functions::UserId;
@@ -187,7 +183,7 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
                 anonymous,
                 replyid;",
     )
-    .bind(user_id.0) //TODO: THIS NEEDS TO BE REPLACED WITH THE ACTUAL AUTHOR ID
+    .bind(user_id.0)
     .bind(reply_info.post_id)
     .bind(reply_info.anonymous)
     .bind(reply_info.contents)
