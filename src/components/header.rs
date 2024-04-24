@@ -16,13 +16,13 @@ pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl
         "/classes".to_string()
     };
     view! {
-        <div class="bg-white p-4 flex justify-between items-center text-gray-600">
+        <div class="bg-white p-4 flex justify-between items-center text-gray-600 ">
             <div class="flex items-center">
                 <img src={format!("/{}", logo_src)} alt="Logo" class="h-8 mr-2"/>
                 <a href={header_text_href} class="text-xl font-bold">{text}</a>
             </div>
-            <div class="relative p-2 rounded-full border border-gray-300 w-64">
-                <input type="text" placeholder="Search something..." class="pl-10 pr-10 w-full"/>
+            <div class="relative p-2 rounded-full border border-gray-300 focus-within:border-blue-500 w-64">
+                <input type="text" placeholder="Search something..." class="pl-5 pr-5 w-full border-none focus:outline-none"/>
                 <button class="absolute inset-y-0 right-0 pr-3 flex items-center">
                     <MagnifyingGlass size="20px"/>
                 </button>

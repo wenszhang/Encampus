@@ -36,8 +36,8 @@ pub fn LoginPage() -> impl IntoView {
         <form on:submit=on_submit>
             <div class="flex flex-col justify-center items-center h-screen">
                 <div class="bg-white p-20 rounded-lg shadow-md">
-                    <div class="text-center">
-                        <img src={format!("/{}", "logo.png")} alt="Logo" class="h-16 mr-0"/>
+                    <div class="flex justify-center items-center">
+                        <img src={format!("/{}", "logo.png")} alt="Logo" class="h-16"/>
                     </div>
                     <h1 class="text-2xl font-semibold text-center mb-4">
                         Login
@@ -51,21 +51,21 @@ pub fn LoginPage() -> impl IntoView {
                             id="username"
                             placeholder="Enter your Username"
                             required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
                             on:input=on_input(set_username)
                             prop:value=username
                         />
                     </div>
-                    <div class="mb-4">
+                    <div class="mb-4 opacity-50">
                         <label for="password" class="block text-gray-700 font-bold mb-2">
                             Password:
-                        </label>
+                        </label >
                         <input
                             type="password"
                             id="password"
                             placeholder="Enter your Password"
                             required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500"
+                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 bg-gray-200 text-gray-500 cursor-not-allowed"
                             on:input=on_input(set_password)
                             prop:value=password
                             disabled

@@ -4,6 +4,10 @@ use leptos_router::use_params;
 use leptos_router::Params;
 use serde::Deserialize;
 use serde::Serialize;
+use crate::svgs::text_area_icon::TextAreaIcon;
+
+
+
 
 use crate::util::global_state::GlobalState;
 
@@ -119,7 +123,9 @@ pub fn FocusedPost() -> impl IntoView {
                     <p>"Answer this post:"</p>
                     <div class="bg-white p-3 rounded-t-lg">
                         // Inner border
-                        <div class="border border-gray-300 rounded-t-lg h-12"></div>
+                        <div class="border border-gray-300 rounded-t-lg h-12 flex items-center">                         
+                            <TextAreaIcon/> 
+                        </div>
                         <textarea class="h-96 w-full resize-none border border-gray-300 rounded-b-lg p-2"
                             prop:value=reply_contents
                             on:input=move |ev| set_reply_contents(event_target_value(&ev))
@@ -144,7 +150,7 @@ pub fn FocusedPost() -> impl IntoView {
                                 <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-full peer-checked:bg-primary"></div>
                             </div>
                         </label>
-                        <button class="bg-gray-500 p-2 rounded-full text-white hover:bg-gray-600"
+                        <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
                             on:click=move |_| add_reply_action.dispatch(
                                 AddReplyInfo {
                                     post_id: post_id().unwrap().post_id,
