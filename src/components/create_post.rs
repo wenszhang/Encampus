@@ -1,7 +1,12 @@
-use crate::{database_functions::add_post, pages::class::ClassId};
+use crate::{
+    database_functions::add_post, database_functions::get_author_id_from_name,
+    pages::class::ClassId,
+};
 use leptos::*;
 use leptos_router::use_params;
 use serde::{Deserialize, Serialize};
+
+use crate::util::global_state::GlobalState;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AddPostInfo {
@@ -10,12 +15,15 @@ pub struct AddPostInfo {
     pub anonymous: bool,
     pub limited_visibility: bool,
     pub classid: i32,
-    pub authorid: i32,
+    //pub authorid: i32,
 }
 
 #[component]
 pub fn CreatePost() -> impl IntoView {
     let class_id = use_params::<ClassId>();
+    let global_state = expect_context::<GlobalState>();
+    let username: String = global_state.user_name.get().unwrap().clone();
+
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
             setter(event_target_value(&ev));
@@ -29,7 +37,9 @@ pub fn CreatePost() -> impl IntoView {
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
         async move {
-            add_post(postInfo).await.unwrap();
+            add_post(postInfo, global_state.user_name.get().unwrap())
+                .await
+                .unwrap();
         }
     });
 
@@ -78,7 +88,6 @@ pub fn CreatePost() -> impl IntoView {
                                 anonymous: anonymous_state(),
                                 limited_visibility: false,
                                 classid: class_id.get().unwrap().class_id,
-                                authorid: 2
                             })
                         >
                         "Post"
