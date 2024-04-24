@@ -1,13 +1,10 @@
+use crate::svgs::text_area_icon::TextAreaIcon;
 use chrono::NaiveDateTime;
 use leptos::*;
 use leptos_router::use_params;
 use leptos_router::Params;
 use serde::Deserialize;
 use serde::Serialize;
-use crate::svgs::text_area_icon::TextAreaIcon;
-
-
-
 
 use crate::util::global_state::GlobalState;
 
@@ -123,8 +120,8 @@ pub fn FocusedPost() -> impl IntoView {
                     <p>"Answer this post:"</p>
                     <div class="bg-white p-3 rounded-t-lg">
                         // Inner border
-                        <div class="border border-gray-300 rounded-t-lg h-12 flex items-center">                         
-                            <TextAreaIcon/> 
+                        <div class="border border-gray-300 rounded-t-lg h-12 flex items-center">
+                            <TextAreaIcon/>
                         </div>
                         <textarea class="h-96 w-full resize-none border border-gray-300 rounded-b-lg p-2"
                             prop:value=reply_contents
