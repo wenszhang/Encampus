@@ -143,8 +143,9 @@ pub fn FocusedPost() -> impl IntoView {
                                     prop:checked=reply_anonymous_state
                                     on:change=move |_| set_reply_anonymous_state(!reply_anonymous_state())
                                 />
-                                <div class="block h-8 rounded-full bg-gray-500 w-14"></div>
-                                <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-full peer-checked:bg-primary"></div>
+                                <div class="flex items-center justify-evenly text-xs h-8 rounded-full bg-gray-500 w-16 transition-colors peer-checked:bg-green-500"><span class="[&:not(:peer-checked)]:invisible">"On"</span>  <span class="peer-checked:invisible">"Off"</span> </div>
+                                <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-8 peer-checked:bg-primary"></div>
+                                
                             </div>
                         </label>
                         <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
