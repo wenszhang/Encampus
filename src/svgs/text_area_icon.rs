@@ -1,17 +1,15 @@
 use leptos::{component, view, IntoView};
 
 #[component]
-pub fn TextAreaIcon(
-  
-) -> impl IntoView {
+pub fn TextAreaIcon() -> impl IntoView {
     view! {
         <div class="flex justify-center pl-5">
-            <div class="flex items-center h-12 cursor-not-allowed"> 
-                // Bold 
+            <div class="flex items-center h-12 cursor-not-allowed">
+                // Bold
                 <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
                     <path d="M4 2h4.5a3.501 3.501 0 0 1 2.852 5.53A3.499 3.499 0 0 1 9.5 14H4a1 1 0 0 1-1-1V3a1 1 0 0 1 1-1m1 7v3h4.5a1.5 1.5 0 0 0 0-3Zm3.5-2a1.5 1.5 0 0 0 0-3H5v3Z"/>
                 </svg>
-            
+
                 // Image Icon
                 <svg class="w-5 h-5 mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
                     <path d="M19.999 4h-16c-1.103 0-2 .897-2 2v12c0 1.103.897 2 2 2h16c1.103 0 2-.897 2-2V6c0-1.103-.897-2-2-2m-13.5 3a1.5 1.5 0 1 1 0 3a1.5 1.5 0 0 1 0-3m5.5 10h-7l4-5l1.5 2l3-4l5.5 7z"/>
