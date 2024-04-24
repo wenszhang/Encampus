@@ -24,7 +24,7 @@ pub fn ClassPage() -> impl IntoView {
             .unwrap_or_default()
     });
 
-    let class_name = create_resource(class_id, |class_id| async {
+    let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
             .await
             .unwrap_or_else(|_| "Failed".to_string())

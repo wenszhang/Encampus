@@ -34,9 +34,7 @@ pub fn ClassesPage() -> impl IntoView {
         <Header text="ENCAMPUS".to_string() logo={None} class_id={None} />
 
         <div class="grid grid-cols-3 gap-4 p-10 mx-20">
-            <Suspense
-                fallback=move || view! { <p>"Loading..."</p> }
-            >
+            <Suspense fallback=move || view! { <p>"Loading..."</p> }>
                 <For each=move || classes().unwrap_or_default() key=|class| class.id let:class>
                     <ClassTile class={class} />
                 </For>

@@ -43,10 +43,19 @@ pub fn FocusedPost() -> impl IntoView {
     let post_id = use_params::<PostId>();
 
     let post_and_replies = create_resource(post_id, |post_id| async {
-        get_post(post_id.unwrap().post_id).await.unwrap()
+        if let Ok(post_id) = post_id {
+            Some(get_post(post_id.post_id).await.unwrap())
+        } else {
+            None
+        }
     });
-    let post = move || post_and_replies().map(|tuple| tuple.0);
-    let replies = move || post_and_replies().map(|tuple| tuple.1).unwrap_or_default();
+    let post = move || post_and_replies().flatten().map(|tuple| tuple.0);
+    let replies = move || {
+        post_and_replies()
+            .flatten()
+            .map(|tuple| tuple.1)
+            .unwrap_or_default()
+    };
 
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
@@ -57,9 +66,11 @@ pub fn FocusedPost() -> impl IntoView {
             match add_reply(reply_info).await {
                 Ok(reply) => {
                     post_and_replies.update(|post_and_replies| {
-                        post_and_replies
-                            .iter_mut()
-                            .for_each(|tuple| tuple.1.push(reply.clone()))
+                        if let Some(outer_option) = post_and_replies.as_mut() {
+                            if let Some(post_and_replies) = outer_option.as_mut() {
+                                post_and_replies.1.push(reply.clone())
+                            }
+                        }
                     });
                     set_reply_contents(String::default());
                 }
