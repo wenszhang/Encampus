@@ -5,6 +5,8 @@ use leptos_router::Params;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::util::global_state::GlobalState;
+
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
     pub post_id: i32,
@@ -41,6 +43,7 @@ pub struct AddReplyInfo {
 pub fn FocusedPost() -> impl IntoView {
     // Fetch post id from route in the format of "class/:class_id/:post_id"
     let post_id = use_params::<PostId>();
+    let global_state = expect_context::<GlobalState>();
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         get_post(post_id.unwrap().post_id).await.unwrap()
@@ -54,7 +57,7 @@ pub fn FocusedPost() -> impl IntoView {
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
         async move {
-            match add_reply(reply_info).await {
+            match add_reply(reply_info, global_state.user_name.get().unwrap()).await {
                 Ok(reply) => {
                     post_and_replies.update(|post_and_replies| {
                         post_and_replies
@@ -154,14 +157,25 @@ fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> im
     }
 }
 
+// #[cfg(feature = "ssr")]
+// #[derive(sqlx::FromRow)]
+// struct UserId(i32);
+
 #[server(AddReply)]
-pub async fn add_reply(reply_info: AddReplyInfo) -> Result<Reply, ServerFnError> {
+pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
+    use crate::database_functions::UserId;
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to add Reply".to_string(),
     ))?;
+
+    let user_id: UserId = sqlx::query_as("select id from users where name = $1")
+        .bind(user)
+        .fetch_one(&pool)
+        .await
+        .expect("select should work");
 
     let newreply: Reply = sqlx::query_as(
         "INSERT INTO replies (time, authorid, postid, anonymous, contents) 
@@ -173,7 +187,7 @@ pub async fn add_reply(reply_info: AddReplyInfo) -> Result<Reply, ServerFnError>
                 anonymous,
                 replyid;",
     )
-    .bind(2) //TODO: THIS NEEDS TO BE REPLACED WITH THE ACTUAL AUTHOR ID
+    .bind(user_id.0) //TODO: THIS NEEDS TO BE REPLACED WITH THE ACTUAL AUTHOR ID
     .bind(reply_info.post_id)
     .bind(reply_info.anonymous)
     .bind(reply_info.contents)

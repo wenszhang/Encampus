@@ -1,7 +1,4 @@
-use crate::{
-    database_functions::add_post, database_functions::get_author_id_from_name,
-    pages::class::ClassId,
-};
+use crate::{database_functions::add_post, pages::class::ClassId};
 use leptos::*;
 use leptos_router::use_params;
 use serde::{Deserialize, Serialize};
@@ -22,7 +19,6 @@ pub struct AddPostInfo {
 pub fn CreatePost() -> impl IntoView {
     let class_id = use_params::<ClassId>();
     let global_state = expect_context::<GlobalState>();
-    let username: String = global_state.user_name.get().unwrap().clone();
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {

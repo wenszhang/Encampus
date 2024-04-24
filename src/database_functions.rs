@@ -170,9 +170,8 @@ pub async fn add_post(new_post_info: AddPostInfo, user: String) -> Result<(), Se
     Ok(())
 }
 
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct UserId(i32);
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct UserId(pub i32);
 
 #[server(GetAuthorIDFromName)]
 pub async fn get_author_id_from_name(name: String) -> Result<i32, ServerFnError> {
