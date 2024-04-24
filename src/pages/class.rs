@@ -23,6 +23,7 @@ pub fn ClassPage() -> impl IntoView {
             .await
             .unwrap_or_default()
     });
+    provide_context(posts);
 
     let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
