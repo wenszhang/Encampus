@@ -7,13 +7,19 @@ use leptos::*;
 use crate::util::global_state::GlobalState;
 
 #[component]
-pub fn Header(text: String, logo: String) -> impl IntoView {
+pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
+    let logo_src = logo.as_deref().unwrap_or("logo.png");
+    let header_text_href = if let Some(id) = &class_id {
+        format!("/classes/{}", id)
+    } else {
+        "/classes".to_string()
+    };
     view! {
         <div class="bg-white p-4 flex justify-between items-center text-gray-600">
             <div class="flex items-center">
-                <img src={format!("/{}", logo)} alt="Logo" class="h-8 mr-2"/>
-                <span class="text-xl font-bold">{text}</span>
+                <img src={format!("/{}", logo_src)} alt="Logo" class="h-8 mr-2"/>
+                <a href={header_text_href} class="text-xl font-bold">{text}</a>
             </div>
             <div class="relative p-2 rounded-full border border-gray-300 w-64">
                 <input type="text" placeholder="Search something..." class="pl-10 pr-10 w-full"/>
