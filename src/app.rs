@@ -1,5 +1,5 @@
 use crate::{
-    components::{focused_post::FocusedPost, page::Page},
+    components::{create_post::CreatePost, focused_post::FocusedPost, page::Page},
     error_template::{AppError, ErrorTemplate},
     pages::{class::ClassPage, classes::ClassesPage, dev::Dev, home::Home, login_page::LoginPage},
     util::global_state::GlobalState,
@@ -40,7 +40,7 @@ pub fn App() -> impl IntoView {
                             <Route path="/classes" view=ClassesPage/>
                             <Route path="/classes/:class_id" view=ClassPage>
                                 <Route path="" view=|| {}/>
-                                // <Route path="/new" view=CreatePost/>
+                                <Route path="/new" view=CreatePost/>
                                 <Route path="/:post_id" view=FocusedPost/>
                             </Route>
                         </Route>

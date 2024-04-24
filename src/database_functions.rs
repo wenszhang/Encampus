@@ -1,6 +1,8 @@
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
+use crate::components::create_post::AddPostInfo;
+
 /**
  * Struct to hold the class info
  */
@@ -14,7 +16,7 @@ pub struct ClassInfo {
 /**
  * Struct to hold the post info
  */
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
     pub title: String,
@@ -140,14 +142,7 @@ pub async fn login_signup(name: String) -> Result<(), ServerFnError> {
  * Add a post to a class
  */
 #[server(AddPost)]
-pub async fn add_post(
-    title: String,
-    contents: String,
-    anonymous: bool,
-    limited_visibility: bool,
-    classid: i32,
-    authorid: i32,
-) -> Result<(), ServerFnError> {
+pub async fn add_post(new_post_info: AddPostInfo, user: String) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -155,16 +150,43 @@ pub async fn add_post(
         "Unable to complete Request".to_string(),
     ))?;
 
+    let user_id: UserId = sqlx::query_as("select id from users where name = $1")
+        .bind(user)
+        .fetch_one(&pool)
+        .await
+        .expect("select should work");
+
     sqlx::query("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6);")
-    .bind(title)
-    .bind(contents)
-    .bind(authorid)
-    .bind(anonymous)
-    .bind(limited_visibility)
-    .bind(classid)
-    .execute(&pool)
-    .await
-    .expect("failed adding post");
+        .bind(new_post_info.title)
+        .bind(new_post_info.contents)
+        .bind(user_id.0)
+        .bind(new_post_info.anonymous)
+        .bind(new_post_info.limited_visibility)
+        .bind(new_post_info.classid)
+        .execute(&pool)
+        .await
+        .expect("failed adding post");
 
     Ok(())
+}
+
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct UserId(pub i32);
+
+#[server(GetAuthorIDFromName)]
+pub async fn get_author_id_from_name(name: String) -> Result<i32, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let UserId(user) = sqlx::query_as("select id from users where name = $1")
+        .bind(name)
+        .fetch_one(&pool)
+        .await
+        .expect("select should work");
+
+    Ok(user)
 }
