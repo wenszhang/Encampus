@@ -50,11 +50,14 @@ pub fn ClassPage() -> impl IntoView {
         <Suspense fallback=move || view! { <p>"Loading..."</p> } >
             <Header text={class_name().unwrap_or_default()} logo={None} class_id={class_id.get().ok().map(|c| c.class_id)}/>
         </Suspense>
-        <A href="new">
-            <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                "Post +"
-            </button>
-        </A>
+        <div class="flex justify-end pt-8 mx-20">
+            <A href="new">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    "Post +"
+                </button>
+            </A>
+        </div>
+
         <div class="flex align mx-20 my-10 flex-col gap-4">
             <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
 
