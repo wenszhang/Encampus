@@ -1,5 +1,5 @@
 use crate::{database_functions::add_post, pages::class::ClassId};
-use leptos::*;
+use leptos::{ev::MouseEvent, *};
 use leptos_router::use_params;
 use serde::{Deserialize, Serialize};
 
@@ -33,58 +33,66 @@ pub fn CreatePost() -> impl IntoView {
         }
     });
 
+    let on_submit = move |event: MouseEvent| {
+        event.prevent_default();
+
+        add_post_action.dispatch(AddPostInfo {
+            title: post_title(),
+            contents: post_contents(),
+            anonymous: anonymous_state(),
+            limited_visibility: false,
+            classid: class_id.get().unwrap().class_id,
+            authorid: 2,
+        });
+
+        let back_nav = format!("/classes/{}", class_id.get().unwrap().class_id);
+        let navigate = leptos_router::use_navigate();
+        navigate(&back_nav, Default::default());
+    };
+
     view! {
         <DarkenedCard class="p-5 flex flex-col gap-2">
-                    <p>"Create New Post"</p>
-                    <div class="bg-white p-3 rounded-t-lg">
-                        // Inner border
-                        <p>"Title:"</p>
-                        <textarea class="h-12 w-full resize-none border border-gray-300 rounded-t-lg p-2"
-                            on:input=on_input(set_post_title)
-                            prop:value=post_title
-                        >
-                        </textarea>
-                        //<div class="border border-gray-300 rounded-t-lg h-12"></div>
-                        <p>"Contents:"</p>
-                        <textarea class="h-96 w-full resize-none border border-gray-300 rounded-b-lg p-2"
-                            on:input=on_input(set_post_contents)
-                            prop:value=post_contents
-                        >
-                        </textarea>
+            <p>"Create New Post"</p>
+            <div class="bg-white p-3 rounded-t-lg">
+                // Inner border
+                <p>"Title:"</p>
+                <textarea class="h-12 w-full resize-none border border-gray-300 rounded-t-lg p-2"
+                    on:input=on_input(set_post_title)
+                    prop:value=post_title
+                >
+                </textarea>
+                //<div class="border border-gray-300 rounded-t-lg h-12"></div>
+                <p>"Contents:"</p>
+                <textarea class="h-96 w-full resize-none border border-gray-300 rounded-b-lg p-2"
+                    on:input=on_input(set_post_contents)
+                    prop:value=post_contents
+                >
+                </textarea>
+            </div>
+            <div class="flex justify-end gap-5">
+                <label
+                for="anonymousToggle"
+                class="flex items-center cursor-pointer select-none"
+                >
+                    <span class="mx-2">"Anonymous:"</span>
+                    <div class="relative">
+                        <input
+                            type="checkbox"
+                            id="anonymousToggle"
+                            class="peer sr-only"
+                            prop:checked=anonymous_state
+                            on:change=move |_| set_anonymous_state(!anonymous_state())
+                        />
+                        <div class="block h-8 rounded-full bg-gray-500 w-14"></div>
+                        <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-full peer-checked:bg-primary"></div>
                     </div>
-                    <div class="flex justify-end gap-5">
-                        <label
-                        for="anonymousToggle"
-                        class="flex items-center cursor-pointer select-none"
-                        >
-                            <span class="mx-2">"Anonymous:"</span>
-                            <div class="relative">
-                                <input
-                                    type="checkbox"
-                                    id="anonymousToggle"
-                                    class="peer sr-only"
-                                    prop:checked=anonymous_state
-                                    on:change=move |_| set_anonymous_state(!anonymous_state())
-                                />
-                                <div class="block h-8 rounded-full bg-gray-500 w-14"></div>
-                                <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-full peer-checked:bg-primary"></div>
-                            </div>
-                        </label>
-                        <button type="submit" class="bg-gray-500 p-2 rounded-full text-white hover:bg-gray-600"
-                        on:click=move |_| add_post_action.dispatch(
-                            AddPostInfo {
-                                title: post_title(),
-                                contents: post_contents(),
-                                anonymous: anonymous_state(),
-                                limited_visibility: false,
-                                classid: class_id.get().unwrap().class_id,
-                                authorid: 2
-                            })
-                        >
-                        "Post"
-                        </button>
-                    </div>
-                </DarkenedCard>
+                </label>
+                <button type="submit" class="bg-gray-500 p-2 rounded-full text-white hover:bg-gray-600"
+                on:click=on_submit>
+                "Post"
+                </button>
+            </div>
+        </DarkenedCard>
     }
 }
 
