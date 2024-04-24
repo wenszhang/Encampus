@@ -252,7 +252,8 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 END as author_name, 
                 anonymous,
                 replyid
-            FROM replies JOIN users ON replies.authorid = users.id WHERE replies.postid = $1"
+            FROM replies JOIN users ON replies.authorid = users.id WHERE replies.postid = $1
+            ORDER BY time;"
         )
         .bind(post_id)
         .fetch_all(&pool)

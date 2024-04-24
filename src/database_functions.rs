@@ -74,12 +74,13 @@ pub async fn get_posts(class_id: i32) -> Result<Vec<Post>, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let rows: Vec<Post> =
-        sqlx::query_as("select title, postid as post_id from posts where posts.classid = $1")
-            .bind(class_id)
-            .fetch_all(&pool)
-            .await
-            .expect("select should work");
+    let rows: Vec<Post> = sqlx::query_as(
+        "select title, postid as post_id from posts where posts.classid = $1 ORDER BY timestamp;",
+    )
+    .bind(class_id)
+    .fetch_all(&pool)
+    .await
+    .expect("select should work");
 
     Ok(rows)
 }
