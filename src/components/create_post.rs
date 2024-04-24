@@ -1,6 +1,9 @@
-use crate::{database_functions::add_post, pages::class::ClassId};
+use crate::{
+    database_functions::{add_post, Post},
+    pages::class::ClassId,
+};
 use leptos::*;
-use leptos_router::use_params;
+use leptos_router::{use_params, ParamsError};
 use serde::{Deserialize, Serialize};
 
 use crate::util::global_state::GlobalState;
@@ -19,6 +22,7 @@ pub struct AddPostInfo {
 pub fn CreatePost() -> impl IntoView {
     let class_id = use_params::<ClassId>();
     let global_state = expect_context::<GlobalState>();
+    let posts = expect_context::<Resource<Result<ClassId, ParamsError>, Vec<Post>>>();
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
@@ -33,9 +37,27 @@ pub fn CreatePost() -> impl IntoView {
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
         async move {
-            add_post(postInfo, global_state.user_name.get().unwrap())
-                .await
-                .unwrap();
+            match add_post(postInfo, global_state.user_name.get_untracked().unwrap()).await {
+                Ok(post) => {
+                    let post_id = post.post_id;
+                    posts.update(|posts| {
+                        if let Some(posts) = posts {
+                            posts.push(post);
+                        }
+                    });
+                    let navigate = leptos_router::use_navigate();
+                    navigate(
+                        format!(
+                            "/classes/{}/{}",
+                            class_id.get_untracked().unwrap().class_id,
+                            post_id
+                        )
+                        .as_str(),
+                        Default::default(),
+                    );
+                }
+                Err(_) => logging::error!("Attempt to post post failed. Please try again"),
+            }
         }
     });
 

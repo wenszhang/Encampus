@@ -1,4 +1,5 @@
 use crate::svgs::text_area_icon::TextAreaIcon;
+use chrono::FixedOffset;
 use chrono::NaiveDateTime;
 use leptos::*;
 use leptos_router::use_params;
@@ -67,7 +68,7 @@ pub fn FocusedPost() -> impl IntoView {
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
         async move {
-            match add_reply(reply_info, global_state.user_name.get().unwrap()).await {
+            match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
                 Ok(reply) => {
                     post_and_replies.update(|post_and_replies| {
                         if let Some(outer_option) = post_and_replies.as_mut() {
@@ -93,7 +94,7 @@ pub fn FocusedPost() -> impl IntoView {
                     <p class="font-light text-sm">
                         "Posted by "
                         {move || post().map(|post| post.author_name)}
-                        {move || post().map(|post| format!("{}", post.timestamp.format(" at %l %p on %b %-d")))}
+                        {move || post().map(|post| format!("{}", post.timestamp.checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap()).unwrap().format(" at %l %p on %b %-d")))}
                     </p>
                     <br/>
                     <p>{move || post().map(|post| post.contents)}</p>
@@ -108,7 +109,7 @@ pub fn FocusedPost() -> impl IntoView {
                         <p class="font-bold">
                             "Answered by "
                             {reply.author_name}
-                            {format!("{}", reply.time.format(" at %l %p on %b %-d"))}
+                            {format!("{}", reply.time.checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap()).unwrap().format(" at %l %p on %b %-d"))}
                             ":"
                         </p>
                         <br/>

@@ -142,7 +142,7 @@ pub async fn login_signup(name: String) -> Result<(), ServerFnError> {
  * Add a post to a class
  */
 #[server(AddPost)]
-pub async fn add_post(new_post_info: AddPostInfo, user: String) -> Result<(), ServerFnError> {
+pub async fn add_post(new_post_info: AddPostInfo, user: String) -> Result<Post, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -156,18 +156,21 @@ pub async fn add_post(new_post_info: AddPostInfo, user: String) -> Result<(), Se
         .await
         .expect("select should work");
 
-    sqlx::query("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6);")
+    let post = sqlx::query_as("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6)
+                        RETURNING                 
+                        title, 
+                        postid as post_id;")
         .bind(new_post_info.title)
         .bind(new_post_info.contents)
         .bind(user_id.0)
         .bind(new_post_info.anonymous)
         .bind(new_post_info.limited_visibility)
         .bind(new_post_info.classid)
-        .execute(&pool)
+        .fetch_one(&pool)
         .await
         .expect("failed adding post");
 
-    Ok(())
+    Ok(post)
 }
 
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
