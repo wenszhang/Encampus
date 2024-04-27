@@ -1,3 +1,6 @@
+/**
+ * Component for the login page where users can login to their account
+ */
 use leptos::{ev::SubmitEvent, *};
 
 use crate::{database_functions::login_signup, util::global_state::GlobalState};

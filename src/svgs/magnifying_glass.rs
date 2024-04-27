@@ -1,3 +1,6 @@
+/**
+ * Magnifying Glass component, used in search bar
+ */
 use leptos::{component, view, IntoView};
 
 #[component]

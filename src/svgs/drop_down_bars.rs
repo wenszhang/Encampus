@@ -1,3 +1,6 @@
+/**
+ * A hamburger menu icon svg with custom size
+ */
 use leptos::*;
 
 /// A hamburger menu icon svg with custom size

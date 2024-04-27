@@ -1,3 +1,6 @@
+/**
+ * This file contains all the database functions that are used in the server
+ */
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 

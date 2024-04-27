@@ -1,3 +1,6 @@
+/**
+ * Component view and logic for the header at the top of the page of the site
+ */
 use crate::svgs::announcement_bell::AnnouncementBell;
 use crate::svgs::drop_down_bars::DropDownBars;
 use crate::svgs::magnifying_glass::MagnifyingGlass;

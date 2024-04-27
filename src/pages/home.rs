@@ -1,3 +1,6 @@
+/**
+ * Page to show the home page, first page users see when they visit the site
+ */
 use leptos::{component, view, IntoView};
 use leptos_router::A;
 

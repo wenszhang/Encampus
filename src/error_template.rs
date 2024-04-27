@@ -1,3 +1,6 @@
+/**
+ * This file contains the ErrorTemplate component which is used to display errors in the application.
+ */
 use http::status::StatusCode;
 use leptos::*;
 use thiserror::Error;

@@ -1,3 +1,7 @@
+/**
+* Page getting and displaying all classes registered to the user
+
+*/
 use leptos::{component, create_resource, view, For, IntoView, Suspense};
 use leptos::{create_effect, leptos_dom};
 

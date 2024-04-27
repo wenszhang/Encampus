@@ -1,3 +1,6 @@
+/**
+ * This file contains the CreatePost component, which is a form that allows users to create a new post.
+ */
 use crate::{
     database_functions::{add_post, Post},
     pages::class::ClassId,

@@ -1,3 +1,6 @@
+/**
+ * Page getting and displaying all posts in a class
+ */
 use crate::components::header::Header;
 use crate::components::question_tile::QuestionTile;
 use crate::database_functions::get_class_name;
