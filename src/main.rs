@@ -45,9 +45,9 @@ cfg_if::cfg_if! {
 
             let pool = PgPoolOptions::new()
                 .max_connections(5)
-                .connect("postgres://dev:encampus@encampus.dev/encampusdb")
+                .connect("postgres://dev:encampus@143.198.110.69/encampusdb")
                 .await
-                .expect("Database at encampus.dev should be live and accessible");
+                .expect("Database at 143.198.110.69 should be live and accessible");
 
             // Setting get_configuration(None) means we'll be using cargo-leptos's env values
             // For deployment these variables are:
