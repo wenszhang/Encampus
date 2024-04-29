@@ -1,3 +1,6 @@
+/**
+ * This file is the main entry point for the application.
+ */
 use crate::{
     components::{create_post::CreatePost, focused_post::FocusedPost, page::Page},
     error_template::{AppError, ErrorTemplate},

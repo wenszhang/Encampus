@@ -1,3 +1,6 @@
+/**
+ * Page component
+ */
 use leptos::{component, view, IntoView};
 use leptos_meta::Title;
 use leptos_router::Outlet;

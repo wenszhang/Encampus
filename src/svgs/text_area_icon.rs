@@ -1,3 +1,6 @@
+/**
+ * Component for the text area used in text editor
+ */
 use leptos::{component, view, IntoView};
 
 #[component]

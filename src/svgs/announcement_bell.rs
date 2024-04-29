@@ -1,3 +1,6 @@
+/**
+ * Component for the announcement bell icon.
+ */
 use leptos::{component, view, IntoView};
 
 #[component]
