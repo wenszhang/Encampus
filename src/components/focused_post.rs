@@ -9,6 +9,7 @@ use leptos_router::use_params;
 use leptos_router::Params;
 use serde::Deserialize;
 use serde::Serialize;
+use crate::components::replies::Replies;
 
 use crate::util::global_state::GlobalState;
 
@@ -30,11 +31,11 @@ pub struct Post {
 #[derive(Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Reply {
-    time: NaiveDateTime,
-    contents: String,
-    author_name: String,
-    anonymous: bool,
-    replyid: i32,
+    pub time: NaiveDateTime,
+    pub contents: String,
+    pub author_name: String,
+    pub anonymous: bool,
+    pub replyid: i32,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -66,6 +67,7 @@ pub fn FocusedPost() -> impl IntoView {
             .map(|tuple| tuple.1)
             .unwrap_or_default()
     };
+    let sorted_replies = replies.clone();
 
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
@@ -130,23 +132,7 @@ pub fn FocusedPost() -> impl IntoView {
                         }
                     }}
                 </div>
-                <For
-                each=replies
-                key=|reply| reply.replyid
-                let:reply
-                >
-                    <DarkenedCard class="p-5 ">
-                        <p class="font-bold">
-                            "Answered by "
-                            {reply.author_name}
-                            {format!("{}", reply.time.checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap()).unwrap().format(" at %l %p on %b %-d"))}
-                            ":"
-                        </p>
-                        <br/>
-                        <p>{reply.contents}</p>
-                        // TODO use the reply's timestamp, author's name and anonymous info
-                    </DarkenedCard>
-                </For>
+                <Replies get_replies=sorted_replies() sort=order_option></Replies>
                 <DarkenedCard class="p-5 flex flex-col gap-2">
                     <p>"Answer this post:"</p>
                     <div class="bg-white p-3 rounded-t-lg">
@@ -197,7 +183,7 @@ pub fn FocusedPost() -> impl IntoView {
 }
 
 #[component]
-fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
+pub fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
     view! {
         <div class=format!("bg-[#EEEEEE] rounded-xl {}", class)>{children()}</div>
     }
