@@ -50,6 +50,8 @@ pub fn FocusedPost() -> impl IntoView {
     let post_id = use_params::<PostId>();
     let global_state = expect_context::<GlobalState>();
 
+    let (order_option, set_value) = create_signal("Newest First".to_string());
+
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
             Some(get_post(post_id.post_id).await.unwrap())
@@ -103,6 +105,31 @@ pub fn FocusedPost() -> impl IntoView {
                     <p>{move || post().map(|post| post.contents)}</p>
                     // TODO use the post's timestamp, author_name and anonymous info
                 </DarkenedCard>
+                <div>
+                    {move || if replies().is_empty() {
+                        view! {
+                            <span>
+                                <b>"No Replies Yet" </b>
+                            </span>
+                        }
+                    } else {
+                        view! {
+                            <span class="flex justify-between inline-block">
+                                <b class="inline-block"> "Replies:" </b>
+                                <span class="inline-block">
+                                   <select on:change=move |ev| {
+                                        let new_value = event_target_value(&ev);
+                                        set_value(new_value);
+                                    }>
+                                        <SelectOrderOption order_option is="Newest First"/>
+                                        <SelectOrderOption order_option is="Oldest First"/>
+                                        // <SelectOrderOption order_option is="By Rating"/>
+                                    </select>
+                                </span>
+                            </span>
+                        }
+                    }}
+                </div>
                 <For
                 each=replies
                 key=|reply| reply.replyid
@@ -173,6 +200,18 @@ pub fn FocusedPost() -> impl IntoView {
 fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
     view! {
         <div class=format!("bg-[#EEEEEE] rounded-xl {}", class)>{children()}</div>
+    }
+}
+
+#[component]
+pub fn SelectOrderOption(is: &'static str, order_option: ReadSignal<String>) -> impl IntoView {
+    view! {
+        <option
+            order_option=is
+            selected=move || order_option() == is
+        >
+            {is}
+        </option>
     }
 }
 
