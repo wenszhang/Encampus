@@ -67,7 +67,6 @@ pub fn FocusedPost() -> impl IntoView {
             .map(|tuple| tuple.1)
             .unwrap_or_default()
     };
-    let sorted_replies = replies.clone();
 
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
@@ -132,7 +131,7 @@ pub fn FocusedPost() -> impl IntoView {
                         }
                     }}
                 </div>
-                <Replies get_replies=sorted_replies() sort=order_option></Replies>
+                <Replies get_replies=(replies.clone())() sort=order_option></Replies>
                 <DarkenedCard class="p-5 flex flex-col gap-2">
                     <p>"Answer this post:"</p>
                     <div class="bg-white p-3 rounded-t-lg">

@@ -8,18 +8,24 @@ use crate::components::focused_post::DarkenedCard;
 
 #[component]
 pub fn Replies(get_replies: Vec<Reply>, sort: ReadSignal<String>) -> impl IntoView {
-    let sort_order = sort.get();
-    let mut get_replies_clone = get_replies.clone();
+    let get_replies_clone = get_replies.clone();
 
-    match sort_order.as_str() {
-        "Oldest First" => get_replies_clone.sort_by(|a, b| a.time.cmp(&b.time)),
-        "Newest First" => get_replies_clone.sort_by(|a, b| b.time.cmp(&a.time)),
-        _ => (), // If the sort order is not recognized, do nothing
-    }
+    let sorted_replies = move || {
+        let sort_order = sort.get();
+        let mut sorted_replies = get_replies_clone.clone();
+
+        match sort_order.as_str() {
+            "Oldest First" => sorted_replies.sort_by(|a, b| a.time.cmp(&b.time)),
+            "Newest First" => sorted_replies.sort_by(|a, b| b.time.cmp(&a.time)),
+            _ => (),
+        }
+
+        sorted_replies
+    };
 
     view! {
         <For
-            each=move || get_replies_clone.clone()
+            each=sorted_replies
             key=|reply| reply.replyid
             let:reply
         >
