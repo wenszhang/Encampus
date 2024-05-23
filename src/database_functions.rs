@@ -24,6 +24,7 @@ pub struct ClassInfo {
 pub struct Post {
     pub title: String,
     pub post_id: i32,
+    pub resolved: bool,
 }
 
 /**
@@ -78,7 +79,7 @@ pub async fn get_posts(class_id: i32) -> Result<Vec<Post>, ServerFnError> {
     ))?;
 
     let rows: Vec<Post> = sqlx::query_as(
-        "select title, postid as post_id from posts where posts.classid = $1 ORDER BY timestamp;",
+        "select title, postid as post_id, resolved from posts where posts.classid = $1 ORDER BY timestamp;",
     )
     .bind(class_id)
     .fetch_all(&pool)
