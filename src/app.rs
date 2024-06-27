@@ -3,8 +3,12 @@
  */
 use crate::{
     data::global_state::GlobalState,
-    error_template::{AppError, ErrorTemplate},
-    pages::global_components::{create_post::CreatePost, focused_post::FocusedPost, page::Page},
+    pages::global_components::{
+        create_post::CreatePost,
+        error_template::{AppError, ErrorTemplate},
+        focused_post::FocusedPost,
+        page::Page,
+    },
     pages::{
         class::ClassPage, classes::ClassesPage, dev_pages::dev::Dev, home::Home,
         login_page::LoginPage,
