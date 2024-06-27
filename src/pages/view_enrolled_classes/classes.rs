@@ -5,8 +5,8 @@
 use leptos::{component, create_resource, view, For, IntoView, Suspense};
 use leptos::{create_effect, leptos_dom};
 
-use crate::data::database::database_functions::get_class_list;
-use crate::data::database::database_functions::ClassInfo;
+use crate::data::database::class_functions::get_class_list;
+use crate::data::database::class_functions::ClassInfo;
 use crate::pages::global_components::header::Header;
 
 #[component]

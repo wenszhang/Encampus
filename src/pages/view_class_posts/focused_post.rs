@@ -178,7 +178,7 @@ fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> im
 
 #[server(AddReply)]
 pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
-    use crate::data::database::database_functions::UserId;
+    use crate::data::database::user_functions::UserId;
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
