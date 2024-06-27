@@ -1,10 +1,8 @@
+use super::class::ClassId;
 /**
  * This file contains the CreatePost component, which is a form that allows users to create a new post.
  */
-use crate::{
-    data::database::database_functions::{add_post, Post},
-    pages::class::ClassId,
-};
+use crate::data::database::database_functions::{add_post, Post};
 use leptos::*;
 use leptos_router::{use_params, ParamsError};
 use serde::{Deserialize, Serialize};

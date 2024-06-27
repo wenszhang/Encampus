@@ -1,10 +1,7 @@
+use super::question_tile::QuestionTile;
 use crate::data::database::database_functions::get_class_name;
 use crate::data::database::database_functions::get_posts;
-/**
- * Page getting and displaying all posts in a class
- */
 use crate::pages::global_components::header::Header;
-use crate::pages::global_components::question_tile::QuestionTile;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
 
@@ -14,7 +11,7 @@ pub struct ClassId {
 }
 
 /**
- * Page showing all questions in a class
+ * Page getting and displaying all posts in a class
  */
 #[component]
 pub fn ClassPage() -> impl IntoView {
