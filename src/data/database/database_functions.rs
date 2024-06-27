@@ -4,7 +4,7 @@
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
-use crate::components::create_post::AddPostInfo;
+use crate::pages::global_components::create_post::AddPostInfo;
 
 /**
  * Struct to hold the class info

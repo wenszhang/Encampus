@@ -1,10 +1,10 @@
+use crate::data::database::database_functions::get_class_name;
+use crate::data::database::database_functions::get_posts;
 /**
  * Page getting and displaying all posts in a class
  */
-use crate::components::header::Header;
-use crate::components::question_tile::QuestionTile;
-use crate::database_functions::get_class_name;
-use crate::database_functions::get_posts;
+use crate::pages::global_components::header::Header;
+use crate::pages::global_components::question_tile::QuestionTile;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
 

@@ -1,4 +1,4 @@
-use crate::svgs::drop_down_bars::*;
+use crate::static_files::images::svgs::drop_down_bars::*;
 use leptos::{
     component, create_resource, server, view, IntoView, ServerFnError, SignalSet, Suspense,
 };

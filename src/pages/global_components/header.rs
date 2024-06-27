@@ -1,13 +1,13 @@
 /**
  * Component view and logic for the header at the top of the page of the site
  */
-use crate::svgs::announcement_bell::AnnouncementBell;
-use crate::svgs::drop_down_bars::DropDownBars;
-use crate::svgs::magnifying_glass::MagnifyingGlass;
+use crate::static_files::images::svgs::announcement_bell::AnnouncementBell;
+use crate::static_files::images::svgs::drop_down_bars::DropDownBars;
+use crate::static_files::images::svgs::magnifying_glass::MagnifyingGlass;
 // use crate::components::announcements::Announcements;
 use leptos::*;
 
-use crate::util::global_state::GlobalState;
+use crate::data::global_state::GlobalState;
 
 #[component]
 pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl IntoView {
