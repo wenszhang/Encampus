@@ -231,7 +231,6 @@ pub fn SelectOrderOption(is: &'static str, order_option: ReadSignal<String>) -> 
     }
 }
 
-
 #[server(AddReply)]
 pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
     use crate::data::database::user_functions::UserId;
@@ -258,19 +257,19 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
                 anonymous,
                 replyid;",
     )
-        .bind(user_id.0)
-        .bind(reply_info.post_id)
-        .bind(reply_info.anonymous)
-        .bind(reply_info.contents)
-        .fetch_one(&pool)
-        .await
-        .map_err(|db_error| {
-            logging::error!(
+    .bind(user_id.0)
+    .bind(reply_info.post_id)
+    .bind(reply_info.anonymous)
+    .bind(reply_info.contents)
+    .fetch_one(&pool)
+    .await
+    .map_err(|db_error| {
+        logging::error!(
             "\nAdd Reply Server Function Failed. Database returned error {:?}\n",
             db_error
         );
-            ServerFnError::<NoCustomError>::ServerError("Unable to add Reply".to_string())
-        })?;
+        ServerFnError::<NoCustomError>::ServerError("Unable to add Reply".to_string())
+    })?;
 
     Ok(newreply)
 }
