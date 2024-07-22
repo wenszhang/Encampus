@@ -27,7 +27,7 @@ pub struct Post {
     anonymous: bool,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Reply {
     time: NaiveDateTime,
@@ -49,6 +49,7 @@ pub fn FocusedPost() -> impl IntoView {
     // Fetch post id from route in the format of "class/:class_id/:post_id"
     let post_id = use_params::<PostId>();
     let global_state = expect_context::<GlobalState>();
+    let (order_option, set_value) = create_signal("Newest First".to_string());
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
@@ -87,6 +88,23 @@ pub fn FocusedPost() -> impl IntoView {
         }
     });
 
+    fn sort_replies(replies: Vec<Reply>, order: &str) -> Vec<Reply> {
+        let mut sorted_replies = replies.clone();
+        match order {
+            "Newest First" => sorted_replies.sort_by(|a, b| b.time.cmp(&a.time)),
+            "Oldest First" => sorted_replies.sort_by(|a, b| a.time.cmp(&b.time)),
+            // Add more sorting options here
+            _ => (),
+        }
+        sorted_replies
+    }
+
+    let sorted_replies = create_memo(move |_| {
+        let order = order_option.get();
+        let replies = replies();
+        sort_replies(replies, &order)
+    });
+
     view! {
         <div class="bg-white rounded shadow p-6 flex flex-col gap-3">
             <Suspense fallback=|| view! {
@@ -103,8 +121,33 @@ pub fn FocusedPost() -> impl IntoView {
                     <p>{move || post().map(|post| post.contents)}</p>
                     // TODO use the post's timestamp, author_name and anonymous info
                 </DarkenedCard>
+                <div>
+                    {move || if replies().is_empty() {
+                        view! {
+                            <span>
+                                <b>"No Replies Yet" </b>
+                            </span>
+                        }
+                    } else {
+                        view! {
+                            <span class="flex justify-between inline-block">
+                                <b class="inline-block"> "Replies:" </b>
+                                <span class="inline-block">
+                                   <select on:change=move |ev| {
+                                        let new_value = event_target_value(&ev);
+                                        set_value(new_value);
+                                    }>
+                                        <SelectOrderOption order_option is="Newest First"/>
+                                        <SelectOrderOption order_option is="Oldest First"/>
+                                        // <SelectOrderOption order_option is="By Rating"/>
+                                    </select>
+                                </span>
+                            </span>
+                        }
+                    }}
+                </div>
                 <For
-                each=replies
+                each=sorted_replies
                 key=|reply| reply.replyid
                 let:reply
                 >
@@ -176,6 +219,19 @@ fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> im
     }
 }
 
+#[component]
+pub fn SelectOrderOption(is: &'static str, order_option: ReadSignal<String>) -> impl IntoView {
+    view! {
+        <option
+            order_option=is
+            selected=move || order_option() == is
+        >
+            {is}
+        </option>
+    }
+}
+
+
 #[server(AddReply)]
 pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
     use crate::data::database::user_functions::UserId;
@@ -202,19 +258,19 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
                 anonymous,
                 replyid;",
     )
-    .bind(user_id.0)
-    .bind(reply_info.post_id)
-    .bind(reply_info.anonymous)
-    .bind(reply_info.contents)
-    .fetch_one(&pool)
-    .await
-    .map_err(|db_error| {
-        logging::error!(
+        .bind(user_id.0)
+        .bind(reply_info.post_id)
+        .bind(reply_info.anonymous)
+        .bind(reply_info.contents)
+        .fetch_one(&pool)
+        .await
+        .map_err(|db_error| {
+            logging::error!(
             "\nAdd Reply Server Function Failed. Database returned error {:?}\n",
             db_error
         );
-        ServerFnError::<NoCustomError>::ServerError("Unable to add Reply".to_string())
-    })?;
+            ServerFnError::<NoCustomError>::ServerError("Unable to add Reply".to_string())
+        })?;
 
     Ok(newreply)
 }
