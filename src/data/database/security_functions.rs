@@ -1,3 +1,4 @@
+#[allow(unused_imports)] // Suppress User - false compiler warning due to RowToStruct
 use super::user_functions::User;
 use leptos::{server, ServerFnError};
 
