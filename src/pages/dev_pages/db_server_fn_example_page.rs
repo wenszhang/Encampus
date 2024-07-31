@@ -1,4 +1,4 @@
-use crate::static_files::images::svgs::drop_down_bars::*;
+use crate::resources::images::svgs::drop_down_bars::*;
 use leptos::{
     component, create_resource, server, view, IntoView, ServerFnError, SignalSet, Suspense,
 };
@@ -48,7 +48,7 @@ fn NavBar() -> impl IntoView {
 fn LogoAndTitle() -> impl IntoView {
     view! {
         <div class="flex items-center">
-            <img src="logo.png" alt="ENCAMPUS" class="h-8 mr-2"/>
+            <img src="images/logo.png" alt="ENCAMPUS" class="h-8 mr-2"/>
             <span class="text-xl font-bold">"ENCAMPUS"</span>
         </div>
     }

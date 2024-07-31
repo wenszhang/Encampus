@@ -1,7 +1,7 @@
 /**
  * This file contains the FocusedPost component which is used to display a single post and its replies.
  */
-use crate::static_files::images::svgs::text_area_icon::TextAreaIcon;
+use crate::resources::images::svgs::text_area_icon::TextAreaIcon;
 use chrono::FixedOffset;
 use chrono::NaiveDateTime;
 use leptos::*;

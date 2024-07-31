@@ -3,7 +3,7 @@ pub mod data;
 #[cfg(feature = "ssr")]
 pub mod fileserv;
 pub mod pages;
-pub mod static_files;
+pub mod resources;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]

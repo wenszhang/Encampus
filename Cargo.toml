@@ -68,13 +68,13 @@ site-pkg-dir = "pkg"
 # The tailwind input file.
 #
 # Optional, Activates the tailwind build
-tailwind-input-file = "style/tailwind.css"
+tailwind-input-file = "src/resources/style/tailwind.css"
 
 # Assets source dir. All files found here will be copied and synchronized to site-root.
 # The assets-dir cannot have a sub directory with the same name/path as site-pkg-dir.
 #
 # Optional. Env: LEPTOS_ASSETS_DIR.
-assets-dir = "public"
+assets-dir = "src/resources"
 
 # The IP and port (ex: 127.0.0.1:3000) where the server serves the content. Use it in your server setup.
 site-addr = "127.0.0.1:3000"

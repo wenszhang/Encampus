@@ -40,7 +40,7 @@ pub fn LoginPage() -> impl IntoView {
             <div class="flex flex-col justify-center items-center h-screen">
                 <div class="bg-white p-20 rounded-lg shadow-md">
                     <div class="flex justify-center items-center">
-                        <img src={format!("/{}", "logo.png")} alt="Logo" class="h-16"/>
+                        <img src={format!("/{}", "images/logo.png")} alt="Logo" class="h-16"/>
                     </div>
                     <h1 class="text-2xl font-semibold text-center mb-4">
                         Login
