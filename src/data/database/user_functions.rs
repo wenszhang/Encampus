@@ -1,8 +1,7 @@
 /**
  * Struct to hold user
  */
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct User {
     pub name: String,
     pub id: i32,
