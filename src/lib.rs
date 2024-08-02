@@ -1,12 +1,9 @@
 pub mod app;
-pub mod components;
-pub mod database_functions;
-pub mod error_template;
+pub mod data;
 #[cfg(feature = "ssr")]
 pub mod fileserv;
 pub mod pages;
-pub mod svgs;
-pub mod util;
+pub mod resources;
 
 #[cfg(feature = "hydrate")]
 #[wasm_bindgen::prelude::wasm_bindgen]
