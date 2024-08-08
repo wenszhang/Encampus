@@ -2,10 +2,18 @@
  * This file is the main entry point for the application.
  */
 use crate::{
-    components::{create_post::CreatePost, focused_post::FocusedPost, page::Page},
-    error_template::{AppError, ErrorTemplate},
-    pages::{class::ClassPage, classes::ClassesPage, dev::Dev, home::Home, login_page::LoginPage},
-    util::global_state::GlobalState,
+    data::global_state::GlobalState,
+    pages::{
+        dev_pages::dev::Dev,
+        global_components::{
+            error_template::{AppError, ErrorTemplate},
+            page::Page,
+        },
+        home::Home,
+        login_page::LoginPage,
+        view_class_posts::{class::ClassPage, create_post::CreatePost, focused_post::FocusedPost},
+        view_enrolled_classes::classes::ClassesPage,
+    },
 };
 
 use leptos::*;
