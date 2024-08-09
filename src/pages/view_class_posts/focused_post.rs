@@ -1,7 +1,7 @@
 /**
  * This file contains the FocusedPost component which is used to display a single post and its replies.
  */
-use crate::svgs::text_area_icon::TextAreaIcon;
+use crate::resources::images::svgs::text_area_icon::TextAreaIcon;
 use chrono::FixedOffset;
 use chrono::NaiveDateTime;
 use leptos::*;
@@ -10,7 +10,7 @@ use leptos_router::Params;
 use serde::Deserialize;
 use serde::Serialize;
 
-use crate::util::global_state::GlobalState;
+use crate::data::global_state::GlobalState;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
@@ -178,7 +178,7 @@ fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> im
 
 #[server(AddReply)]
 pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
-    use crate::database_functions::UserId;
+    use crate::data::database::user_functions::UserId;
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 

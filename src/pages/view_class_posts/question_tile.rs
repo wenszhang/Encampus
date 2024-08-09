@@ -1,7 +1,7 @@
 /**
  * QuestionTile component, displaying a tile for one post
  */
-use crate::database_functions::Post;
+use crate::data::database::post_functions::Post;
 use leptos::*;
 use leptos_router::A;
 
