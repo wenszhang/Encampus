@@ -65,7 +65,7 @@ pub fn ClassPage() -> impl IntoView {
             <div class="grid grid-cols-3 gap-4">
                 <Suspense fallback=move || view! { <p>"Loading..."</p> } >
                     <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
-                        {post.resolved.then(|| view! { <QuestionTile post={post} />}).unwrap_or_else(|| view! { <UnansweredQuestionTile post={post} />})}
+                        {post.resolved.then(|| view! { <QuestionTile post={post.clone()} />}).unwrap_or_else(|| view! { <UnansweredQuestionTile post={post.clone()} />})}
                         // {if post.resolved{
                         //     <QuestionTile post={post} />
                         // }else{
