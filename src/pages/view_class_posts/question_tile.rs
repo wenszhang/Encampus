@@ -15,3 +15,14 @@ pub fn QuestionTile(post: Post) -> impl IntoView {
         </A>
     }
 }
+
+#[component]
+pub fn UnansweredQuestionTile(post: Post) -> impl IntoView {
+    view! {
+        <A href=format!("{}", post.post_id)>
+            <div class="tile bg-red-500 rounded shadow p-4 flex items-center justify-center font-bold h-32 transition duration-300 hover:bg-red-700">
+                {post.title}
+            </div>
+        </A>
+    }
+}
