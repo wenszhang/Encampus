@@ -10,6 +10,7 @@ use leptos_router::Params;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::data::database::post_functions::resolve_post;
 use crate::data::global_state::GlobalState;
 
 #[derive(Params, PartialEq, Clone)]
@@ -64,6 +65,12 @@ pub fn FocusedPost() -> impl IntoView {
             .map(|tuple| tuple.1)
             .unwrap_or_default()
     };
+
+    let resolve_post = create_resource(post_id, |post_id| async {
+        resolve_post(post_id.unwrap().post_id)
+            .await
+            .unwrap_or_default()
+    });
 
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
