@@ -67,6 +67,7 @@ pub fn FocusedPost() -> impl IntoView {
 
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
+    let (reply_resolved_state, set_reply_resolved_state) = create_signal(false);
 
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
@@ -138,6 +139,17 @@ pub fn FocusedPost() -> impl IntoView {
                         for="anonymousToggle"
                         class="flex items-center cursor-pointer select-none"
                         >
+                            <div class="flex items-center cursor-pointer select-none">
+                                <span class="mx-2">"Resolve:"</span>
+                                <input
+                                    type="checkbox"
+                                    id="resolveToggle"
+                                    class="mx-2"
+                                    prop:checked=reply_resolved_state
+                                    on:change=move |_| set_reply_resolved_state(!reply_resolved_state())
+                                />
+                            </div>
+
                             <span class="mx-2">"Anonymous:"</span>
                             <div class="relative">
                                 <input
