@@ -27,6 +27,7 @@ pub struct Post {
     author_name: String,
     anonymous: bool,
     resolved: bool,
+    author_id: i32,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -168,40 +169,44 @@ pub fn FocusedPost() -> impl IntoView {
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
-                            {if post().map(|post| post.resolved) == Some(false){
-                                view! {
-                                    <span class="mx-2">"Resolve:"</span>
-                                    <input
-                                        type="checkbox"
-                                        id="resolveToggle"
-                                        class="mx-2"
-                                        prop:checked=false
-                                        on:change=move |_| {
-                                            let resolve_post = resolve_post;
-                                            spawn_local(async move {
-                                                resolve_post(post_id().unwrap().post_id, true).await.unwrap();
-                                            });
-                                        }
-                                    />
+                            {if post().map(|post| post.author_name) == move || global_state.user_name{
+
+
+                                if post().map(|post| post.resolved) == Some(false){
+                                    view! {
+                                        <span class="mx-2">"Resolve:"</span>
+                                        <input
+                                            type="checkbox"
+                                            id="resolveToggle"
+                                            class="mx-2"
+                                            prop:checked=false
+                                            on:change=move |_| {
+                                                let resolve_post = resolve_post;
+                                                spawn_local(async move {
+                                                    resolve_post(post_id().unwrap().post_id, true).await.unwrap();
+                                                });
+                                            }
+                                        />
+                                    }
+                                } else{
+                                    view! {
+                                        <span class="mx-2">"Resolved:"</span>
+                                        <input
+                                            type="checkbox"
+                                            id="resolveToggle"
+                                            class="mx-2"
+                                            prop:checked=true
+                                            on:change=move |_| {
+                                                let resolve_post = resolve_post;
+                                                spawn_local(async move {
+                                                    resolve_post(post_id().unwrap().post_id, false).await.unwrap();
+                                                });
+                                            }
+                                        />
+                                    }
                                 }
-                            } else{
-                                view! {
-                                    <span class="mx-2">"Resolved:"</span>
-                                    <input
-                                        type="checkbox"
-                                        id="resolveToggle"
-                                        class="mx-2"
-                                        prop:checked=true
-                                        on:change=move |_| {
-                                            let resolve_post = resolve_post;
-                                            spawn_local(async move {
-                                                resolve_post(post_id().unwrap().post_id, false).await.unwrap();
-                                            });
-                                        }
-                                    />
-                                }
-                            }
-                            }
+                            }else{{}}
+                        }
 
                         </div>
                     </div>
@@ -283,7 +288,8 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                     ELSE users.name 
                 END as author_name, 
                 anonymous,
-                resolved 
+                resolved,
+                authorid 
             FROM posts JOIN users ON posts.authorid = users.id WHERE posts.postid = $1"
         )
         .bind(post_id)
