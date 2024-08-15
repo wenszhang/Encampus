@@ -27,7 +27,6 @@ pub struct Post {
     author_name: String,
     anonymous: bool,
     resolved: bool,
-    author_id: i32,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -169,7 +168,7 @@ pub fn FocusedPost() -> impl IntoView {
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
-                            {if post().map(|post| post.author_name) == move || global_state.user_name{
+                            {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()){
 
 
                                 if post().map(|post| post.resolved) == Some(false){
@@ -205,7 +204,12 @@ pub fn FocusedPost() -> impl IntoView {
                                         />
                                     }
                                 }
-                            }else{{}}
+                            }else {
+                                view!{
+                                    <span class="mx-2">""</span>
+                                    />
+                                }
+                            }
                         }
 
                         </div>
@@ -288,8 +292,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                     ELSE users.name 
                 END as author_name, 
                 anonymous,
-                resolved,
-                authorid 
+                resolved
             FROM posts JOIN users ON posts.authorid = users.id WHERE posts.postid = $1"
         )
         .bind(post_id)
