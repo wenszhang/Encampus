@@ -68,10 +68,16 @@ pub fn FocusedPost() -> impl IntoView {
             .unwrap_or_default()
     };
 
-    let resolve_post = create_resource(post_id, |post_id| async {
-        resolve_post(post_id.unwrap().post_id)
-            .await
-            .unwrap_or_default()
+    let resolve_post_action = create_action(move |post_id| {
+        let post_id = post_id.clone();
+        async move {
+            match resolve_post(post_id.unwrap().post_id, current_resolved).await {
+                Ok(post) => {}
+                Err(_) => {
+                    logging::error!("Attempt to resolve post failed. Please try again")
+                }
+            }
+        }
     });
 
     let (reply_contents, set_reply_contents) = create_signal(String::default());
@@ -186,7 +192,7 @@ pub fn FocusedPost() -> impl IntoView {
                                         on:change=move |_| {
                                             let resolve_post = resolve_post;
                                             spawn_local(async move {
-                                                resolve_post().unwrap();
+                                                resolve_post(post_id, true).await.unwrap();
                                             });
                                         }
                                     />
@@ -202,7 +208,7 @@ pub fn FocusedPost() -> impl IntoView {
                                         on:change=move |_| {
                                             let resolve_post = resolve_post;
                                             spawn_local(async move {
-                                                resolve_post().unwrap();
+                                                resolve_post(post_id, false).await.unwrap();
                                             });
                                         }
                                     />
