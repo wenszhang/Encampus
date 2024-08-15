@@ -51,7 +51,6 @@ pub fn FocusedPost() -> impl IntoView {
     // Fetch post id from route in the format of "class/:class_id/:post_id"
     let post_id = use_params::<PostId>();
     let global_state = expect_context::<GlobalState>();
-    let current_resolved = false;
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
@@ -67,18 +66,6 @@ pub fn FocusedPost() -> impl IntoView {
             .map(|tuple| tuple.1)
             .unwrap_or_default()
     };
-
-    let resolve_post_action = create_action(move |post_id| {
-        let post_id = post_id.clone();
-        async move {
-            match resolve_post(post_id.unwrap().post_id, current_resolved).await {
-                Ok(post) => {}
-                Err(_) => {
-                    logging::error!("Attempt to resolve post failed. Please try again")
-                }
-            }
-        }
-    });
 
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
@@ -192,7 +179,7 @@ pub fn FocusedPost() -> impl IntoView {
                                         on:change=move |_| {
                                             let resolve_post = resolve_post;
                                             spawn_local(async move {
-                                                resolve_post(post_id, true).await.unwrap();
+                                                resolve_post(post_id().unwrap().post_id, true).await.unwrap();
                                             });
                                         }
                                     />
@@ -208,7 +195,7 @@ pub fn FocusedPost() -> impl IntoView {
                                         on:change=move |_| {
                                             let resolve_post = resolve_post;
                                             spawn_local(async move {
-                                                resolve_post(post_id, false).await.unwrap();
+                                                resolve_post(post_id().unwrap().post_id, false).await.unwrap();
                                             });
                                         }
                                     />
