@@ -92,7 +92,7 @@ pub async fn get_author_id_from_name(name: String) -> Result<i32, ServerFnError>
 }
 
 #[server(ResolvePost)]
-pub async fn resolve_post(post_id: i32) -> Result<(), ServerFnError> {
+pub async fn resolve_post(post_id: i32, status: bool) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -100,7 +100,8 @@ pub async fn resolve_post(post_id: i32) -> Result<(), ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    sqlx::query("update posts set resolved = true where postid = $1")
+    sqlx::query("update posts set resolved = $1 where postid = $2")
+        .bind(status)
         .bind(post_id)
         .execute(&pool)
         .await

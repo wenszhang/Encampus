@@ -26,6 +26,7 @@ pub struct Post {
     contents: String,
     author_name: String,
     anonymous: bool,
+    resolved: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -50,6 +51,7 @@ pub fn FocusedPost() -> impl IntoView {
     // Fetch post id from route in the format of "class/:class_id/:post_id"
     let post_id = use_params::<PostId>();
     let global_state = expect_context::<GlobalState>();
+    let current_resolved = false;
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
@@ -74,7 +76,6 @@ pub fn FocusedPost() -> impl IntoView {
 
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
-    let (reply_resolved_state, set_reply_resolved_state) = create_signal(false);
 
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
@@ -174,14 +175,41 @@ pub fn FocusedPost() -> impl IntoView {
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
-                            <span class="mx-2">"Resolve:"</span>
-                            <input
-                                type="checkbox"
-                                id="resolveToggle"
-                                class="mx-2"
-                                prop:checked=reply_resolved_state
-                                on:change=move |_| set_reply_resolved_state(!reply_resolved_state())
-                            />
+                            {if post().map(|post| post.resolved) == Some(false){
+                                view! {
+                                    <span class="mx-2">"Resolve:"</span>
+                                    <input
+                                        type="checkbox"
+                                        id="resolveToggle"
+                                        class="mx-2"
+                                        prop:checked=false
+                                        on:change=move |_| {
+                                            let resolve_post = resolve_post;
+                                            spawn_local(async move {
+                                                resolve_post().unwrap();
+                                            });
+                                        }
+                                    />
+                                }
+                            } else{
+                                view! {
+                                    <span class="mx-2">"Resolved:"</span>
+                                    <input
+                                        type="checkbox"
+                                        id="resolveToggle"
+                                        class="mx-2"
+                                        prop:checked=true
+                                        on:change=move |_| {
+                                            let resolve_post = resolve_post;
+                                            spawn_local(async move {
+                                                resolve_post().unwrap();
+                                            });
+                                        }
+                                    />
+                                }
+                            }
+                            }
+
                         </div>
                     </div>
             </Suspense>
@@ -261,7 +289,8 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 CASE WHEN anonymous THEN 'Anonymous Author'
                     ELSE users.name 
                 END as author_name, 
-                anonymous 
+                anonymous,
+                resolved 
             FROM posts JOIN users ON posts.authorid = users.id WHERE posts.postid = $1"
         )
         .bind(post_id)
