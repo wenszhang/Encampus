@@ -56,10 +56,11 @@ pub async fn add_post(new_post_info: AddPostInfo, user: String) -> Result<Post, 
         .await
         .expect("select should work");
 
-    let post = sqlx::query_as("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6)
+    let post: Post = sqlx::query_as("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid, resolved) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6, false)
                         RETURNING                 
                         title, 
-                        postid as post_id;")
+                        postid as post_id,
+                        resolved;")
         .bind(new_post_info.title)
         .bind(new_post_info.contents)
         .bind(user_id.0)
