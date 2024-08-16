@@ -204,10 +204,11 @@ pub fn FocusedPost() -> impl IntoView {
                                         />
                                     }
                                 }
-                            }else {
+                            }else { // Work around cause rust wants there to be and else case so effectively empty else case
                                 view!{
                                     <span class="mx-2">""</span>
-                                    />
+                                    <div>
+                                    </div>
                                 }
                             }
                         }
