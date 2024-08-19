@@ -10,6 +10,7 @@ use leptos_router::Params;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::data::database::class_functions::get_instructor;
 use crate::data::database::post_functions::resolve_post;
 use crate::data::global_state::GlobalState;
 
@@ -18,7 +19,7 @@ pub struct PostId {
     pub post_id: i32,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
     timestamp: NaiveDateTime,
@@ -87,6 +88,12 @@ pub fn FocusedPost() -> impl IntoView {
                 Err(_) => logging::error!("Attempt to post reply failed. Please try again"),
             };
         }
+    });
+
+    let instructor = create_resource(post_id, |post_id| async {
+        get_instructor(post_id.unwrap().post_id)
+            .await
+            .unwrap_or_else(|_| "Failed".to_string())
     });
 
     view! {
@@ -168,7 +175,8 @@ pub fn FocusedPost() -> impl IntoView {
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
-                            {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()){
+                            {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()) ||
+                                instructor().map(|instructor| instructor) == Some(global_state.user_name.get().unwrap_or_default()){
 
 
                                 if post().map(|post| post.resolved) == Some(false){
