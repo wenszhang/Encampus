@@ -21,6 +21,10 @@ pub struct ClassInfo {
 #[derive(sqlx::FromRow)]
 pub struct ClassName(String);
 
+#[cfg(feature = "ssr")]
+#[derive(sqlx::FromRow)]
+pub struct UserName(String);
+
 /**
  * Get all class names from the database
  * Will eventually have a user added and so query will be modified to get only the classes the user is registered to
@@ -60,5 +64,22 @@ pub async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
         .fetch_one(&pool)
         .await
         .expect("select should work");
+    Ok(name)
+}
+
+#[server(GetInstructor)]
+pub async fn get_instructor(post_id: i32) -> Result<String, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let UserName (name)= sqlx::query_as("select name from instructing join users on professorid = id where courseid = (select classid from posts where postid = $1)")
+    .bind(post_id)
+    .fetch_one(&pool)
+    .await
+    .expect("select should work");
     Ok(name)
 }
