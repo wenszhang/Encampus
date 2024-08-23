@@ -77,7 +77,7 @@ pub async fn get_instructor(post_id: i32) -> Result<String, ServerFnError> {
     ))?;
 
     let UserName (name)= sqlx::query_as(
-        "select name from instructing join users on professorid = id where courseid = (select classid from posts where postid = $1);",
+        "select username from instructing join users on professorid = id where courseid = (select classid from posts where postid = $1);",
     )
     .bind(post_id)
     .fetch_one(&pool)

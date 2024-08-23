@@ -245,7 +245,7 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
         "Unable to add Reply".to_string(),
     ))?;
 
-    let user_id: UserId = sqlx::query_as("select id from users where name = $1")
+    let user_id: UserId = sqlx::query_as("select id from users where username = $1")
         .bind(user)
         .fetch_one(&pool)
         .await
@@ -298,7 +298,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 title, 
                 contents, 
                 CASE WHEN anonymous THEN 'Anonymous Author'
-                    ELSE users.name 
+                    ELSE users.username 
                 END as author_name, 
                 anonymous,
                 resolved
@@ -311,7 +311,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 time, 
                 contents,
                 CASE WHEN anonymous THEN 'Anonymous Author'
-                    ELSE users.name 
+                    ELSE users.username 
                 END as author_name, 
                 anonymous,
                 replyid

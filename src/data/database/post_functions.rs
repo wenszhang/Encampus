@@ -50,7 +50,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user: String) -> Result<Post, 
         "Unable to complete Request".to_string(),
     ))?;
 
-    let user_id: UserId = sqlx::query_as("select id from users where name = $1")
+    let user_id: UserId = sqlx::query_as("select id from users where username = $1")
         .bind(user)
         .fetch_one(&pool)
         .await
@@ -83,7 +83,7 @@ pub async fn get_author_id_from_name(name: String) -> Result<i32, ServerFnError>
         "Unable to complete Request".to_string(),
     ))?;
 
-    let UserId(user) = sqlx::query_as("select id from users where name = $1")
+    let UserId(user) = sqlx::query_as("select id from users where username = $1")
         .bind(name)
         .fetch_one(&pool)
         .await
