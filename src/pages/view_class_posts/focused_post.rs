@@ -10,6 +10,8 @@ use leptos_router::Params;
 use serde::Deserialize;
 use serde::Serialize;
 
+use crate::data::database::class_functions::get_instructor;
+use crate::data::database::post_functions::resolve_post;
 use crate::data::global_state::GlobalState;
 
 #[derive(Params, PartialEq, Clone)]
@@ -17,7 +19,7 @@ pub struct PostId {
     pub post_id: i32,
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
     timestamp: NaiveDateTime,
@@ -25,6 +27,7 @@ pub struct Post {
     contents: String,
     author_name: String,
     anonymous: bool,
+    resolved: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
@@ -103,6 +106,12 @@ pub fn FocusedPost() -> impl IntoView {
         let order = order_option.get();
         let replies = replies();
         sort_replies(replies, &order)
+    });
+
+    let instructor = create_resource(post_id, |post_id| async {
+        get_instructor(post_id.unwrap().post_id)
+            .await
+            .unwrap_or_else(|_| "Failed".to_string())
     });
 
     view! {
@@ -207,6 +216,56 @@ pub fn FocusedPost() -> impl IntoView {
                         </button>
                     </div>
                 </DarkenedCard>
+                    <div class="flex justify-end gap-5">
+                        <div class="flex items-center cursor-pointer select-none">
+                            {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()) ||
+                                instructor() == Some(global_state.user_name.get().unwrap_or_default()){
+
+
+                                if post().map(|post| post.resolved) == Some(false){
+                                    view! {
+                                        <span class="mx-2">"Resolve:"</span>
+                                        <input
+                                            type="checkbox"
+                                            id="resolveToggle"
+                                            class="mx-2"
+                                            prop:checked=false
+                                            on:change=move |_| {
+                                                let resolve_post = resolve_post;
+                                                spawn_local(async move {
+                                                    resolve_post(post_id().unwrap().post_id, true).await.unwrap();
+                                                });
+                                            }
+                                        />
+                                    }
+                                } else{
+                                    view! {
+                                        <span class="mx-2">"Resolved:"</span>
+                                        <input
+                                            type="checkbox"
+                                            id="resolveToggle"
+                                            class="mx-2"
+                                            prop:checked=true
+                                            on:change=move |_| {
+                                                let resolve_post = resolve_post;
+                                                spawn_local(async move {
+                                                    resolve_post(post_id().unwrap().post_id, false).await.unwrap();
+                                                });
+                                            }
+                                        />
+                                    }
+                                }
+                            }else { // Work around cause rust wants there to be and else case so effectively empty else case
+                                view!{
+                                    <span class="mx-2">""</span>
+                                    <div>
+                                    </div>
+                                }
+                            }
+                        }
+
+                        </div>
+                    </div>
             </Suspense>
         </div>
     }
@@ -241,7 +300,7 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
         "Unable to add Reply".to_string(),
     ))?;
 
-    let user_id: UserId = sqlx::query_as("select id from users where name = $1")
+    let user_id: UserId = sqlx::query_as("select id from users where username = $1")
         .bind(user)
         .fetch_one(&pool)
         .await
@@ -294,9 +353,10 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 title, 
                 contents, 
                 CASE WHEN anonymous THEN 'Anonymous Author'
-                    ELSE users.name 
+                    ELSE users.username 
                 END as author_name, 
-                anonymous 
+                anonymous,
+                resolved
             FROM posts JOIN users ON posts.authorid = users.id WHERE posts.postid = $1"
         )
         .bind(post_id)
@@ -306,7 +366,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 time, 
                 contents,
                 CASE WHEN anonymous THEN 'Anonymous Author'
-                    ELSE users.name 
+                    ELSE users.username 
                 END as author_name, 
                 anonymous,
                 replyid

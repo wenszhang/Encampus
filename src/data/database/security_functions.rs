@@ -14,13 +14,14 @@ pub async fn login_signup(name: String) -> Result<(), ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let user_result: Option<User> = sqlx::query_as("select name, id from users where name = $1")
-        .bind(name.clone())
-        .fetch_optional(&pool)
-        .await?;
+    let user_result: Option<User> =
+        sqlx::query_as("select username, id from users where username = $1")
+            .bind(name.clone())
+            .fetch_optional(&pool)
+            .await?;
 
     if user_result.is_none() {
-        sqlx::query("insert into users(name) values($1)")
+        sqlx::query("insert into users(username) values($1)")
             .bind(name.clone())
             .execute(&pool)
             .await
