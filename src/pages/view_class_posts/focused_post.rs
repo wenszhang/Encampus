@@ -210,11 +210,11 @@ pub fn FocusedPost() -> impl IntoView {
                         </label>
                         <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
                             on:click=move |_| add_reply_action.dispatch(
-                                    AddReplyInfo {
-                                    post_id: post_id().unwrap().post_id,
-                                    contents: reply_contents(),
-                                    anonymous: reply_anonymous_state()
-                                    })
+                            AddReplyInfo {
+                            post_id: post_id().unwrap().post_id,
+                            contents: reply_contents(),
+                            anonymous: reply_anonymous_state()
+                            })
                         >
                         "Post Response"
                         </button>
