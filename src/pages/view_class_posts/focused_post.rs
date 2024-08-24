@@ -80,7 +80,11 @@ pub fn FocusedPost() -> impl IntoView {
                     post_and_replies.update(|post_and_replies| {
                         if let Some(outer_option) = post_and_replies.as_mut() {
                             if let Some(post_and_replies) = outer_option.as_mut() {
-                                post_and_replies.1.push(reply.clone())
+                                if reply.contents.len() > 0 {
+                                    post_and_replies.1.push(reply.clone())
+                                } else {
+                                    ()
+                                }
                             }
                         }
                     });
@@ -206,11 +210,11 @@ pub fn FocusedPost() -> impl IntoView {
                         </label>
                         <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
                             on:click=move |_| add_reply_action.dispatch(
-                                AddReplyInfo {
+                                    AddReplyInfo {
                                     post_id: post_id().unwrap().post_id,
                                     contents: reply_contents(),
                                     anonymous: reply_anonymous_state()
-                                })
+                                    })
                         >
                         "Post Response"
                         </button>
