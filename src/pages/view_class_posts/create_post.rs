@@ -16,7 +16,6 @@ pub struct AddPostInfo {
     pub anonymous: bool,
     pub limited_visibility: bool,
     pub classid: i32,
-    //pub authorid: i32,
 }
 
 #[component]
@@ -38,26 +37,30 @@ pub fn CreatePost() -> impl IntoView {
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
         async move {
-            match add_post(postInfo, global_state.user_name.get_untracked().unwrap()).await {
-                Ok(post) => {
-                    let post_id = post.post_id;
-                    posts.update(|posts| {
-                        if let Some(posts) = posts {
-                            posts.push(post);
-                        }
-                    });
-                    let navigate = leptos_router::use_navigate();
-                    navigate(
-                        format!(
-                            "/classes/{}/{}",
-                            class_id.get_untracked().unwrap().class_id,
-                            post_id
-                        )
-                        .as_str(),
-                        Default::default(),
-                    );
+            if postInfo.title.len() > 0 && postInfo.contents.len() > 0 {
+                match add_post(postInfo, global_state.user_name.get_untracked().unwrap()).await {
+                    Ok(post) => {
+                        let post_id = post.post_id;
+                        posts.update(|posts| {
+                            if let Some(posts) = posts {
+                                posts.push(post);
+                            }
+                        });
+                        let navigate = leptos_router::use_navigate();
+                        navigate(
+                            format!(
+                                "/classes/{}/{}",
+                                class_id.get_untracked().unwrap().class_id,
+                                post_id
+                            )
+                            .as_str(),
+                            Default::default(),
+                        );
+                    }
+                    Err(_) => logging::error!("Attempt to post post failed. Please try again"),
                 }
-                Err(_) => logging::error!("Attempt to post post failed. Please try again"),
+            } else {
+                ()
             }
         }
     });
