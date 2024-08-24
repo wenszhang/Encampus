@@ -75,23 +75,23 @@ pub fn FocusedPost() -> impl IntoView {
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
         async move {
-            match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
-                Ok(reply) => {
-                    post_and_replies.update(|post_and_replies| {
-                        if let Some(outer_option) = post_and_replies.as_mut() {
-                            if let Some(post_and_replies) = outer_option.as_mut() {
-                                if reply.contents.len() > 0 {
+            if reply_info.contents.len() > 0 {
+                match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
+                    Ok(reply) => {
+                        post_and_replies.update(|post_and_replies| {
+                            if let Some(outer_option) = post_and_replies.as_mut() {
+                                if let Some(post_and_replies) = outer_option.as_mut() {
                                     post_and_replies.1.push(reply.clone())
-                                } else {
-                                    ()
                                 }
                             }
-                        }
-                    });
-                    set_reply_contents(String::default());
-                }
-                Err(_) => logging::error!("Attempt to post reply failed. Please try again"),
-            };
+                        });
+                        set_reply_contents(String::default());
+                    }
+                    Err(_) => logging::error!("Attempt to post reply failed. Please try again"),
+                };
+            } else {
+                ()
+            }
         }
     });
 
