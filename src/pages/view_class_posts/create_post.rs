@@ -60,7 +60,7 @@ pub fn CreatePost() -> impl IntoView {
                     Err(_) => logging::error!("Attempt to post post failed. Please try again"),
                 }
             } else {
-                ()
+                () // Probably want to throw an error message on the screen, might add that sooner if not later
             }
         }
     });
