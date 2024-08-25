@@ -13,9 +13,10 @@ use crate::pages::global_components::header::Header;
 pub fn ClassTile(class: ClassInfo) -> impl IntoView {
     view! {
         <a href=&format!("classes/{}", class.id)>
-                <div class="tile bg-white rounded shadow-md p-4 flex items-center justify-center text-l font-bold h-32 tile transition duration-300 hover:bg-gray-100">
+                <div class="tile bg-white rounded shadow-md p-10 flex items-center justify-center text-l font-bold h-70 w-50 tile transition duration-300 hover:bg-gray-100">
                     {class.name}
                 </div>
+
         </a>
     }
 }

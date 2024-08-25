@@ -1,3 +1,4 @@
+use crate::data::database::announcement_functions::get_announcement_list;
 /**
  * Component view and logic for the header at the top of the page of the site
  */
@@ -6,8 +7,29 @@ use crate::resources::images::svgs::drop_down_bars::DropDownBars;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 // use crate::components::announcements::Announcements;
 use leptos::*;
+use svg::view;
 
 use crate::data::global_state::GlobalState;
+
+// database function for announcements
+use crate::data::database::class_functions::announcement_functions::GetAnnoucementsList;
+
+#[component]
+pub fn AnnouncementInfo(class_id: Option<i32>) -> impl IntoView {
+    let announcements = create_resource(class_id, |class_id| async {
+        get_announcement_list(class_id.unwrap().class_id)
+            .await
+            .unwrap_or_default()
+    });
+
+    return view! {
+        <ul class="py-1 mx-1 text-gray-700 w-40 text-left text-lg">
+        {values.into_iter()
+            .map(|n| view! { <li class= "px-4 py-2 hover:bg-gray-100 cursor-pointer">{n}</li>})
+            .collect_view()}
+        </ul>
+    };
+}
 
 #[component]
 pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl IntoView {
@@ -37,17 +59,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl
                     </button>
                     <div class="absolute right-0 top-full mt-[-0.1rem] shadow-md rounded-lg bg-white invisible
                         group-hover:opacity-100 group-hover:scale-100 group-hover:visible">
-                        <ul class="py-1 mx-1 text-gray-700 w-40 text-left text-lg">
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">"Class Cancelled!"</div>
-                            </li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">"Exam Reminder!"</div>
-                            </li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">"Homework Update"</div>
-                            </li>
-                        </ul>
+                        <AnnouncementInfo class_id = class_id/>
                     </div>
                 </div>
                 <span class="text-xl font-bold mr-4 flex items-center">{move || global_state.user_name.get()}</span>
