@@ -75,23 +75,19 @@ pub fn FocusedPost() -> impl IntoView {
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
         async move {
-            if reply_info.contents.len() > 0 {
-                match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
-                    Ok(reply) => {
-                        post_and_replies.update(|post_and_replies| {
-                            if let Some(outer_option) = post_and_replies.as_mut() {
-                                if let Some(post_and_replies) = outer_option.as_mut() {
-                                    post_and_replies.1.push(reply.clone())
-                                }
+            match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
+                Ok(reply) => {
+                    post_and_replies.update(|post_and_replies| {
+                        if let Some(outer_option) = post_and_replies.as_mut() {
+                            if let Some(post_and_replies) = outer_option.as_mut() {
+                                post_and_replies.1.push(reply.clone())
                             }
-                        });
-                        set_reply_contents(String::default());
-                    }
-                    Err(_) => logging::error!("Attempt to post reply failed. Please try again"),
-                };
-            } else {
-                () // Probably want to throw an error message on the screen, might add that sooner if not later
-            }
+                        }
+                    });
+                    set_reply_contents(String::default());
+                }
+                Err(_) => logging::error!("Attempt to post reply failed. Please try again"),
+            };
         }
     });
 
@@ -209,12 +205,17 @@ pub fn FocusedPost() -> impl IntoView {
                             </div>
                         </label>
                         <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
-                            on:click=move |_| add_reply_action.dispatch(
+                            on:click=move |_| {
+                                if reply_contents().is_empty() {
+                                    return; // Probably want to throw an error message on the screen, might add that sooner if not later
+                                }
+                                add_reply_action.dispatch(
                                 AddReplyInfo {
                                     post_id: post_id().unwrap().post_id,
                                     contents: reply_contents(),
                                     anonymous: reply_anonymous_state()
                                 })
+                            }
                         >
                         "Post Response"
                         </button>
