@@ -16,7 +16,6 @@ pub struct AddPostInfo {
     pub anonymous: bool,
     pub limited_visibility: bool,
     pub classid: i32,
-    //pub authorid: i32,
 }
 
 #[component]
@@ -64,43 +63,47 @@ pub fn CreatePost() -> impl IntoView {
 
     view! {
         <DarkenedCard class="p-5 flex flex-col gap-2">
-                    <p>"Create New Post"</p>
-                    <div class="bg-white p-3 rounded-t-lg">
-                        // Inner border
-                        <p>"Title:"</p>
-                        <textarea class="h-12 w-full resize-none border border-gray-300 rounded-t-lg p-2"
-                            on:input=on_input(set_post_title)
-                            prop:value=post_title
-                        >
-                        </textarea>
-                        //<div class="border border-gray-300 rounded-t-lg h-12"></div>
-                        <p>"Contents:"</p>
-                        <textarea class="h-96 w-full resize-none border border-gray-300 rounded-b-lg p-2"
-                            on:input=on_input(set_post_contents)
-                            prop:value=post_contents
-                        >
-                        </textarea>
+            <p>"Create New Post"</p>
+            <div class="bg-white p-3 rounded-t-lg">
+                // Inner border
+                <p>"Title:"</p>
+                <textarea class="h-12 w-full resize-none border border-gray-300 rounded-t-lg p-2"
+                    on:input=on_input(set_post_title)
+                    prop:value=post_title
+                >
+                </textarea>
+                //<div class="border border-gray-300 rounded-t-lg h-12"></div>
+                <p>"Contents:"</p>
+                <textarea class="h-96 w-full resize-none border border-gray-300 rounded-b-lg p-2"
+                    on:input=on_input(set_post_contents)
+                    prop:value=post_contents
+                >
+                </textarea>
+            </div>
+            <div class="flex justify-end gap-5">
+                <label
+                for="anonymousToggle"
+                class="flex items-center cursor-pointer select-none"
+                >
+                    <span class="mx-2">"Anonymous:"</span>
+                    <div class="relative">
+                        <input
+                            type="checkbox"
+                            id="anonymousToggle"
+                            class="peer sr-only"
+                            prop:checked=anonymous_state
+                            on:change=move |_| set_anonymous_state(!anonymous_state())
+                        />
+                        <div class="block h-8 rounded-full bg-gray-500 w-14"></div>
+                        <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-full peer-checked:bg-primary"></div>
                     </div>
-                    <div class="flex justify-end gap-5">
-                        <label
-                        for="anonymousToggle"
-                        class="flex items-center cursor-pointer select-none"
-                        >
-                            <span class="mx-2">"Anonymous:"</span>
-                            <div class="relative">
-                                <input
-                                    type="checkbox"
-                                    id="anonymousToggle"
-                                    class="peer sr-only"
-                                    prop:checked=anonymous_state
-                                    on:change=move |_| set_anonymous_state(!anonymous_state())
-                                />
-                                <div class="block h-8 rounded-full bg-gray-500 w-14"></div>
-                                <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-full peer-checked:bg-primary"></div>
-                            </div>
-                        </label>
-                        <button type="submit" class="bg-gray-500 p-2 rounded-full text-white hover:bg-gray-600"
-                        on:click=move |_| add_post_action.dispatch(
+                </label>
+                <button type="submit" class="bg-gray-500 p-2 rounded-full text-white hover:bg-gray-600"
+                    on:click=move |_| {
+                        if post_title().is_empty() || post_contents().is_empty() {
+                            return; // Probably want to write an error message on the screen, might add that sooner if not later
+                        }
+                        add_post_action.dispatch(
                             AddPostInfo {
                                 title: post_title(),
                                 contents: post_contents(),
@@ -108,11 +111,12 @@ pub fn CreatePost() -> impl IntoView {
                                 limited_visibility: false,
                                 classid: class_id.get().unwrap().class_id,
                             })
-                        >
-                        "Post"
-                        </button>
-                    </div>
-                </DarkenedCard>
+                    }
+                >
+                "Post"
+                </button>
+            </div>
+        </DarkenedCard>
     }
 }
 
