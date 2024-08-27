@@ -1,8 +1,7 @@
 /**
 * Page getting and displaying all classes registered to the user
-
 */
-use leptos::{component, create_resource, view, For, IntoView, Suspense};
+use leptos::{component, create_resource, view, For, IntoView, Signal, Suspense};
 use leptos::{create_effect, leptos_dom};
 
 use crate::data::database::class_functions::get_class_list;
@@ -36,7 +35,7 @@ pub fn ClassesPage() -> impl IntoView {
     );
 
     view! {
-        <Header text="ENCAMPUS".to_string() logo={None} class_id={None} />
+        <Header text="ENCAMPUS".to_string() logo={None} class_id={Signal::derive(|| None)} />
 
         <div class="grid grid-cols-3 gap-4 p-10 mx-20">
             <Suspense fallback=move || view! { <p>"Loading..."</p> }>

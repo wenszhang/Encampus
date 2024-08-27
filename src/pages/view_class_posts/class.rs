@@ -49,7 +49,7 @@ pub fn ClassPage() -> impl IntoView {
 
     view! {
         <Suspense fallback=move || view! { <p>"Loading..."</p> } >
-            <Header text={class_name().unwrap_or_default()} logo={None} class_id={class_id.get().ok().map(|c| c.class_id)}/>
+            <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
         </Suspense>
         <div class="flex justify-end pt-8 mx-20">
             <A href="new">

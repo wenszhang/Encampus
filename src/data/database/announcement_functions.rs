@@ -1,4 +1,3 @@
-use chrono::DateTime;
 /**
  * This file contains all the database functions that are used in the server
  */
@@ -33,7 +32,7 @@ pub async fn get_announcement_list(class_id: i32) -> Result<Vec<AnnouncementInfo
     ))?;
 
     let announcements: Vec<AnnouncementInfo> =
-        sqlx::query_as("SELECT announcementid as annoucement_id, time, title, contents, classid as class_id, authorid as author_id from announcements where classid = $1")
+        sqlx::query_as("SELECT announcementid as announcement_id, time, title, contents, classid as class_id, authorid as author_id from announcements where classid = $1")
             .bind(class_id)
             .fetch_all(&pool)
             .await
