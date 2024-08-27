@@ -12,19 +12,22 @@ use svg::view;
 use crate::data::global_state::GlobalState;
 
 // database function for announcements
-use crate::data::database::class_functions::announcement_functions::GetAnnoucementsList;
+use crate::data::database::announcement_functions::GetAnnouncementsList;
 
 #[component]
 pub fn AnnouncementInfo(class_id: Option<i32>) -> impl IntoView {
-    let announcements = create_resource(class_id, |class_id| async {
-        get_announcement_list(class_id.unwrap().class_id)
-            .await
-            .unwrap_or_default()
-    });
+    let announcements = create_resource(
+        || class_id,
+        |class_id| async {
+            get_announcement_list(class_id.unwrap())
+                .await
+                .unwrap_or_default()
+        },
+    );
 
     return view! {
         <ul class="py-1 mx-1 text-gray-700 w-40 text-left text-lg">
-        {values.into_iter()
+        {announcements.into_iter()
             .map(|n| view! { <li class= "px-4 py-2 hover:bg-gray-100 cursor-pointer">{n}</li>})
             .collect_view()}
         </ul>
