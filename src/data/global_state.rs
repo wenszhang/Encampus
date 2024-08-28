@@ -4,6 +4,7 @@ use leptos::{create_rw_signal, RwSignal};
 pub(crate) struct GlobalState {
     pub _user_token: RwSignal<Option<String>>,
     pub user_name: RwSignal<Option<String>>,
+    pub first_name: RwSignal<Option<String>>,
     pub authenticated: RwSignal<bool>,
 }
 
@@ -12,6 +13,7 @@ impl GlobalState {
         Self {
             _user_token: create_rw_signal(None),
             user_name: create_rw_signal(None),
+            first_name: create_rw_signal(None),
             authenticated: create_rw_signal(false),
         }
     }
