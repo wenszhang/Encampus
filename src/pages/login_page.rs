@@ -2,7 +2,9 @@
  * Component for the login page where users can login to their account
  */
 use leptos::{ev::SubmitEvent, *};
+use leptos_router::use_params;
 
+use crate::data::database::user_functions::{get_user_info, GetUserInfo, User};
 use crate::{data::database::security_functions::login_signup, data::global_state::GlobalState};
 
 #[component]
@@ -23,11 +25,24 @@ pub fn LoginPage() -> impl IntoView {
         event.prevent_default();
 
         let _login = create_resource(username, |username| async {
-            login_signup(username).await.unwrap();
+            login_signup(username).await.unwrap_or_default();
         });
 
         global_state.user_name.set(Some(username.get()));
         global_state.authenticated.set(true);
+
+        let username = username.clone();
+        let user = create_resource(username, |username| async {
+            get_user_info(username).await.unwrap();
+        });
+        global_state.first_name.set(async {
+            Some(
+                get_user_info(username.get())
+                    .await
+                    .unwrap_or_default()
+                    .first_name,
+            )
+        });
 
         // The variable definition is required
         // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
