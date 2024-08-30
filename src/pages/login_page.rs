@@ -2,16 +2,14 @@
  * Component for the login page where users can login to their account
  */
 use leptos::{ev::SubmitEvent, *};
-use leptos_router::use_params;
 
-use crate::data::database::user_functions::{get_user_info, GetUserInfo, User};
+use crate::data::database::user_functions::get_user_info;
 use crate::{data::database::security_functions::login_signup, data::global_state::GlobalState};
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
-    let (first_name, set_first_name) = create_signal("".to_string());
 
     // Input event handler for controlled components
     let on_input = |setter: WriteSignal<String>| {
@@ -29,13 +27,11 @@ pub fn LoginPage() -> impl IntoView {
             login_signup(username).await.unwrap_or_default();
         });
 
-        let current_username = username.get();
-
-        global_state.user_name.set(Some(current_username.clone()));
+        global_state.user_name.set(Some(username.get()));
         global_state.authenticated.set(true);
 
         let user = create_resource(username, |username| async {
-            get_user_info("Matt".to_string()).await.unwrap_or_default()
+            get_user_info(username).await.unwrap_or_default()
         });
 
         global_state
