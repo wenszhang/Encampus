@@ -11,6 +11,7 @@ use crate::{data::database::security_functions::login_signup, data::global_state
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
+    let (first_name, set_first_name) = create_signal("".to_string());
 
     // Input event handler for controlled components
     let on_input = |setter: WriteSignal<String>| {
@@ -28,21 +29,10 @@ pub fn LoginPage() -> impl IntoView {
             login_signup(username).await.unwrap_or_default();
         });
 
-        global_state.user_name.set(Some(username.get()));
-        global_state.authenticated.set(true);
+        let current_username = username.get();
 
-        let username = username.clone();
-        let user = create_resource(username, |username| async {
-            get_user_info(username).await.unwrap();
-        });
-        global_state.first_name.set(async {
-            Some(
-                get_user_info(username.get())
-                    .await
-                    .unwrap_or_default()
-                    .first_name,
-            )
-        });
+        global_state.user_name.set(Some(current_username.clone()));
+        global_state.authenticated.set(true);
 
         // The variable definition is required
         // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
@@ -102,4 +92,26 @@ pub fn LoginPage() -> impl IntoView {
             </div>
         </form>
     }
+}
+
+#[cfg(feature = "ssr")]
+#[derive(sqlx::FromRow)]
+pub struct Name(String);
+
+#[server(SetUserFirstName)]
+pub async fn set_user_first_name(username: String) -> Result<String, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let Name(name) = sqlx::query_as("select firstname from users where username = '$1'")
+        .bind(username)
+        .fetch_one(&pool)
+        .await
+        .expect("failed getting user");
+
+    Ok(name)
 }
