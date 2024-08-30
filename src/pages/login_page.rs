@@ -34,6 +34,14 @@ pub fn LoginPage() -> impl IntoView {
         global_state.user_name.set(Some(current_username.clone()));
         global_state.authenticated.set(true);
 
+        let user = create_resource(username, |username| async {
+            get_user_info("Matt".to_string()).await.unwrap_or_default()
+        });
+
+        global_state
+            .first_name
+            .set(Some(user.get().unwrap().firstname));
+
         // The variable definition is required
         // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
         let navigate = leptos_router::use_navigate();

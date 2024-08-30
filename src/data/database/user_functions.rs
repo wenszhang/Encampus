@@ -4,12 +4,12 @@ use serde::{Deserialize, Serialize};
 /**
  * Struct to hold user
  */
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Default)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct User {
     pub username: String,
-    pub first_name: String,
-    pub last_name: String,
+    pub firstname: String,
+    pub lastname: String,
     pub id: i32,
 }
 
