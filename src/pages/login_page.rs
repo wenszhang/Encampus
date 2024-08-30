@@ -4,12 +4,14 @@
 use leptos::{ev::SubmitEvent, *};
 
 use crate::data::database::user_functions::get_user_info;
+use crate::data::database::user_functions::User;
 use crate::{data::database::security_functions::login_signup, data::global_state::GlobalState};
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
+    let (first_name, set_first_name) = create_signal("".to_string());
 
     // Input event handler for controlled components
     let on_input = |setter: WriteSignal<String>| {
@@ -27,16 +29,27 @@ pub fn LoginPage() -> impl IntoView {
             login_signup(username).await.unwrap_or_default();
         });
 
-        global_state.user_name.set(Some(username.get()));
-        global_state.authenticated.set(true);
-
-        let user = create_resource(username, |username| async {
-            get_user_info(username).await.unwrap_or_default()
+        let user_name = username.clone();
+        let user = create_resource(user_name, |user_name| async {
+            get_user_info(user_name).await.unwrap_or_else(|_| User {
+                username: "Failed".to_string(),
+                firstname: "Failed".to_string(),
+                lastname: "Failed".to_string(),
+                id: 0,
+            })
         });
 
+        global_state.user_name.set(Some(username.get()));
+        global_state.authenticated.set(true);
         global_state
             .first_name
-            .set(Some(user.get().unwrap().firstname));
+            .set(Some(user.get().unwrap_or_default().firstname));
+
+        // let user = create_resource(username, |username| async {
+        //     get_user_info(username).await.unwrap().first_name
+        // });
+
+        // global_state.first_name.set(Some(user.get().unwrap()));
 
         // The variable definition is required
         // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")

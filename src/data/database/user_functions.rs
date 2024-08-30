@@ -1,6 +1,6 @@
+use crate::data::global_state::{self, GlobalState};
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
-
 /**
  * Struct to hold user
  */
@@ -15,6 +15,9 @@ pub struct User {
 
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct UserId(pub i32);
+
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct FirstName(pub String);
 
 #[server(GetUserInfo)]
 pub async fn get_user_info(username: String) -> Result<User, ServerFnError> {
