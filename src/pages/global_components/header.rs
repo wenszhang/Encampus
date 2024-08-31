@@ -12,6 +12,7 @@ use crate::data::global_state::GlobalState;
 #[component]
 pub fn Header(text: String, logo: Option<String>, class_id: Option<i32>) -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
+
     let logo_src = logo.as_deref().unwrap_or("images/logo.png");
     let header_text_href = if let Some(id) = &class_id {
         format!("/classes/{}", id)

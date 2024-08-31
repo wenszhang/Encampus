@@ -1,4 +1,3 @@
-use crate::data::global_state::{self, GlobalState};
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 /**
@@ -16,24 +15,24 @@ pub struct User {
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct UserId(pub i32);
 
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct FirstName(pub String);
+// #[cfg(feature = "ssr")]
+// #[derive(sqlx::FromRow)]
+// pub struct FirstName(pub String);
 
-#[server(GetUserInfo)]
-pub async fn get_user_info(username: String) -> Result<User, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
+// #[server(GetUserInfo)]
+// pub async fn get_user_info(username: String) -> Result<String, ServerFnError> {
+//     use leptos::{server_fn::error::NoCustomError, use_context};
+//     use sqlx::postgres::PgPool;
 
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to complete Request".to_string(),
-    ))?;
+//     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+//         "Can't find user".to_string(),
+//     ))?;
 
-    let current_user: User =
-        sqlx::query_as("select username, firstname, lastname, id from users where username = $1")
-            .bind(username)
-            .fetch_one(&pool)
-            .await
-            .expect("failed getting user");
+//     let FirstName(current_user) = sqlx::query_as("SELECT firstname FROM users where username = $1")
+//         .bind(username)
+//         .fetch_one(&pool)
+//         .await
+//         .expect("Can't find user");
 
-    Ok(current_user)
-}
+//     Ok(current_user)
+// }

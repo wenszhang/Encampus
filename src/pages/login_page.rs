@@ -1,17 +1,16 @@
 /**
  * Component for the login page where users can login to their account
  */
-use leptos::{ev::SubmitEvent, *};
+use leptos::{create_resource, ev::SubmitEvent, *};
 
-use crate::data::database::user_functions::get_user_info;
-use crate::data::database::user_functions::User;
+// use crate::data::database::user_functions::get_user_info;
 use crate::{data::database::security_functions::login_signup, data::global_state::GlobalState};
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
-    let (first_name, set_first_name) = create_signal("".to_string());
+    // let (first_name, set_first_name) = create_signal("".to_string());
 
     // Input event handler for controlled components
     let on_input = |setter: WriteSignal<String>| {
@@ -29,27 +28,18 @@ pub fn LoginPage() -> impl IntoView {
             login_signup(username).await.unwrap_or_default();
         });
 
-        let user_name = username.clone();
-        let user = create_resource(user_name, |user_name| async {
-            get_user_info(user_name).await.unwrap_or_else(|_| User {
-                username: "Failed".to_string(),
-                firstname: "Failed".to_string(),
-                lastname: "Failed".to_string(),
-                id: 0,
-            })
-        });
-
         global_state.user_name.set(Some(username.get()));
         global_state.authenticated.set(true);
+        // global_state.first_name.set(Some(username.get())); // Sets name to username, bypass problem below
+
+        let display_name = create_resource(
+            || "".to_string(),
+            |username| async { get_user_info(username).await.unwrap_or_default() },
+        );
+
         global_state
             .first_name
-            .set(Some(user.get().unwrap_or_default().firstname));
-
-        // let user = create_resource(username, |username| async {
-        //     get_user_info(username).await.unwrap().first_name
-        // });
-
-        // global_state.first_name.set(Some(user.get().unwrap()));
+            .set(Some(display_name.get().unwrap())); // calling unwrap on None, db query always returns None
 
         // The variable definition is required
         // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
@@ -131,4 +121,26 @@ pub async fn set_user_first_name(username: String) -> Result<String, ServerFnErr
         .expect("failed getting user");
 
     Ok(name)
+}
+
+#[cfg(feature = "ssr")]
+#[derive(sqlx::FromRow)]
+pub struct FirstName(pub String);
+
+#[server(GetUserInfo)]
+pub async fn get_user_info(username: String) -> Result<String, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Can't find user".to_string(),
+    ))?;
+
+    let FirstName(current_user) = sqlx::query_as("SELECT firstname FROM users limit 1")
+        .bind(username)
+        .fetch_one(&pool)
+        .await
+        .expect("Can't find user");
+
+    Ok(current_user)
 }
