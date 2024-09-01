@@ -11,7 +11,6 @@ use crate::data::{database::security_functions::login_signup, global_state::Glob
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
-    // let (first_name, set_first_name) = create_signal("".to_string());
 
     // Input event handler for controlled components
     let on_input = |setter: WriteSignal<String>| {
@@ -24,7 +23,7 @@ pub fn LoginPage() -> impl IntoView {
         let username = username.to_owned();
         async {
             let user_ID = login_signup(username.clone()).await.unwrap_or_default();
-            let first_name = get_user_info(username.clone()).await.unwrap_or_default();
+            let first_name = set_user_first_name(username.clone()).await.unwrap(); // for some reason unwrap_or_default() doesn't work here but it does with just unwrap()
             (username, user_ID, first_name)
         }
     });
@@ -116,7 +115,7 @@ pub async fn set_user_first_name(username: String) -> Result<String, ServerFnErr
         "Unable to complete Request".to_string(),
     ))?;
 
-    let Name(name) = sqlx::query_as("select firstname from users where username = '$1'")
+    let FirstName(name) = sqlx::query_as("select firstname from users where username = $1")
         .bind(username)
         .fetch_one(&pool)
         .await
