@@ -1,4 +1,3 @@
-use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 /**
  * Struct to hold user

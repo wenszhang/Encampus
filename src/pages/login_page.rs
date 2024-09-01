@@ -1,10 +1,11 @@
 /**
  * Component for the login page where users can login to their account
  */
-use leptos::{create_resource, ev::SubmitEvent, *};
+use leptos::{ev::SubmitEvent, *};
+use leptos_dom::logging::console_log;
 
 // use crate::data::database::user_functions::get_user_info;
-use crate::{data::database::security_functions::login_signup, data::global_state::GlobalState};
+use crate::data::{database::security_functions::login_signup, global_state::GlobalState};
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
@@ -18,33 +19,34 @@ pub fn LoginPage() -> impl IntoView {
             setter(event_target_value(&ev));
         }
     };
-    let global_state = expect_context::<GlobalState>();
+
+    let login_action = create_action(|username: &String| {
+        let username = username.to_owned();
+        async {
+            let user_ID = login_signup(username.clone()).await.unwrap_or_default();
+            let first_name = get_user_info(username.clone()).await.unwrap_or_default();
+            (username, user_ID, first_name)
+        }
+    });
+
+    create_effect(move |_| {
+        let global_state = expect_context::<GlobalState>();
+        if let Some(userInfo) = login_action.value()() {
+            global_state.authenticated.set(true);
+            global_state.user_name.set(Some(userInfo.0));
+            global_state.first_name.set(Some(userInfo.2));
+
+            // The variable definition is required
+            // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
+            let navigate = leptos_router::use_navigate();
+            navigate("/classes", Default::default());
+        }
+    });
 
     // Form submission handler
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
-
-        let _login = create_resource(username, |username| async {
-            login_signup(username).await.unwrap_or_default();
-        });
-
-        global_state.user_name.set(Some(username.get()));
-        global_state.authenticated.set(true);
-        // global_state.first_name.set(Some(username.get())); // Sets name to username, bypass problem below
-
-        let display_name = create_resource(
-            || "".to_string(),
-            |username| async { get_user_info(username).await.unwrap_or_default() },
-        );
-
-        global_state
-            .first_name
-            .set(Some(display_name.get().unwrap())); // calling unwrap on None, db query always returns None
-
-        // The variable definition is required
-        // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
-        let navigate = leptos_router::use_navigate();
-        navigate("/classes", Default::default());
+        login_action.dispatch(username());
     };
 
     view! {
