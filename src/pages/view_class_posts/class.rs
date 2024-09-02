@@ -3,6 +3,8 @@ use super::question_tile::UnansweredQuestionTile;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::pages::global_components::header::Header;
+use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
+
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
 
@@ -51,9 +53,20 @@ pub fn ClassPage() -> impl IntoView {
         <Suspense fallback=move || view! { <p>"Loading..."</p> } >
             <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
         </Suspense>
+
+    <div class="flex justify-center pt-8">
+        <div class="relative p-2 rounded-full border border-gray-300 focus-within:border-blue-500 w-80">
+            <input type="text" placeholder="Search posts by keywords...." class="pl-5 pr-5 w-full border-none focus:outline-none "  style="background-color: white;"/>
+            <button class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                <MagnifyingGlass size="20px"/>
+            </button>
+        </div>
+    </div>
+
+
         <div class="flex justify-end pt-8 mx-20">
             <A href="new">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                <button class="bg-customBlue hover:bg-customBlue-hover text-white py-2 px-4  rounded-full focus:outline-none focus:ring-2 focus:ring-customBlue focus:ring-offset-2">
                     "Post +"
                 </button>
             </A>

@@ -2,7 +2,13 @@
 module.exports = {
     content: ["*.html", "./src/**/*.rs",],
     theme: {
-      extend: {},
+      extend: {   
+        colors: {
+          customBlue: {
+            DEFAULT: '#1A223A',
+            hover: '#101930',},
     },
     plugins: [],
   }
+}
+}

@@ -10,14 +10,16 @@ use crate::pages::global_components::header::Header;
 
 #[component]
 pub fn ClassTile(class: ClassInfo) -> impl IntoView {
-    view! {
+    let var_name = view! {
         <a href=&format!("classes/{}", class.id)>
-                <div class="tile bg-white rounded shadow-md p-10 flex items-center justify-center text-l font-bold h-70 w-50 tile transition duration-300 hover:bg-gray-100">
-                    {class.name}
+            <div class="relative bg-white rounded-lg shadow-lg p-6 flex flex-col items-center justify-center text-lg font-semibold h-60 w-85 transition-transform duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-xl overflow-hidden">
+                <div class="flex-1 flex items-center justify-center text-center mt-2">
+                    <span>{class.name}</span>
                 </div>
-
+            </div>
         </a>
-    }
+    };
+    var_name
 }
 
 /**

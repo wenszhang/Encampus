@@ -9,7 +9,7 @@ use leptos_router::A;
 pub fn QuestionTile(post: Post) -> impl IntoView {
     view! {
         <A href=format!("{}", post.post_id)>
-            <div class="tile bg-white rounded shadow p-4 flex items-center justify-center font-bold h-32 transition duration-300 hover:bg-gray-100">
+            <div class="relative bg-white rounded-lg shadow-lg p-6 flex flex-col items-center justify-center text-lg font-semibold h-60 w-85 transition-transform duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-xl overflow-hidden">
                 {post.title}
             </div>
         </A>
@@ -20,7 +20,7 @@ pub fn QuestionTile(post: Post) -> impl IntoView {
 pub fn UnansweredQuestionTile(post: Post) -> impl IntoView {
     view! {
         <A href=format!("{}", post.post_id)>
-            <div class="tile bg-red-500 rounded shadow p-4 flex items-center justify-center font-bold h-32 transition duration-300 hover:bg-red-700">
+            <div class="relative bg-red-500 hover:bg-red-700 rounded-lg shadow-lg p-6 flex flex-col items-center justify-center text-lg font-semibold h-60 w-100 transition-transform duration-300 hover:scale-105hover:shadow-xl overflow-hidden">
                 {post.title}
             </div>
         </A>
