@@ -15,7 +15,10 @@ pub enum NotificationType {
 }
 
 #[component]
-pub fn Notification(notification_details: NotificationDetails) -> impl IntoView {
+pub fn NotificationComponent(
+    notification_details: NotificationDetails,
+    on_close: impl Fn() + 'static,
+) -> impl IntoView {
     let class_name = match notification_details.notification_type {
         NotificationType::Success => "bg-green-500",
         NotificationType::Error => "bg-red-500",
@@ -25,7 +28,10 @@ pub fn Notification(notification_details: NotificationDetails) -> impl IntoView 
 
     view! {
         <div class={format!("rounded p-4 text-white {}", class_name)}>
-            {&notification_details.message}
+            <span>{&notification_details.message}</span>
+            <button class="ml-4" on:click=move |_| on_close()>
+                {"✖"}
+            </button>
         </div>
     }
 }

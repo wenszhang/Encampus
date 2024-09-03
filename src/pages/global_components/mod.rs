@@ -4,4 +4,4 @@ pub mod announcements;
 pub mod error_template;
 pub mod header;
 pub mod page;
-mod notification;
+pub(crate) mod notification;
