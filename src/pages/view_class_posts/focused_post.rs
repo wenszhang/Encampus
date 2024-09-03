@@ -12,8 +12,10 @@ use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
 use crate::data::database::post_functions::resolve_post;
-use crate::pages::global_components::notification::{NotificationComponent, NotificationDetails, NotificationType};
 use crate::data::global_state::GlobalState;
+use crate::pages::global_components::notification::{
+    NotificationComponent, NotificationDetails, NotificationType,
+};
 
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
@@ -54,7 +56,8 @@ pub fn FocusedPost() -> impl IntoView {
     let post_id = use_params::<PostId>();
     let global_state = expect_context::<GlobalState>();
     let (order_option, set_value) = create_signal("Newest First".to_string());
-    let (notification_details, set_notification_details) = create_signal(None::<NotificationDetails>);
+    let (notification_details, set_notification_details) =
+        create_signal(None::<NotificationDetails>);
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
@@ -346,19 +349,19 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
                 anonymous,
                 replyid;",
     )
-        .bind(user_id.0)
-        .bind(reply_info.post_id)
-        .bind(reply_info.anonymous)
-        .bind(reply_info.contents)
-        .fetch_one(&pool)
-        .await
-        .map_err(|db_error| {
-            logging::error!(
+    .bind(user_id.0)
+    .bind(reply_info.post_id)
+    .bind(reply_info.anonymous)
+    .bind(reply_info.contents)
+    .fetch_one(&pool)
+    .await
+    .map_err(|db_error| {
+        logging::error!(
             "\nAdd Reply Server Function Failed. Database returned error {:?}\n",
             db_error
         );
-            ServerFnError::<NoCustomError>::ServerError("Unable to add Reply".to_string())
-        })?;
+        ServerFnError::<NoCustomError>::ServerError("Unable to add Reply".to_string())
+    })?;
 
     Ok(newreply)
 }
