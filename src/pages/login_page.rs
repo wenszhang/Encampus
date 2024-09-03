@@ -2,7 +2,6 @@
  * Component for the login page where users can login to their account
  */
 use leptos::{ev::SubmitEvent, *};
-use leptos_dom::logging::console_log;
 
 // use crate::data::database::user_functions::get_user_info;
 use crate::data::{database::security_functions::login_signup, global_state::GlobalState};
@@ -23,7 +22,9 @@ pub fn LoginPage() -> impl IntoView {
         let username = username.to_owned();
         async {
             let user_ID = login_signup(username.clone()).await.unwrap_or_default();
-            let first_name = set_user_first_name(username.clone()).await.unwrap(); // for some reason unwrap_or_default() doesn't work here but it does with just unwrap()
+            let first_name = set_user_first_name(username.clone())
+                .await
+                .unwrap_or_default(); // for some reason unwrap_or_default() doesn't work here but it does with just unwrap()
             (username, user_ID, first_name)
         }
     });
@@ -101,10 +102,6 @@ pub fn LoginPage() -> impl IntoView {
         </form>
     }
 }
-
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct Name(String);
 
 #[server(SetUserFirstName)]
 pub async fn set_user_first_name(username: String) -> Result<String, ServerFnError> {

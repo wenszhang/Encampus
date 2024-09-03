@@ -63,7 +63,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                         </div>
                     </div>})
                 }
-                <span class="text-xl font-bold mr-4 flex items-center">{move || global_state.user_name.get()}</span>
+                <span class="text-xl font-bold mr-4 flex items-center">{move || global_state.first_name.get()}</span>
                 <div class="flex items-center relative group">
                     <button>
                         <DropDownBars size="1.3rem"/>
