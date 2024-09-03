@@ -6,7 +6,7 @@ use leptos::{server, ServerFnError};
  * Login a user or sign them up if they don't exist
  */
 #[server(LoginSignUp)]
-pub async fn login_signup(username: String) -> Result<i32, ServerFnError> {
+pub async fn login_signup(username: String) -> Result<User, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -14,13 +14,11 @@ pub async fn login_signup(username: String) -> Result<i32, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let mut user_result: Option<User> = sqlx::query_as(
-        "select username, first_name, last_name, id from users where username = $1
-                                RETURNING id;",
-    )
-    .bind(username.clone())
-    .fetch_optional(&pool)
-    .await?;
+    let mut user_result: Option<User> =
+        sqlx::query_as("select username, firstname, lastname, id from users where username = $1")
+            .bind(username.clone())
+            .fetch_optional(&pool)
+            .await?;
 
     if user_result.is_none() {
         sqlx::query("insert into users(username) values($1)")
@@ -36,13 +34,12 @@ pub async fn login_signup(username: String) -> Result<i32, ServerFnError> {
             .expect("Failed adding student");
 
         user_result = sqlx::query_as(
-            "select username, first_name, last_name, id from users where username = $1
-                                    RETURNING id;",
+            "select username, firstname, lastname, id from users where username = $1",
         )
         .bind(username.clone())
         .fetch_optional(&pool)
         .await?;
     }
 
-    Ok(user_result.unwrap().id)
+    Ok(user_result.unwrap())
 }

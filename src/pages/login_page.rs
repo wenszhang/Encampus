@@ -22,10 +22,7 @@ pub fn LoginPage() -> impl IntoView {
         let username = username.to_owned();
         async {
             let user_ID = login_signup(username.clone()).await.unwrap_or_default();
-            let first_name = set_user_first_name(username.clone())
-                .await
-                .unwrap_or_default(); // for some reason unwrap_or_default() doesn't work here but it does with just unwrap()
-            (username, user_ID, first_name)
+            (username, user_ID.id, user_ID.firstname)
         }
     });
 
@@ -34,6 +31,7 @@ pub fn LoginPage() -> impl IntoView {
         if let Some(userInfo) = login_action.value()() {
             global_state.authenticated.set(true);
             global_state.user_name.set(Some(userInfo.0));
+            global_state.id.set(Some(userInfo.1));
             global_state.first_name.set(Some(userInfo.2));
 
             // The variable definition is required
@@ -101,44 +99,4 @@ pub fn LoginPage() -> impl IntoView {
             </div>
         </form>
     }
-}
-
-#[server(SetUserFirstName)]
-pub async fn set_user_first_name(username: String) -> Result<String, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to complete Request".to_string(),
-    ))?;
-
-    let FirstName(name) = sqlx::query_as("select firstname from users where username = $1")
-        .bind(username)
-        .fetch_one(&pool)
-        .await
-        .expect("failed getting user");
-
-    Ok(name)
-}
-
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct FirstName(pub String);
-
-#[server(GetUserInfo)]
-pub async fn get_user_info(username: String) -> Result<String, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Can't find user".to_string(),
-    ))?;
-
-    let FirstName(current_user) = sqlx::query_as("SELECT firstname FROM users limit 1")
-        .bind(username)
-        .fetch_one(&pool)
-        .await
-        .expect("Can't find user");
-
-    Ok(current_user)
 }
