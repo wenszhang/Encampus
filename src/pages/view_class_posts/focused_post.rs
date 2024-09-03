@@ -123,16 +123,16 @@ pub fn FocusedPost() -> impl IntoView {
             .unwrap_or_else(|_| "Failed".to_string())
     });
 
-    // let notification_view = move || {
-    //     notification_details.get().map(|details| {
-    //         view! {
-    //             <NotificationComponent
-    //                 notification_details={details.clone()}
-    //                 on_close={move || set_notification_details(None)}
-    //             />
-    //         }
-    //     })
-    // };
+    let notification_view = move || {
+        notification_details.get().map(|details| {
+            view! {
+                <NotificationComponent
+                    notification_details={details.clone()}
+                    on_close={move || set_notification_details(None)}
+                />
+            }
+        })
+    };
 
     view! {
         <div class="bg-white rounded shadow p-6 flex flex-col gap-3">
@@ -243,7 +243,7 @@ pub fn FocusedPost() -> impl IntoView {
                         >
                         "Post Response"
                         </button>
-                 // {notification_view}
+                 {notification_view}
                     </div>
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
