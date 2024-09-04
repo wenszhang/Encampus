@@ -3,6 +3,7 @@ use super::question_tile::UnansweredQuestionTile;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::pages::global_components::header::Header;
+use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
 
@@ -53,7 +54,7 @@ pub fn ClassPage() -> impl IntoView {
         </Suspense>
         <div class="flex justify-end pt-8 mx-20">
             <A href="new">
-                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                <button class="bg-customBlue hover:bg-customBlue-HOVER text-white py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2">
                     "Post +"
                 </button>
             </A>
@@ -61,6 +62,16 @@ pub fn ClassPage() -> impl IntoView {
 
         <div class="flex align mx-20 my-10 flex-col gap-4">
             <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
+
+        <div class="flex items-center justify-center">
+            <div class="relative p-2 rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-80 bg-white">
+                <input type="text" placeholder="Search posts by keywords..." class="pl-5 pr-5 w-full border-none focus:outline-none bg-white"/>
+                <button class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                    <MagnifyingGlass size="20px"/>
+                </button>
+            </div>
+        </div>
+
 
             <div class="grid grid-cols-3 gap-4">
                 <Suspense fallback=move || view! { <p>"Loading..."</p> } >

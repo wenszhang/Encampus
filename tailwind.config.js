@@ -5,11 +5,14 @@ module.exports = {
       extend: {   
         colors: {
           customBlue: {
-            DEFAULT: '#1A223A',
-            HOVER: '#101930',},
+            DEFAULT: '#101930',
+            HOVER: '#213873',},
           customRed: {
             DEFAULT: '#FFDADA',
             HOVER: '#FFABAB'
+          },
+          customPurple: {
+          DEFAULT: '#D8C4F7',
           }
     },
     plugins: [],

@@ -44,18 +44,16 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                 <a href="/classes"><img src={format!("/{}", logo_src)} alt="Logo" class="h-8 mr-2"/></a>
                 <a href={header_text_href} class="text-xl font-bold">{text}</a>
             </div>
-            <div class="relative p-2 rounded-full border border-gray-300 focus-within:border-blue-500 w-64">
-                <input type="text" placeholder="Search something..." class="pl-5 pr-5 w-full border-none focus:outline-none"/>
-                <button class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <MagnifyingGlass size="20px"/>
-                </button>
-            </div>
+
             <div class="flex items-center ">
                 {move || class_id().map(|class_id: i32| view! {
                     <div class="group relative">
-                        <button class="pr-2">
-                            <AnnouncementBell size="1.3rem"/>
-                        </button>
+                    <span class="inline-flex items-baseline">
+                        <h3 class="px-2"> "New Announcements"</h3>
+                            <button class="pr-2">
+                                <AnnouncementBell size="1.3rem"/>
+                            </button>
+                    </span>
                         <div class="absolute right-0 top-full mt-[-0.1rem] shadow-md rounded-lg bg-white invisible
                             group-hover:opacity-100 group-hover:scale-100 group-hover:visible">
                             <AnnouncementInfo class_id = move || class_id/>
