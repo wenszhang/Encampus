@@ -30,6 +30,7 @@ pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
 #[component]
 pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>) -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
+
     let logo_src = logo.as_deref().unwrap_or("images/logo.png");
     let header_text_href = move || {
         if let Some(id) = class_id() {
@@ -62,7 +63,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                         </div>
                     </div>})
                 }
-                <span class="text-xl font-bold mr-4 flex items-center">{move || global_state.user_name.get()}</span>
+                <span class="text-xl font-bold mr-4 flex items-center">{move || global_state.first_name.get()}</span>
                 <div class="flex items-center relative group">
                     <button>
                         <DropDownBars size="1.3rem"/>

@@ -386,7 +386,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 title, 
                 contents, 
                 CASE WHEN anonymous THEN 'Anonymous Author'
-                    ELSE users.username 
+                    ELSE users.firstname 
                 END as author_name, 
                 anonymous,
                 resolved
@@ -399,7 +399,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 time, 
                 contents,
                 CASE WHEN anonymous THEN 'Anonymous Author'
-                    ELSE users.username 
+                    ELSE users.firstname 
                 END as author_name, 
                 anonymous,
                 replyid
