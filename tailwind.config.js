@@ -6,7 +6,11 @@ module.exports = {
         colors: {
           customBlue: {
             DEFAULT: '#1A223A',
-            hover: '#101930',},
+            HOVER: '#101930',},
+          customRed: {
+            DEFAULT: '#FFDADA',
+            HOVER: '#FFABAB'
+          }
     },
     plugins: [],
   }

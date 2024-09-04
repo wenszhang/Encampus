@@ -9,10 +9,21 @@ use leptos_router::A;
 pub fn QuestionTile(post: Post) -> impl IntoView {
     view! {
         <A href=format!("{}", post.post_id)>
-            <div class="relative bg-white rounded-lg shadow-lg p-6 flex flex-col items-center justify-center text-lg font-semibold h-60 w-85 transition-transform duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-xl overflow-hidden">
+        <div class="relative bg-white rounded-lg shadow-lg p-6 flex flex-col items-center justify-between text-lg font-semibold h-60 w-85 transition-transform duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-xl overflow-hidden ">
+            <div class="absolute top-4 left-6 flex flex-col items-start space-y-2 z-10">
+                <div class="text-sm font-medium text-gray-700">{}</div> // Get the students name here?
+                <div class="flex space-x-2">
+                    <p class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Example tag</p>
+                    <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Tag1</span>
+                    <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Tag2</span>
+                </div>
+            </div>
+            <div class="w-[calc(100%+3rem)] border-t-2 border-gray-200 mt-8 -mx-6" style="box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);"></div> // Use vanilla inline css
+            <div class="flex-grow flex items-center justify-center">
                 {post.title}
             </div>
-        </A>
+        </div>
+    </A>
     }
 }
 
@@ -20,8 +31,19 @@ pub fn QuestionTile(post: Post) -> impl IntoView {
 pub fn UnansweredQuestionTile(post: Post) -> impl IntoView {
     view! {
         <A href=format!("{}", post.post_id)>
-            <div class="relative bg-red-500 hover:bg-red-700 rounded-lg shadow-lg p-6 flex flex-col items-center justify-center text-lg font-semibold h-60 w-100 transition-transform duration-300 hover:scale-105hover:shadow-xl overflow-hidden">
-                {post.title}
+            <div class="relative bg-customRed rounded-lg shadow-lg p-6 flex flex-col items-center justify-between text-lg font-semibold h-60 w-85 transition-transform duration-300 hover:scale-105 hover:bg-customRed-HOVER hover:shadow-xl overflow-hidden">
+                <div class="absolute top-4 left-6 flex flex-col items-start space-y-2 z-10">
+                    <div class="text-sm font-medium text-gray-700">{}</div>
+                    <div class="flex space-x-2">
+                        <p class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Example tag</p>
+                        <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Tag1</span>
+                        <span class="text-xs bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded-full">Unresolved</span>
+                    </div>
+                </div>
+                <div class="w-[calc(100%+3rem)] border-t-2 border-gray-200 mt-8 -mx-6" style="box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);"></div> // Use vanilla inline css
+                <div class="flex-grow flex items-center justify-center">
+                    {post.title}
+                </div>
             </div>
         </A>
     }
