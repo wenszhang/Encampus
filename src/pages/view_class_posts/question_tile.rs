@@ -11,13 +11,17 @@ pub fn QuestionTile(post: Post) -> impl IntoView {
         <A href=format!("{}", post.post_id)>
             <div class="relative bg-card-bg rounded-lg shadow-lg p-6 flex flex-col items-center justify-between text-lg font-semibold h-60 w-85 transition-transform duration-300 hover:scale-105 hover:bg-gray-100 hover:shadow-xl overflow-hidden">
 
+                // Card header
                 <div class="text-xs absolute top-0 left-0 w-full h-12 bg-card-header rounded-t-lg shadow-md z-10 flex items-center">
                     //<div class="text-sm font-medium text-gray-700">Name{}</div> // Get the students name here?
-                    <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full mr-2">Example tag</span>
-                    <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full mr-2">Tag1</span>
-                    <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full">Tag2</span>
+                    <span class="pl-6"> // Tags container
+                        <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full mr-2">Example tag</span>
+                        <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full mr-2">Tag1</span>
+                        <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full">Tag2</span>
+                    </span>
                 </div>
 
+                // Card body
                 <div class="flex-grow flex items-center justify-center mt-6">
                     <p class="text-center">{post.title}</p>
                 </div>
