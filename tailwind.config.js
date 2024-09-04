@@ -6,14 +6,19 @@ module.exports = {
         colors: {
           customBlue: {
             DEFAULT: '#101930',
-            HOVER: '#213873',},
+            HOVER: '#213873',
+          },
           customRed: {
             DEFAULT: '#FFDADA',
             HOVER: '#FFABAB'
           },
           customPurple: {
-          DEFAULT: '#D8C4F7',
-          }
+            DEFAULT: '#D8C4F7',
+          },
+          card: {
+            bg: '#FFFFFF',
+            header: '#EEEEEE',
+          },
     },
     plugins: [],
   }
