@@ -1,3 +1,4 @@
+use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 /**
  * Struct to hold user
@@ -14,24 +15,44 @@ pub struct User {
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct UserId(pub i32);
 
-// #[cfg(feature = "ssr")]
-// #[derive(sqlx::FromRow)]
-// pub struct FirstName(pub String);
+/**
+ * Login a user or sign them up if they don't exist
+ */
+#[server(LoginSignUp)]
+pub async fn login_signup(username: String) -> Result<User, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
 
-// #[server(GetUserInfo)]
-// pub async fn get_user_info(username: String) -> Result<String, ServerFnError> {
-//     use leptos::{server_fn::error::NoCustomError, use_context};
-//     use sqlx::postgres::PgPool;
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
 
-//     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-//         "Can't find user".to_string(),
-//     ))?;
+    let mut user_result: Option<User> =
+        sqlx::query_as("select username, firstname, lastname, id from users where username = $1")
+            .bind(username.clone())
+            .fetch_optional(&pool)
+            .await?;
 
-//     let FirstName(current_user) = sqlx::query_as("SELECT firstname FROM users where username = $1")
-//         .bind(username)
-//         .fetch_one(&pool)
-//         .await
-//         .expect("Can't find user");
+    if user_result.is_none() {
+        sqlx::query("insert into users(username) values($1)")
+            .bind(username.clone())
+            .execute(&pool)
+            .await
+            .expect("Failed adding user");
 
-//     Ok(current_user)
-// }
+        sqlx::query("insert into students(name) values($1)")
+            .bind(username.clone())
+            .execute(&pool)
+            .await
+            .expect("Failed adding student");
+
+        user_result = sqlx::query_as(
+            "select username, firstname, lastname, id from users where username = $1",
+        )
+        .bind(username.clone())
+        .fetch_optional(&pool)
+        .await?;
+    }
+
+    Ok(user_result.unwrap())
+}

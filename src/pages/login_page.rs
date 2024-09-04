@@ -3,8 +3,7 @@
  */
 use leptos::{ev::SubmitEvent, *};
 
-// use crate::data::database::user_functions::get_user_info;
-use crate::data::{database::security_functions::login_signup, global_state::GlobalState};
+use crate::data::{database::user_functions::login_signup, global_state::GlobalState};
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
