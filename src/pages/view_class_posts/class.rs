@@ -2,6 +2,8 @@ use super::question_tile::QuestionTile;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::pages::global_components::header::Header;
+use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
+use crate::resources::images::svgs::down_arrow::DownArrow;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
@@ -70,6 +72,25 @@ pub fn ClassPage() -> impl IntoView {
                 </button>
             </div>
         </div>
+
+        // beginning of creating announcements area maybe put in another file for cleaner code.
+        <div class="w-full h-7 bg-customBlue rounded-t-lg flex justify-between items-center px-3">
+            // Left Section
+            <div class="flex text-white items-center">
+                <AnnouncementMic size="1em" />
+                <h3 class="px-2">RECENT ANNOUNCEMENTS</h3>
+            </div>
+
+        // Right Section
+            <div class="flex text-white items-center hover:text-customBlue-HOVER hover:bg-gray-300">
+                    <button>
+                        <details>
+                            <summary>COLLAPSE</summary>
+                        </details>
+                    </button>
+
+            </div>
+    </div>
 
 
             <div class="grid grid-cols-3 gap-4">
