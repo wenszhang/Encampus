@@ -40,7 +40,7 @@ pub fn QuestionTile(
                 // Card header
                 <div class="text-xs absolute top-0 left-0 w-full h-12 bg-card-header rounded-t-lg shadow-md z-10 pl-6 flex gap-2 items-center">
                     //<div class="text-sm font-medium text-gray-700">Name{}</div> // Get the students name here?
-                    {move || if is_resolved() {Some(view!{<TagPill props=TagPillProperties::Unresolved />})} else {None}}
+                    {move || if !is_resolved() {Some(view!{<TagPill props=TagPillProperties::Unresolved />})} else {None}}
                     {move || if is_private() {Some(view!{<TagPill props=TagPillProperties::Private />})} else {None}}
                     <TagPill props=TagPillProperties::Custom(CustomTag {title: "HW1".to_string()}) />
                 </div>
