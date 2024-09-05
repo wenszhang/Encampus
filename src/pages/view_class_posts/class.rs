@@ -1,5 +1,4 @@
 use super::question_tile::QuestionTile;
-use super::question_tile::UnansweredQuestionTile;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::pages::global_components::header::Header;
@@ -76,7 +75,7 @@ pub fn ClassPage() -> impl IntoView {
             <div class="grid grid-cols-3 gap-4">
                 <Suspense fallback=move || view! { <p>"Loading..."</p> } >
                     <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
-                        {post.resolved.then(|| view! { <QuestionTile post={post.clone()} />}).unwrap_or_else(|| view! { <UnansweredQuestionTile post={post.clone()} />})}
+                        {post.resolved.then(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| false).into_signal() is_private=(|| false).into_signal()  />}).unwrap_or_else(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| true).into_signal()  is_private=(|| false).into_signal()  />})}
                     </For>
                 </Suspense>
             </div>
