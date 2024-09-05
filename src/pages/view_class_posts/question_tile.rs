@@ -4,6 +4,7 @@ use std::io::Read;
  * QuestionTile component, displaying a tile for one post
  */
 use crate::data::database::post_functions::Post;
+use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 
@@ -43,6 +44,11 @@ pub fn QuestionTile(
                     {move || if !is_resolved() {Some(view!{<TagPill props=TagPillProperties::Unresolved />})} else {None}}
                     {move || if is_private() {Some(view!{<TagPill props=TagPillProperties::Private />})} else {None}}
                     <TagPill props=TagPillProperties::Custom(CustomTag {title: "HW1".to_string()}) />
+                    <button class="ml-auto flex pr-6 hover:blue">
+                        <DotsIcon size="1em" />
+                    </button>
+
+
                 </div>
 
                 // Card body
