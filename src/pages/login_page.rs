@@ -37,7 +37,9 @@ pub fn LoginPage() -> impl IntoView {
             // The variable definition is required
             // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
             let navigate = leptos_router::use_navigate();
-            navigate("/classes", Default::default());
+            if global_state.role.get().unwrap_or_default() == *"student".to_string() {
+                navigate("/classes", Default::default());
+            }
         }
     });
 
