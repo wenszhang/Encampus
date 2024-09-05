@@ -15,9 +15,9 @@ pub fn QuestionTile(post: Post) -> impl IntoView {
                 <div class="text-xs absolute top-0 left-0 w-full h-12 bg-card-header rounded-t-lg shadow-md z-10 flex items-center">
                     //<div class="text-sm font-medium text-gray-700">Name{}</div> // Get the students name here?
                     <span class="pl-6"> // Tags container
-                        <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full mr-2">Example tag</span>
-                        <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full mr-2">Tag1</span>
-                        <span class="px-2 py-1 bg-gray-200 text-gray-600 rounded-full">Tag2</span>
+                        <span class="px-2 py-1 bg-white text-gray-600 rounded-full mr-2">Example tag</span>
+                        <span class="px-2 py-1 bg-white text-gray-600 rounded-full mr-2">Tag1</span>
+                        <span class="px-2 py-1 bg-white text-gray-600 rounded-full">Tag2</span>
                     </span>
                 </div>
 
@@ -40,9 +40,9 @@ pub fn UnansweredQuestionTile(post: Post) -> impl IntoView {
                 <div class="text-xs absolute top-0 left-0 w-full h-12 bg-card-header rounded-t-lg shadow-md z-10 flex items-center">
                     //<div class="text-sm font-medium text-gray-700">Name{}</div> // Get the students name here?
                     <span class="pl-6"> // Tags container
-                        <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Example tag</span>
-                        <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Tag1</span>
-                        <span class="text-xs bg-red-500 hover:bg-red-700 text-white px-2 py-1 rounded-full">Unresolved</span>
+                        <span class=" bg-white text-gray-600 px-2 py-1 rounded-full mr-2">Example tag</span>
+                        <span class=" bg-white text-gray-600 px-2 py-1 rounded-full mr-2">Tag1</span>
+                        <span class=" bg-red-500  text-white px-2 py-1 rounded-full">Unresolved</span>
                     </span>
                 </div>
 
@@ -66,8 +66,8 @@ pub fn PrivateQuestionTile(post: Post) -> impl IntoView {
                 <div class="text-xs absolute top-0 left-0 w-full h-12 bg-card-header rounded-t-lg shadow-md z-10 flex items-center">
                     //<div class="text-sm font-medium text-gray-700">Name{}</div> // Get the students name here?
                     <span class="pl-6"> // Tags container
-                        <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Example tag</span>
-                        <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">Tag1</span>
+                        <span class="text-xs bg-white text-gray-600 px-2 py-1 rounded-full">Example tag</span>
+                        <span class="text-xs bg-white text-gray-600 px-2 py-1 rounded-full">Tag1</span>
                         <span class="text-xs bg-customPurple text-white px-2 py-1 rounded-full">Private</span>
                     </span>
                 </div>
