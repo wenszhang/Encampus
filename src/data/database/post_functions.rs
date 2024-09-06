@@ -15,11 +15,17 @@ pub struct Post {
     pub resolved: bool,
 }
 
+#[derive(PartialEq, Clone, Copy)]
+pub struct PostFetcher {
+    pub class_id: i32,
+    pub user_id: i32,
+}
+
 /**
  * Get all posts for a class given the class id
  */
 #[server(GetPosts)]
-pub async fn get_posts(class_id: i32) -> Result<Vec<Post>, ServerFnError> {
+pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -28,9 +34,10 @@ pub async fn get_posts(class_id: i32) -> Result<Vec<Post>, ServerFnError> {
     ))?;
 
     let rows: Vec<Post> = sqlx::query_as(
-        "select title, postid as post_id, resolved from posts where posts.classid = $1 ORDER BY timestamp;",
+        "select title, postid as post_id, resolved from posts where (posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) ORDER BY timestamp;",
     )
     .bind(class_id)
+    .bind(user_id)
     .fetch_all(&pool)
     .await
     .expect("select should work");
@@ -50,7 +57,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         "Unable to complete Request".to_string(),
     ))?;
 
-    let post: Post = sqlx::query_as("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid, resolved) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6, false)
+    let post: Post = sqlx::query_as("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid, resolved, private) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6, false, $7)
                         RETURNING                 
                         title, 
                         postid as post_id,
@@ -61,6 +68,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         .bind(new_post_info.anonymous)
         .bind(new_post_info.limited_visibility)
         .bind(new_post_info.classid)
+        .bind(new_post_info.private)
         .fetch_one(&pool)
         .await
         .expect("failed adding post");

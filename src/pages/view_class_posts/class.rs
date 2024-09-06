@@ -2,6 +2,8 @@ use super::question_tile::QuestionTile;
 use super::question_tile::UnansweredQuestionTile;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
+use crate::data::database::post_functions::PostFetcher;
+use crate::data::global_state::GlobalState;
 use crate::pages::global_components::header::Header;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
@@ -16,14 +18,22 @@ pub struct ClassId {
  */
 #[component]
 pub fn ClassPage() -> impl IntoView {
+    let global_state = expect_context::<GlobalState>();
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
 
-    let posts = create_resource(class_id, |class_id| async {
-        get_posts(class_id.unwrap().class_id)
-            .await
-            .unwrap_or_default()
-    });
+    let post_data = PostFetcher {
+        class_id: class_id.get().unwrap().class_id,
+        user_id: global_state.id.get_untracked().unwrap(),
+    };
+    let posts = create_resource(
+        move || (post_data),
+        |post_data| async move {
+            get_posts(post_data.class_id, post_data.user_id)
+                .await
+                .unwrap_or_default()
+        },
+    );
     provide_context(posts);
 
     let class_name = create_local_resource(class_id, |class_id| async {
