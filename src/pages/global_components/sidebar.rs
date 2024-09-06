@@ -6,9 +6,9 @@ pub fn Sidebar() -> impl IntoView {
     let (collapsed, set_collapsed) = create_signal(false);
 
     view! {
-        <div class=move || if collapsed.get() { "fixed h-screen w-20 bg-gray-800 text-white" } else { "fixed h-screen w-64 bg-gray-800 text-white" }>
+        <div class=move || if collapsed.get() { "sticky top-0 h-screen w-20 bg-gray-800 text-white" } else { "sticky top-0 h-screen w-64 bg-gray-800 text-white" }>
             <div class="flex items-center justify-center mt-10 mb-4">
-                <img src="/path/to/instructor-image.jpg" class="rounded-full w-16 h-16" alt="Instructor Image" />
+                <img src="https://cdn.discordapp.com/attachments/1068270523794075678/1281628826551586947/images.jpg?ex=66dc695b&is=66db17db&hm=1a6ca3af1c813e5553660684b249b76c262d52eebac348791164a918e4da3558&" class="rounded-full w-16 h-16" alt="Instructor Image" />
             </div>
             <h1 class="text-center text-xl font-semibold" hidden=move || collapsed.get()>"Instructor"</h1>
             <div class="px-4">
