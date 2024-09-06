@@ -20,8 +20,8 @@ pub fn LoginPage() -> impl IntoView {
     let login_action = create_action(|username: &String| {
         let username = username.to_owned();
         async {
-            let user_ID = login_signup(username.clone()).await.unwrap_or_default();
-            (username, user_ID.id, user_ID.firstname)
+            let user = login_signup(username.clone()).await.unwrap_or_default();
+            (username, user.id, user.firstname, user.role)
         }
     });
 
@@ -32,11 +32,17 @@ pub fn LoginPage() -> impl IntoView {
             global_state.user_name.set(Some(userInfo.0));
             global_state.id.set(Some(userInfo.1));
             global_state.first_name.set(Some(userInfo.2));
+            global_state.role.set(Some(userInfo.3));
 
             // The variable definition is required
             // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
             let navigate = leptos_router::use_navigate();
-            navigate("/classes", Default::default());
+            match global_state.role.get().unwrap_or_default().as_str() {
+                "student" => navigate("/classes", Default::default()),
+                "instructor" => navigate("/classes", Default::default()), // Change to instructor page when implemented
+                "admin" => navigate("/classes", Default::default()), // Change to admin page when implemented
+                _ => navigate("/login", Default::default()),
+            }
         }
     });
 
