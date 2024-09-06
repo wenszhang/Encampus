@@ -10,6 +10,7 @@ pub struct User {
     pub firstname: String,
     pub lastname: String,
     pub id: i32,
+    pub role: String,
 }
 
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
@@ -27,18 +28,21 @@ pub async fn login_signup(username: String) -> Result<User, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let mut user_result: Option<User> =
-        sqlx::query_as("select username, firstname, lastname, id from users where username = $1")
-            .bind(username.clone())
-            .fetch_optional(&pool)
-            .await?;
+    let mut user_result: Option<User> = sqlx::query_as(
+        "select username, firstname, lastname, id, role from users where username = $1",
+    )
+    .bind(username.clone())
+    .fetch_optional(&pool)
+    .await?;
 
     if user_result.is_none() {
-        sqlx::query("insert into users(username) values($1)")
-            .bind(username.clone())
-            .execute(&pool)
-            .await
-            .expect("Failed adding user");
+        sqlx::query(
+            "insert into users(username, firstname, lastname, role) values($1, $1, $1, 'student')",
+        )
+        .bind(username.clone())
+        .execute(&pool)
+        .await
+        .expect("Failed adding user");
 
         sqlx::query("insert into students(name) values($1)")
             .bind(username.clone())
@@ -47,7 +51,7 @@ pub async fn login_signup(username: String) -> Result<User, ServerFnError> {
             .expect("Failed adding student");
 
         user_result = sqlx::query_as(
-            "select username, firstname, lastname, id from users where username = $1",
+            "select username, firstname, lastname, id, role from users where username = $1",
         )
         .bind(username.clone())
         .fetch_optional(&pool)
