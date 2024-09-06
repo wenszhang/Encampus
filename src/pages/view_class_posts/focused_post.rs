@@ -13,6 +13,9 @@ use serde::Serialize;
 use crate::data::database::class_functions::get_instructor;
 use crate::data::database::post_functions::resolve_post;
 use crate::data::global_state::GlobalState;
+use crate::pages::global_components::notification::{
+    NotificationComponent, NotificationDetails, NotificationType,
+};
 
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
@@ -53,6 +56,8 @@ pub fn FocusedPost() -> impl IntoView {
     let post_id = use_params::<PostId>();
     let global_state = expect_context::<GlobalState>();
     let (order_option, set_value) = create_signal("Newest First".to_string());
+    let (notification_details, set_notification_details) =
+        create_signal(None::<NotificationDetails>);
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
@@ -61,6 +66,7 @@ pub fn FocusedPost() -> impl IntoView {
             None
         }
     });
+
     let post = move || post_and_replies().flatten().map(|tuple| tuple.0);
     let replies = move || {
         post_and_replies()
@@ -86,7 +92,13 @@ pub fn FocusedPost() -> impl IntoView {
                     });
                     set_reply_contents(String::default());
                 }
-                Err(_) => logging::error!("Attempt to post reply failed. Please try again"),
+                Err(_) => {
+                    logging::error!("Attempt to post reply failed. Please try again");
+                    set_notification_details(Some(NotificationDetails {
+                        message: "Failed to add reply. Please try again.".to_string(),
+                        notification_type: NotificationType::Error,
+                    }));
+                }
             };
         }
     });
@@ -113,6 +125,17 @@ pub fn FocusedPost() -> impl IntoView {
             .await
             .unwrap_or_else(|_| "Failed".to_string())
     });
+
+    let notification_view = move || {
+        notification_details.get().map(|details| {
+            view! {
+                <NotificationComponent
+                    notification_details={details.clone()}
+                    on_close={move || set_notification_details(None)}
+                />
+            }
+        })
+    };
 
     view! {
         <div class="bg-white rounded shadow p-6 flex flex-col gap-3">
@@ -207,6 +230,10 @@ pub fn FocusedPost() -> impl IntoView {
                         <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
                             on:click=move |_| {
                                 if reply_contents().is_empty() {
+                                    set_notification_details(Some(NotificationDetails {
+                                        message: "Reply content cannot be empty.".to_string(),
+                                        notification_type: NotificationType::Warning,
+                                    }));
                                     return; // Probably want to throw an error message on the screen, might add that sooner if not later
                                 }
                                 add_reply_action.dispatch(
@@ -219,6 +246,7 @@ pub fn FocusedPost() -> impl IntoView {
                         >
                         "Post Response"
                         </button>
+                 {notification_view}
                     </div>
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
@@ -358,7 +386,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 title, 
                 contents, 
                 CASE WHEN anonymous THEN 'Anonymous Author'
-                    ELSE users.username 
+                    ELSE users.firstname 
                 END as author_name, 
                 anonymous,
                 resolved
@@ -371,7 +399,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 time, 
                 contents,
                 CASE WHEN anonymous THEN 'Anonymous Author'
-                    ELSE users.username 
+                    ELSE users.firstname 
                 END as author_name, 
                 anonymous,
                 replyid

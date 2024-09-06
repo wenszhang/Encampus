@@ -37,7 +37,7 @@ pub fn CreatePost() -> impl IntoView {
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
         async move {
-            match add_post(postInfo, global_state.user_name.get_untracked().unwrap()).await {
+            match add_post(postInfo, global_state.id.get_untracked().unwrap()).await {
                 Ok(post) => {
                     let post_id = post.post_id;
                     posts.update(|posts| {
