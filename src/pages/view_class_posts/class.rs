@@ -4,6 +4,7 @@ use crate::data::database::post_functions::get_posts;
 use crate::data::database::post_functions::PostFetcher;
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::header::Header;
+use crate::pages::global_components::sidebar::Sidebar;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
@@ -59,55 +60,54 @@ pub fn ClassPage() -> impl IntoView {
     });
 
     view! {
-        <Suspense fallback=move || view! { <p>"Loading..."</p> } >
-            <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
-        </Suspense>
-        <div class="flex justify-end pt-8 mx-20">
-            <A href="new">
-                <button class="bg-customBlue hover:bg-customBlue-HOVER text-white py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2">
-                    "Post +"
-                </button>
-            </A>
-        </div>
-
-        <div class="flex align mx-20 my-10 flex-col gap-4">
-            <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
-
-        <div class="flex items-center justify-center">
-            <div class="relative p-2 rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-80 bg-white">
-                <input type="text" placeholder="Search posts by keywords..." class="pl-5 pr-5 w-full border-none focus:outline-none bg-white"/>
-                <button class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                    <MagnifyingGlass size="20px"/>
-                </button>
-            </div>
-        </div>
-
-        // beginning of creating announcements area maybe put in another file for cleaner code.
-        <div class="w-full h-7 bg-customBlue rounded-t-lg flex justify-between items-center px-3">
-            // Left Section
-            <div class="flex text-white items-center">
-                <AnnouncementMic size="5em"/>
-                <h3 class="px-2"> RECENT ANNOUNCEMENTS</h3>
-            </div>
-
-        // Right Section
-            <div class="flex text-white items-center hover:text-customBlue-HOVER hover:bg-gray-300">
-                    <button>
-                        <details>
-                            <summary>COLLAPSE</summary>
-                        </details>
-                    </button>
-            </div>
-    </div>
-
-
-            <div class="grid grid-cols-3 gap-4">
+        <div class="flex">
+            <Sidebar/>
+            <div class="flex-1">
                 <Suspense fallback=move || view! { <p>"Loading..."</p> } >
-                    <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
-                        {let private = post.private;
-                            post.resolved.then(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| false).into_signal() is_private=(move || private).into_signal()  />}).unwrap_or_else(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| true).into_signal()  is_private=(move || private).into_signal()  />})}
-                    </For>
+                    <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
                 </Suspense>
+                <div class="flex justify-end pt-8 mx-20">
+                    <A href="new">
+                        <button class="bg-customBlue hover:bg-customBlue-HOVER text-white py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2">
+                            "Post +"
+                        </button>
+                    </A>
+                </div>
+                <div class="flex align mx-20 my-10 flex-col gap-4">
+                    <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
+                    <div class="flex items-center justify-center">
+                        <div class="relative p-2 rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-80 bg-white">
+                            <input type="text" placeholder="Search posts by keywords..." class="pl-5 pr-5 w-full border-none focus:outline-none bg-white"/>
+                            <button class="absolute inset-y-0 right-0 pr-3 flex items-center">
+                                <MagnifyingGlass size="20px"/>
+                            </button>
+                        </div>
+                    </div>
+                    // beginning of creating announcements area maybe put in another file for cleaner code.
+                    <div class="w-full h-7 bg-customBlue rounded-t-lg flex justify-between items-center px-3">
+                        // Left Section
+                        <div class="flex text-white items-center">
+                            <AnnouncementMic size="5em"/>
+                            <h3 class="px-2"> RECENT ANNOUNCEMENTS</h3>
+                        </div>
+                        // Right Section
+                        <div class="flex text-white items-center hover:text-customBlue-HOVER hover:bg-gray-300">
+                            <button>
+                                <details>
+                                    <summary>COLLAPSE</summary>
+                                </details>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-3 gap-4">
+                        <Suspense fallback=move || view! { <p>"Loading..."</p> } >
+                            <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
+                                {let private = post.private;
+                                post.resolved.then(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| false).into_signal() is_private=(move || private).into_signal()  />}).unwrap_or_else(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| true).into_signal()  is_private=(move || private).into_signal()  />})}
+                            </For>
+                        </Suspense>
+                    </div>
+                </div>
             </div>
         </div>
     }

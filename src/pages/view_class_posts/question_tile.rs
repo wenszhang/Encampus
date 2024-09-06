@@ -34,8 +34,9 @@ pub fn QuestionTile(
             class:bg-customRed=  move || is_resolved()
             class=("hover:bg-customRed-HOVER", move || is_resolved())
             class=("hover:bg-gray-100", move || !is_resolved())
-            // class=("shadow-lg shadow-purple-600", is_private())>
-            class=("border-4 border-purple-600", is_private())>
+            class=("shadow-lg shadow-purple-600", is_private())>
+            // class:bg-customPurple = is_private()
+            // class=("border-4 border-purple-600", is_private())>
 
                 // Card header
                 <div class="text-xs absolute top-0 left-0 w-full h-12 bg-card-header rounded-t-lg shadow-md z-10 pl-6 flex gap-2 items-center">
