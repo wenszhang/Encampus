@@ -13,6 +13,7 @@ pub struct Post {
     pub title: String,
     pub post_id: i32,
     pub resolved: bool,
+    pub private: bool,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -34,7 +35,7 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
     ))?;
 
     let rows: Vec<Post> = sqlx::query_as(
-        "select title, postid as post_id, resolved from posts where (posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) ORDER BY timestamp;",
+        "select title, postid as post_id, resolved, private from posts where (posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) ORDER BY timestamp;",
     )
     .bind(class_id)
     .bind(user_id)
@@ -61,7 +62,8 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
                         RETURNING                 
                         title, 
                         postid as post_id,
-                        resolved;")
+                        resolved,
+                        private;")
         .bind(new_post_info.title)
         .bind(new_post_info.contents)
         .bind(user_id)

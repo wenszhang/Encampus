@@ -104,7 +104,8 @@ pub fn ClassPage() -> impl IntoView {
             <div class="grid grid-cols-3 gap-4">
                 <Suspense fallback=move || view! { <p>"Loading..."</p> } >
                     <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
-                        {post.resolved.then(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| false).into_signal() is_private=(|| false).into_signal()  />}).unwrap_or_else(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| true).into_signal()  is_private=(|| false).into_signal()  />})}
+                        {let private = post.private;
+                            post.resolved.then(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| false).into_signal() is_private=(move || private).into_signal()  />}).unwrap_or_else(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| true).into_signal()  is_private=(move || private).into_signal()  />})}
                     </For>
                 </Suspense>
             </div>
