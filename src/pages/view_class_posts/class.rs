@@ -3,7 +3,6 @@ use super::question_tile::UnansweredQuestionTile;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::pages::global_components::header::Header;
-use crate::pages::global_components::sidebar::Sidebar;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
 
@@ -49,31 +48,26 @@ pub fn ClassPage() -> impl IntoView {
     });
 
     view! {
-        <div class="flex">
-            <Sidebar/>
-            <div class="flex-1">
+        <Suspense fallback=move || view! { <p>"Loading..."</p> } >
+            <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
+        </Suspense>
+        <div class="flex justify-end pt-8 mx-20">
+            <A href="new">
+                <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                    "Post +"
+                </button>
+            </A>
+        </div>
+
+        <div class="flex align mx-20 my-10 flex-col gap-4">
+            <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
+
+            <div class="grid grid-cols-3 gap-4">
                 <Suspense fallback=move || view! { <p>"Loading..."</p> } >
-                    <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
+                    <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
+                        {post.resolved.then(|| view! { <QuestionTile post={post.clone()} />}).unwrap_or_else(|| view! { <UnansweredQuestionTile post={post.clone()} />})}
+                    </For>
                 </Suspense>
-                <div class="flex justify-end pt-8 mx-20">
-                    <A href="new">
-                        <button class="bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
-                            "Post +"
-                        </button>
-                    </A>
-                </div>
-
-                <div class="flex align mx-20 my-10 flex-col gap-4">
-                    <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
-
-                    <div class="grid grid-cols-3 gap-4">
-                        <Suspense fallback=move || view! { <p>"Loading..."</p> } >
-                            <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
-                                {post.resolved.then(|| view! { <QuestionTile post={post.clone()} />}).unwrap_or_else(|| view! { <UnansweredQuestionTile post={post.clone()} />})}
-                            </For>
-                        </Suspense>
-                    </div>
-                </div>
             </div>
         </div>
     }

@@ -1,16 +1,37 @@
 /**
- * Page component
+ * Page 'framework' that wraps all pages and provides a sidebar
  */
-use leptos::{component, view, IntoView};
+use crate::pages::global_components::sidebar::Sidebar;
+use leptos::SignalGet;
+use leptos::{component, view, IntoView, MaybeSignal};
 use leptos_meta::Title;
 use leptos_router::Outlet;
 
 #[component]
-pub fn Page() -> impl IntoView {
+pub fn Page(show_sidebar: MaybeSignal<bool>) -> impl IntoView {
     view! {
         <Title text="Encampus"/>
         <div class="flex flex-col bg-gray-200 min-h-screen">
-            <Outlet/>
+            {move || if show_sidebar.get() {
+                view! {
+                    <div class="flex">
+                        <div class="fixed w-64">
+                            <Sidebar/>
+                        </div>
+                        <div class="flex-1 ml-64">
+                            <Outlet/>
+                        </div>
+                    </div>
+                }.into_view()
+            } else {
+                view! {
+                    <div class="flex">
+                        <div class="flex-1">
+                            <Outlet/>
+                        </div>
+                    </div>
+                }.into_view()
+            }}
         </div>
     }
 }
