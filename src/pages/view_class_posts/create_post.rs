@@ -2,9 +2,9 @@ use super::class::ClassId;
 /**
  * This file contains the CreatePost component, which is a form that allows users to create a new post.
  */
-use crate::data::database::post_functions::{add_post, Post};
+use crate::data::database::post_functions::{add_post, Post, PostFetcher};
 use leptos::*;
-use leptos_router::{use_params, ParamsError};
+use leptos_router::use_params;
 use serde::{Deserialize, Serialize};
 
 use crate::data::global_state::GlobalState;
@@ -23,7 +23,7 @@ pub struct AddPostInfo {
 pub fn CreatePost() -> impl IntoView {
     let class_id = use_params::<ClassId>();
     let global_state = expect_context::<GlobalState>();
-    let posts = expect_context::<Resource<Result<ClassId, ParamsError>, Vec<Post>>>();
+    let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
