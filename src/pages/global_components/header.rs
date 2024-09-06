@@ -4,7 +4,6 @@
 use crate::data::database::announcement_functions::get_announcement_list;
 use crate::resources::images::svgs::announcement_bell::AnnouncementBell;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
-use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 // use crate::components::announcements::Announcements;
 use leptos::*;
 
@@ -30,7 +29,7 @@ pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
 #[component]
 pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>) -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
-    let logo_src = logo.as_deref().unwrap_or("images/logo.png");
+    let logo_src = logo.as_deref().unwrap_or("images/BlockU_RGB.png");
     let header_text_href = move || {
         if let Some(id) = class_id() {
             format!("/classes/{}", id)

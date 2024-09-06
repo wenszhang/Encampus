@@ -1,8 +1,6 @@
 pub mod announcement_bell;
 pub mod announcement_mic;
-pub mod class_tile_squiggle;
 pub mod dots_icon;
-pub mod down_arrow;
 pub mod drop_down_bars;
 pub mod lock_icon;
 pub mod magnifying_glass;

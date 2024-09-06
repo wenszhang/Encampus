@@ -39,6 +39,13 @@ pub fn ClassesPage() -> impl IntoView {
     view! {
         <Header text="ENCAMPUS".to_string() logo={None} class_id={Signal::derive(|| None)} />
 
+        <div class="px-10 mt-10">
+          <h1 class="text-3xl font-bold leading-tight text-gray-900">
+            Your Courses
+          </h1>
+        </div>
+
+
         <div class="grid grid-cols-3 gap-4 p-10 mx-20">
             <Suspense fallback=move || view! { <p>"Loading..."</p> }>
                 <For each=move || classes().unwrap_or_default() key=|class| class.id let:class>

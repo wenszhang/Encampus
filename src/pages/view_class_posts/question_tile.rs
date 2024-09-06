@@ -1,5 +1,3 @@
-use std::io::Read;
-
 /**
  * QuestionTile component, displaying a tile for one post
  */
@@ -44,10 +42,10 @@ pub fn QuestionTile(
                     {move || if !is_resolved() {Some(view!{<TagPill props=TagPillProperties::Unresolved />})} else {None}}
                     {move || if is_private() {Some(view!{<TagPill props=TagPillProperties::Private />})} else {None}}
                     <TagPill props=TagPillProperties::Custom(CustomTag {title: "HW1".to_string()}) />
-                    <button class="ml-auto flex pr-6 hover:blue">
-                        <DotsIcon size="1em" />
-                    </button>
 
+                    <button class=" flex ml-auto ">
+                        <DotsIcon size="10em"/>
+                    </button>
 
                 </div>
 
