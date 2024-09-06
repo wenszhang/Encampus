@@ -34,11 +34,13 @@ pub async fn login_signup(username: String) -> Result<User, ServerFnError> {
             .await?;
 
     if user_result.is_none() {
-        sqlx::query("insert into users(username) values($1)")
-            .bind(username.clone())
-            .execute(&pool)
-            .await
-            .expect("Failed adding user");
+        sqlx::query(
+            "insert into users(username, firstname, lastname, role) values($1, $1, $1, 'student')",
+        )
+        .bind(username.clone())
+        .execute(&pool)
+        .await
+        .expect("Failed adding user");
 
         sqlx::query("insert into students(name) values($1)")
             .bind(username.clone())
