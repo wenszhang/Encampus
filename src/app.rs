@@ -49,11 +49,11 @@ pub fn App() -> impl IntoView {
                     <Route path="/dev" view=Dev/>
 
                     // Root route for Page, passing `show_sidebar` to control sidebar visibility
-                    <Route path="/" view=move || Page(PageProps { show_sidebar: MaybeSignal::Static(false) })> // Hide sidebar by default
+                    <Route path="/" view=move || Page(PageProps { show_sidebar: false })> // Hide sidebar by default
                         // Authenticated routes
                         <Route path="" view=AuthenticatedRoutes>
                             <Route path="/classes" view=ClassesPage/>
-                            <Route path="/classes/:class_id" view=move || Page(PageProps { show_sidebar: MaybeSignal::Static(true) })> // Show sidebar on ClassPage
+                            <Route path="/classes/:class_id" view=move || Page(PageProps { show_sidebar: true })> // Show sidebar on ClassPage
                                 <Route path="" view=ClassPage/>
                                 <Route path="new" view=CreatePost/>
                                 <Route path=":post_id" view=FocusedPost/>

@@ -8,11 +8,11 @@ use leptos_meta::Title;
 use leptos_router::Outlet;
 
 #[component]
-pub fn Page(show_sidebar: MaybeSignal<bool>) -> impl IntoView {
+pub fn Page(show_sidebar: bool) -> impl IntoView {
     view! {
         <Title text="Encampus"/>
         <div class="flex flex-col bg-gray-200 min-h-screen">
-            {move || if show_sidebar.get() {
+            {move || if show_sidebar {
                 view! {
                     <div class="flex">
                         <div class="fixed w-64">
