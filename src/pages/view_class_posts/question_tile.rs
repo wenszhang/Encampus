@@ -31,10 +31,12 @@ pub fn QuestionTile(
                         items-center justify-between text-lg font-semibold h-60 \
                         w-85 transition-transform duration-300 hover:scale-105 \
                         bg-card-bg  hover:shadow-xl overflow-hidden"
-            class:bg-customRed=  move || is_resolved()
-            class=("hover:bg-customRed-HOVER", move || is_resolved())
-            class=("hover:bg-gray-100", move || !is_resolved())
-            class=("shadow-lg shadow-purple-600", is_private)>
+                class:bg-customRed=  move || is_resolved()
+                class=("hover:bg-customRed-HOVER", move || is_resolved())
+                class=("hover:bg-gray-100", move || !is_resolved())
+                class:border-purple-500= is_private()
+                class:border-4= is_private()
+                class=("border-4 border-purple-500", is_private())>
 
                 // Card header
                 <div class="text-xs absolute top-0 left-0 w-full h-12 bg-card-header rounded-t-lg shadow-md z-10 pl-6 flex gap-2 items-center">

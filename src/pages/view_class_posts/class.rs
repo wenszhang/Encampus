@@ -1,6 +1,8 @@
 use super::question_tile::QuestionTile;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
+use crate::data::database::post_functions::PostFetcher;
+use crate::data::global_state::GlobalState;
 use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
@@ -18,14 +20,22 @@ pub struct ClassId {
  */
 #[component]
 pub fn ClassPage() -> impl IntoView {
+    let global_state = expect_context::<GlobalState>();
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
 
-    let posts = create_resource(class_id, |class_id| async {
-        get_posts(class_id.unwrap().class_id)
-            .await
-            .unwrap_or_default()
-    });
+    let post_data = PostFetcher {
+        class_id: class_id.get().unwrap().class_id,
+        user_id: global_state.id.get_untracked().unwrap_or_default(),
+    };
+    let posts = create_resource(
+        move || (post_data),
+        |post_data| async move {
+            get_posts(post_data.class_id, post_data.user_id)
+                .await
+                .unwrap_or_default()
+        },
+    );
     provide_context(posts);
 
     let class_name = create_local_resource(class_id, |class_id| async {
@@ -92,7 +102,8 @@ pub fn ClassPage() -> impl IntoView {
                     <div class="grid grid-cols-3 gap-4">
                         <Suspense fallback=move || view! { <p>"Loading..."</p> } >
                             <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
-                                {post.resolved.then(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| false).into_signal() is_private=(|| false).into_signal()  />}).unwrap_or_else(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| true).into_signal()  is_private=(|| false).into_signal()  />})}
+                                {let private = post.private;
+                                post.resolved.then(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| false).into_signal() is_private=(move || private).into_signal()  />}).unwrap_or_else(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| true).into_signal()  is_private=(move || private).into_signal()  />})}
                             </For>
                         </Suspense>
                     </div>
