@@ -32,6 +32,7 @@ pub fn CreatePost() -> impl IntoView {
     };
 
     let (anonymous_state, set_anonymous_state) = create_signal(false);
+    let (private_state, set_private_state) = create_signal(false);
     let (post_title, set_post_title) = create_signal("".to_string());
     let (post_contents, set_post_contents) = create_signal("".to_string());
 
@@ -83,6 +84,23 @@ pub fn CreatePost() -> impl IntoView {
             </div>
             <div class="flex justify-end gap-5">
                 <label
+                for="privateToggle"
+                class="flex items-center cursor-pointer select-none"
+                >
+                    <span class="mx-2">"Private:"</span>
+                    <div class="relative">
+                        <input
+                            type="checkbox"
+                            id="privateToggle"
+                            class="peer sr-only"
+                            prop:checked=private_state
+                            on:change=move |_| set_private_state(!private_state())
+                        />
+                        <div class="block h-8 rounded-full bg-gray-500 w-14"></div>
+                        <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-full peer-checked:bg-primary"></div>
+                    </div>
+                </label>
+                <label
                 for="anonymousToggle"
                 class="flex items-center cursor-pointer select-none"
                 >
@@ -111,7 +129,7 @@ pub fn CreatePost() -> impl IntoView {
                                 anonymous: anonymous_state(),
                                 limited_visibility: false,
                                 classid: class_id.get().unwrap().class_id,
-                                private: false, // TODO: Hook up to UI to allow for private posts
+                                private: private_state(), // TODO: Hook up to UI to allow for private posts
                             })
                     }
                 >
