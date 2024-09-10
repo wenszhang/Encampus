@@ -3,11 +3,12 @@
  */
 use leptos::{ev::SubmitEvent, *};
 
-use crate::data::{database::user_functions::login_signup, global_state::GlobalState};
-
 #[component]
 pub fn RegisterPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
+    let (first_name, set_first_name) = create_signal("".to_string());
+    let (last_name, set_last_name) = create_signal("".to_string());
+    let (role, set_role) = create_signal("".to_string());
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
@@ -15,8 +16,12 @@ pub fn RegisterPage() -> impl IntoView {
         }
     };
 
+    let on_submit = move |event: SubmitEvent| {
+        event.prevent_default();
+    };
+
     view! {
-        <form>
+        <form on:submit=on_submit>
         <div class="flex flex-col justify-center items-center h-screen">
             <div class="bg-white p-20 rounded-lg shadow-md">
                 <div class="flex justify-center items-center">
@@ -52,8 +57,8 @@ pub fn RegisterPage() -> impl IntoView {
                         placeholder="First Name"
                         required
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                        on:input=on_input(set_username)
-                        prop:value=username
+                        on:input=on_input(set_first_name)
+                        prop:value=first_name
                     />
                 </div>
                 <div class="mb-4">
@@ -62,12 +67,12 @@ pub fn RegisterPage() -> impl IntoView {
                     </label>
                     <input
                         type="text"
-                        id="username"
+                        id="last_name"
                         placeholder="Last Name"
                         required
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                        on:input=on_input(set_username)
-                        prop:value=username
+                        on:input=on_input(set_last_name)
+                        prop:value=last_name
                     />
                 </div>
                 <div class="mb-5">
@@ -76,7 +81,10 @@ pub fn RegisterPage() -> impl IntoView {
                     </label>
                     <select
                         id="role"
+                        required
                         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
+                        on:input=on_input(set_role)
+                        prop:value=role
                     >
                         <option value="student">Student</option>
                         <option value="teacher">Teacher</option>

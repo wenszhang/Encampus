@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 /**
  * Struct to hold user
  */
-#[derive(Clone, Serialize, Deserialize, Default)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct User {
     pub username: String,
@@ -59,4 +59,26 @@ pub async fn login_signup(username: String) -> Result<User, ServerFnError> {
     }
 
     Ok(user_result.unwrap())
+}
+
+#[server(AddUser)]
+pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let UserId(user_id) = sqlx::query(
+        "insert into users(username, firstname, lastname, role) values($1, $2, $3, $4 ) returning id",
+    )
+    .bind(user.username.clone())
+    .bind(user.firstname.clone())
+    .bind(user.lastname.clone())
+    .bind(user.role.clone())
+    .fetch_one(&pool)
+    .await?;
+
+    Ok(user_id)
 }
