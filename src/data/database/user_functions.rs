@@ -13,6 +13,7 @@ pub struct User {
     pub role: String,
 }
 
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct UserId(pub i32);
 
@@ -70,7 +71,7 @@ pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let UserId(user_id) = sqlx::query(
+    let UserId(user_id) = sqlx::query_as(
         "insert into users(username, firstname, lastname, role) values($1, $2, $3, $4 ) returning id",
     )
     .bind(user.username.clone())
@@ -78,7 +79,8 @@ pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
     .bind(user.lastname.clone())
     .bind(user.role.clone())
     .fetch_one(&pool)
-    .await?;
+    .await
+    .expect("Unable to add new user.");
 
     Ok(user_id)
 }
