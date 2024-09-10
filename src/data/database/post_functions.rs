@@ -98,7 +98,7 @@ pub async fn resolve_post(post_id: i32, status: bool) -> Result<(), ServerFnErro
 }
 
 #[server(RemovePost)]
-pub async fn remove_post(post_id: i32) -> Result<(), ServerFnError> {
+pub async fn remove_post(post_id: i32, user_id: i32) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -106,11 +106,24 @@ pub async fn remove_post(post_id: i32) -> Result<(), ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    sqlx::query("update posts set removed = true where postid = $1")
+    let UserId(instructor_id) = sqlx::query_as("select instructorid from classes where courseid = (select classid from posts where postid = $1)")
         .bind(post_id)
-        .execute(&pool)
+        .fetch_one(&pool)
         .await
-        .expect("Cannot remove post");
+        .expect("Cannot get instructor id");
 
+    let UserId(author_id) = sqlx::query_as("select authorid from posts where postid = $1")
+        .bind(post_id)
+        .fetch_one(&pool)
+        .await
+        .expect("Cannot get author id");
+
+    if author_id == user_id || instructor_id == user_id {
+        sqlx::query("update posts set removed = true where postid = $1")
+            .bind(post_id)
+            .execute(&pool)
+            .await
+            .expect("Cannot remove post");
+    }
     Ok(())
 }
