@@ -57,7 +57,7 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
                     <Suspense fallback=move || view! { <p>"Loading..."</p> }>
                         <For each=move || courses().unwrap_or_default() key=|class| class.id let:class>
                             <li class="py-2">
-                                <A href={format!("/classes/{}", class.id)} class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">{class.name}</A>
+                                <A href={format!("/classes/{}", class.id)} target="_self" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">{class.name}</A>
                             </li>
                         </For>
                     </Suspense>
