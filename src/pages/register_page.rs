@@ -1,3 +1,5 @@
+use crate::data::database::user_functions::add_user;
+use crate::data::database::user_functions::User;
 /**
  * Component for the login page where users can login to their account
  */
@@ -19,6 +21,21 @@ pub fn RegisterPage() -> impl IntoView {
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
     };
+
+    let new_user = User {
+        username: username.get(),
+        firstname: first_name.get(),
+        lastname: last_name.get(),
+        role: role.get(),
+        id: 0,
+    };
+
+    let new_user_id = create_action(|user: &User| {
+        let user = user.clone();
+        async {
+            let id = add_user(user).await.unwrap_or_default();
+        }
+    });
 
     view! {
         <form on:submit=on_submit>
