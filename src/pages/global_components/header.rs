@@ -3,9 +3,11 @@
  */
 use crate::data::database::announcement_functions::get_announcement_list;
 use crate::data::global_state::GlobalState;
+use crate::data::global_state::GlobalState;
 use crate::resources::images::svgs::announcement_bell::AnnouncementBell;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
 use leptos::*;
+use leptos_router::{use_navigate, A};
 use leptos_router::{use_navigate, A};
 
 #[component]
@@ -41,6 +43,13 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
         } else {
             "/classes".to_string()
         }
+    };
+
+    let logout = move |_| {
+        // Clear local storage and reset global state
+        global_state_clone.clear_local_storage();
+        // Redirect the user to the login page after logging out
+        navigate("/login", Default::default());
     };
 
     let logout = move |_| {
