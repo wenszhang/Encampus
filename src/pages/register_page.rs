@@ -1,5 +1,6 @@
 use crate::data::database::user_functions::add_user;
 use crate::data::database::user_functions::User;
+use crate::data::global_state::GlobalState;
 /**
  * Component for the login page where users can login to their account
  */
@@ -18,10 +19,6 @@ pub fn RegisterPage() -> impl IntoView {
         }
     };
 
-    let on_submit = move |event: SubmitEvent| {
-        event.prevent_default();
-    };
-
     let new_user = User {
         username: username.get(),
         firstname: first_name.get(),
@@ -30,12 +27,34 @@ pub fn RegisterPage() -> impl IntoView {
         id: 0,
     };
 
-    let new_user_id = create_action(|user: &User| {
-        let user = user.clone();
-        async {
-            let id = add_user(user).await.unwrap_or_default();
+    let new_user_action = create_action(|new_user: &User| {
+        let new_user = new_user.clone();
+        async { add_user(new_user).await.unwrap_or_default() }
+    });
+
+    create_effect(move |_| {
+        let global_state = expect_context::<GlobalState>();
+        if let Some(id) = new_user_action.value()() {
+            global_state.authenticated.set(true);
+            global_state.user_name.set(Some(username.get()));
+            global_state.id.set(Some(id));
+            global_state.first_name.set(Some(first_name.get()));
+            global_state.role.set(Some(role.get()));
+
+            let navigate = leptos_router::use_navigate();
+            match global_state.role.get().unwrap_or_default().as_str() {
+                "student" => navigate("/classes", Default::default()),
+                "teacher" => navigate("/classes", Default::default()), // Change to instructor page when implemented
+                "admin" => navigate("/classes", Default::default()), // Change to admin page when implemented
+                _ => navigate("/login", Default::default()),
+            }
         }
     });
+
+    let on_submit = move |event: SubmitEvent| {
+        event.prevent_default();
+        new_user_action.dispatch(new_user.clone());
+    };
 
     view! {
         <form on:submit=on_submit>
