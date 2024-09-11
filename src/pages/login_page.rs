@@ -3,12 +3,12 @@
  */
 use leptos::{ev::SubmitEvent, *};
 
-use crate::data::{database::user_functions::login_signup, global_state::GlobalState};
+use crate::data::{database::user_functions::login, global_state::GlobalState};
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
-    let (password, set_password) = create_signal("".to_string());
+    // let (password, set_password) = create_signal("".to_string());
 
     // Input event handler for controlled components
     let on_input = |setter: WriteSignal<String>| {
@@ -20,7 +20,7 @@ pub fn LoginPage() -> impl IntoView {
     let login_action = create_action(|username: &String| {
         let username = username.to_owned();
         async {
-            let user = login_signup(username.clone()).await.unwrap_or_default();
+            let user = login(username.clone()).await.unwrap_or_default();
             (username, user.id, user.firstname, user.role)
         }
     });
@@ -28,6 +28,9 @@ pub fn LoginPage() -> impl IntoView {
     create_effect(move |_| {
         let global_state = expect_context::<GlobalState>();
         if let Some(userInfo) = login_action.value()() {
+            if userInfo.1 == 0 {
+                return;
+            }
             global_state.authenticated.set(true);
             global_state.user_name.set(Some(userInfo.0));
             global_state.id.set(Some(userInfo.1));
@@ -76,21 +79,21 @@ pub fn LoginPage() -> impl IntoView {
                             prop:value=username
                         />
                     </div>
-                    <div class="mb-4 opacity-50">
-                        <label for="password" class="block text-gray-700 font-bold mb-2">
-                            Password:
-                        </label >
-                        <input
-                            type="password"
-                            id="password"
-                            placeholder="Enter your Password"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 bg-gray-200 text-gray-500 cursor-not-allowed"
-                            on:input=on_input(set_password)
-                            prop:value=password
-                            disabled
-                        />
-                    </div>
+                    // <div class="mb-4 opacity-50">
+                    //     <label for="password" class="block text-gray-700 font-bold mb-2">
+                    //         Password:
+                    //     </label >
+                    //     <input
+                    //         type="password"
+                    //         id="password"
+                    //         placeholder="Enter your Password"
+                    //         required
+                    //         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 bg-gray-200 text-gray-500 cursor-not-allowed"
+                    //         on:input=on_input(set_password)
+                    //         prop:value=password
+                    //         disabled
+                    //     />
+                    // </div>
                     <button
                         type="submit"
                         class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
@@ -99,7 +102,10 @@ pub fn LoginPage() -> impl IntoView {
                     </button>
                     <div class="mt-4 text-sm text-gray-600 text-center">
                         Please enter your username.
-                        </div>
+                    </div>
+                    <div class="mt-1 text-sm text-gray-600 text-center">
+                        Click here to <a href="/register" class="text-blue-500">register</a>.
+                    </div>
                 </div>
             </div>
         </form>
