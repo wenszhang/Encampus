@@ -35,7 +35,7 @@ pub fn LoginPage() -> impl IntoView {
             global_state.role.set(Some(userInfo.3));
 
             // Save user info to local storage
-            global_state.save_to_local_storage(); // <-- This is where we save to localStorage
+            global_state.save_to_local_storage();
 
             // Navigate based on the user's role
             let navigate = leptos_router::use_navigate();
