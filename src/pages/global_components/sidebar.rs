@@ -43,14 +43,12 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
     view! {
         <>
             <div class="flex items-center justify-center mt-10 mb-4">
-                <img src="https://cdn.discordapp.com/attachments/1068270523794075678/1281628826551586947/images.jpg"
+                <img src="https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
                     class="rounded-full w-16 h-16" alt="Profile Image" />
             </div>
 
-            // Emphasized name text
+            // Name and role
             <h1 class="text-center text-2xl font-bold">{name}</h1> 
-
-            // Slightly less emphasized role text
             <h2 class="text-center text-lg font-semibold text-gray-500">{role}</h2>
 
             <div class="px-4">
