@@ -16,7 +16,6 @@ pub fn RegisterPage() -> impl IntoView {
     let (last_name, set_last_name) = create_signal("".to_string());
     let (user_id, set_user_id) = create_signal(0);
     let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
-    // let (role, set_role) = create_signal("".to_string());
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
@@ -32,19 +31,24 @@ pub fn RegisterPage() -> impl IntoView {
         id: 0,
     };
 
-    let new_user_action = create_action(move |new_user: &User| {
-        let new_user = new_user.clone();
-        async move {
-            match add_user(new_user).await {
-                Ok(id) => {
-                    set_user_id(id);
-                }
-                Err(_) => {
-                    set_login_error(Some(NotificationDetails {
-                        message: "Failed adding user, username already exists.".to_string(),
-                        notification_type: NotificationType::Error,
-                    }));
-                }
+    let new_user_action = create_action(move |_| async move {
+        match add_user(User {
+            username: username.get(),
+            firstname: first_name.get(),
+            lastname: last_name.get(),
+            role: "student".to_string(),
+            id: 0,
+        })
+        .await
+        {
+            Ok(id) => {
+                set_user_id(id);
+            }
+            Err(_) => {
+                set_login_error(Some(NotificationDetails {
+                    message: "Failed adding user, username already exists.".to_string(),
+                    notification_type: NotificationType::Error,
+                }));
             }
         }
     });

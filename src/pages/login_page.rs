@@ -11,7 +11,6 @@ use crate::pages::global_components::notification::{
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
-    // let (password, set_password) = create_signal("".to_string());
     let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
 
     // Input event handler for controlled components
@@ -99,21 +98,6 @@ pub fn LoginPage() -> impl IntoView {
                             prop:value=username
                         />
                     </div>
-                    // <div class="mb-4 opacity-50">
-                    //     <label for="password" class="block text-gray-700 font-bold mb-2">
-                    //         Password:
-                    //     </label >
-                    //     <input
-                    //         type="password"
-                    //         id="password"
-                    //         placeholder="Enter your Password"
-                    //         required
-                    //         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-indigo-500 bg-gray-200 text-gray-500 cursor-not-allowed"
-                    //         on:input=on_input(set_password)
-                    //         prop:value=password
-                    //         disabled
-                    //     />
-                    // </div>
                     <button
                         type="submit"
                         class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
