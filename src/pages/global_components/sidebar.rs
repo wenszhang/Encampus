@@ -1,3 +1,5 @@
+use crate::data::database::class_functions::get_class_list;
+use crate::data::database::class_functions::ClassInfo;
 use leptos::*;
 use leptos_router::A;
 
@@ -5,23 +7,18 @@ use leptos_router::A;
 pub fn Sidebar() -> impl IntoView {
     let (collapsed, set_collapsed) = create_signal(false);
 
+    let courses = create_resource(
+        || {},
+        |_| async { get_class_list().await.unwrap_or_default() },
+    );
+
     view! {
         <div class=move || if collapsed.get() { "sticky top-0 h-screen w-8 bg-gray-800 text-white flex items-center justify-center" } else { "sticky top-0 h-screen w-64 bg-gray-800 text-white" }>
             {move || {
-                let courses = vec![
-                    ("MATH 3210", "/math-3210"),
-                    ("CS 3220", "/cs-3220"),
-                    ("CS 3230", "/cs-3230"),
-                    ("Past Courses", "/past-courses"),
-                ]
-                .into_iter()                                            // Had trouble dealing with courses expiring early, here is the solution:
-                .map(|(name, url)| (name.to_string(), url.to_string())) // Convert &str to String
-                .collect::<Vec<_>>();                                   // Collect into Vec<(String, String)>
-
                 if collapsed() {
                     collapsed_view(set_collapsed).into_view()
                 } else {
-                    expanded_view(set_collapsed, courses).into_view() // Pass the Vec<(String, String)>
+                    expanded_view(set_collapsed, courses).into_view()
                 }
             }}
         </div>
@@ -39,7 +36,7 @@ fn collapsed_view(set_collapsed: WriteSignal<bool>) -> View {
 }
 
 // Expanded view for the sidebar
-fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Vec<(String, String)>) -> View {
+fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<ClassInfo>>) -> View {
     view! {
         <>
             <div class="flex items-center justify-center mt-10 mb-4">
@@ -50,13 +47,13 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Vec<(String, String)
             <div class="px-4">
                 <h2 class="text-sm text-gray-400 mt-6 mb-2 uppercase tracking-widest">"Fall 24 Courses"</h2>
                 <ul>
-                    {courses.into_iter().map(|(name, url)| {
-                        view! {
+                    <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+                        <For each=move || courses().unwrap_or_default() key=|class| class.id let:class>
                             <li class="py-2">
-                                <A href={url} class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">{name}</A>
+                                <A href={format!("/classes/{}", class.id)} class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">{class.name}</A>
                             </li>
-                        }
-                    }).collect::<Vec<_>>()}
+                        </For>
+                    </Suspense>
                 </ul>
                 <h2 class="text-sm text-gray-400 mt-6 mb-2 uppercase tracking-widest">"Tools"</h2>
                 <ul>
