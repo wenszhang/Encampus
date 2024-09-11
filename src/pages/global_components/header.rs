@@ -66,7 +66,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                     </button>
                     <div class="absolute right-0 top-full mt-[-0.1rem] bg-white shadow-md rounded-lg transition
                         ease-out duration-200 opacity-0 scale-95 invisible group-hover:opacity-100 group-hover:scale-100
-                        group-hover:visible">
+                        group-hover:visible z-50">
                         <ul class="py-1 text-gray-700 w-36 text-left text-lg">
                             <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
                                 <div class="block">"Profile"</div>
