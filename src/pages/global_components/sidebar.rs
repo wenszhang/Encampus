@@ -37,13 +37,22 @@ fn collapsed_view(set_collapsed: WriteSignal<bool>) -> View {
 
 // Expanded view for the sidebar
 fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<ClassInfo>>) -> View {
+    let name = "John Doe".to_string();
+    let role = "Student".to_string();
+
     view! {
         <>
             <div class="flex items-center justify-center mt-10 mb-4">
                 <img src="https://cdn.discordapp.com/attachments/1068270523794075678/1281628826551586947/images.jpg"
-                    class="rounded-full w-16 h-16" alt="Instructor Image" />
+                    class="rounded-full w-16 h-16" alt="Profile Image" />
             </div>
-            <h1 class="text-center text-xl font-semibold">"Instructor"</h1>
+
+            // Emphasized name text
+            <h1 class="text-center text-2xl font-bold">{name}</h1> 
+
+            // Slightly less emphasized role text
+            <h2 class="text-center text-lg font-semibold text-gray-500">{role}</h2>
+
             <div class="px-4">
                 <h2 class="text-sm text-gray-400 mt-6 mb-2 uppercase tracking-widest">"Fall 24 Courses"</h2>
                 <ul>
