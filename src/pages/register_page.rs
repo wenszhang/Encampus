@@ -59,7 +59,7 @@ pub fn RegisterPage() -> impl IntoView {
     view! {
         <form on:submit=on_submit>
         <div class="flex flex-col justify-center items-center h-screen">
-            <div class="bg-white p-20 rounded-lg shadow-md">
+            <div class="bg-white p-20 rounded-lg shadow-md w-96">
                 <div class="flex justify-center items-center">
                     <img src={format!("/{}", "images/logo.png")} alt="Logo" class="h-16"/>
                 </div>
