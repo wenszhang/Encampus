@@ -4,11 +4,15 @@
 use leptos::{ev::SubmitEvent, *};
 
 use crate::data::{database::user_functions::login, global_state::GlobalState};
+use crate::pages::global_components::notification::{
+    NotificationComponent, NotificationDetails, NotificationType,
+};
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
     // let (password, set_password) = create_signal("".to_string());
+    let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
 
     // Input event handler for controlled components
     let on_input = |setter: WriteSignal<String>| {
@@ -29,22 +33,26 @@ pub fn LoginPage() -> impl IntoView {
         let global_state = expect_context::<GlobalState>();
         if let Some(userInfo) = login_action.value()() {
             if userInfo.1 == 0 {
-                return;
-            }
-            global_state.authenticated.set(true);
-            global_state.user_name.set(Some(userInfo.0));
-            global_state.id.set(Some(userInfo.1));
-            global_state.first_name.set(Some(userInfo.2));
-            global_state.role.set(Some(userInfo.3));
+                set_login_error.set(Some(NotificationDetails {
+                    message: "Failed Signing In, User doesn't exist.".to_string(),
+                    notification_type: NotificationType::Error,
+                }));
+            } else {
+                global_state.authenticated.set(true);
+                global_state.user_name.set(Some(userInfo.0));
+                global_state.id.set(Some(userInfo.1));
+                global_state.first_name.set(Some(userInfo.2));
+                global_state.role.set(Some(userInfo.3));
 
-            // The variable definition is required
-            // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
-            let navigate = leptos_router::use_navigate();
-            match global_state.role.get().unwrap_or_default().as_str() {
-                "student" => navigate("/classes", Default::default()),
-                "instructor" => navigate("/classes", Default::default()), // Change to instructor page when implemented
-                "admin" => navigate("/classes", Default::default()), // Change to admin page when implemented
-                _ => navigate("/login", Default::default()),
+                // The variable definition is required
+                // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
+                let navigate = leptos_router::use_navigate();
+                match global_state.role.get().unwrap_or_default().as_str() {
+                    "student" => navigate("/classes", Default::default()),
+                    "instructor" => navigate("/classes", Default::default()), // Change to instructor page when implemented
+                    "admin" => navigate("/classes", Default::default()), // Change to admin page when implemented
+                    _ => navigate("/login", Default::default()),
+                }
             }
         }
     });
@@ -53,6 +61,17 @@ pub fn LoginPage() -> impl IntoView {
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
         login_action.dispatch(username());
+    };
+
+    let notification_view = move || {
+        login_error.get().map(|details| {
+            view! {
+                <NotificationComponent
+                    notification_details={details.clone()}
+                    on_close={move || set_login_error(None)}
+                />
+            }
+        })
     };
 
     view! {
@@ -65,6 +84,7 @@ pub fn LoginPage() -> impl IntoView {
                     <h1 class="text-2xl font-semibold text-center mb-4">
                         Login
                     </h1>
+                    {notification_view}
                     <div class="mb-4">
                         <label for="username" class="block text-gray-700 font-bold mb-2">
                             Username:

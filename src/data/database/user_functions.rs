@@ -78,15 +78,16 @@ pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
     ))?;
 
     let UserId(user_id) = sqlx::query_as(
-        "insert into users(username, firstname, lastname, role) values($1, $2, $3, $4 ) returning id",
+        "insert into users(username, firstname, lastname, role) values($1, $2, $3, 'student') returning id",
     )
     .bind(user.username.clone())
     .bind(user.firstname.clone())
     .bind(user.lastname.clone())
-    .bind(user.role.clone())
     .fetch_one(&pool)
     .await
-    .expect("Unable to add new user.");
+    .map_err(|_| {
+        ServerFnError::<NoCustomError>::ServerError("Unable to create user, username already exists".to_string())
+    })?;
 
     Ok(user_id)
 }
