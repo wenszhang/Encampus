@@ -16,7 +16,7 @@ use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
-
+use crate::pages::view_class_posts::class::ClassId;
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
     pub post_id: i32,
@@ -54,6 +54,7 @@ pub struct AddReplyInfo {
 pub fn FocusedPost() -> impl IntoView {
     // Fetch post id from route in the format of "class/:class_id/:post_id"
     let post_id = use_params::<PostId>();
+    let class_id = use_params::<ClassId>();
     let global_state = expect_context::<GlobalState>();
     let (order_option, set_value) = create_signal("Newest First".to_string());
     let (notification_details, set_notification_details) =
@@ -106,7 +107,17 @@ pub fn FocusedPost() -> impl IntoView {
     let remove_action = create_action(move |post_id: &PostId| {
         let post_id = post_id.clone();
         async move {
-        remove_post(post_id.post_id, global_state.id.get_untracked().unwrap()).await
+        remove_post(post_id.post_id, global_state.id.get_untracked().unwrap()).await;
+
+        let navigate = leptos_router::use_navigate();
+        navigate(
+            format!(
+                "/classes/{}",
+                class_id.get_untracked().unwrap().class_id
+            )
+            .as_str(),
+            Default::default(),
+        );
     }});
 
     fn sort_replies(replies: Vec<Reply>, order: &str) -> Vec<Reply> {
