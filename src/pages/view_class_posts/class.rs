@@ -93,25 +93,9 @@ pub fn ClassPage() -> impl IntoView {
                             </button>
                         </div>
                     </div>
-                    // beginning of creating announcements area maybe put in another file for cleaner code.
-                    // <div class="w-full h-7 bg-customBlue rounded-t-lg flex justify-between items-center px-3">
-                    //     // Left Section
-                    //     <div class="flex text-white items-center">
-                    //         <AnnouncementMic size="5em"/>
-                    //         <h3 class="px-2"> RECENT ANNOUNCEMENTS</h3>
-                    //     </div>
-                    //     // Right Section
-                    //     <div class="flex text-white items-center hover:text-customBlue-HOVER hover:bg-gray-300">
-                    //         <button>
-                    //             <details>
-                    //                 <summary>COLLAPSE</summary>
-                    //             </details>
-                    //         </button>
-                    //     </div>
-                    // </div>
 
+                    // announcements section
                     <Suspense fallback=move || view! { <p>"Loading announcements..."</p> }>
-                    // Pass the announcements data into the `Announcements` component
                         { move || {
                             let ann_list = announcements().unwrap_or_default();
                             view! { <Announcements announcements={ann_list} /> }
