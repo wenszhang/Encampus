@@ -1,11 +1,12 @@
 use super::question_tile::QuestionTile;
+use crate::data::database::announcement_functions::get_announcement_list;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::data::database::post_functions::PostFetcher;
 use crate::data::global_state::GlobalState;
+use crate::pages::global_components::announcements::Announcements;
 use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
-use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
@@ -43,6 +44,15 @@ pub fn ClassPage() -> impl IntoView {
             .await
             .unwrap_or_else(|_| "Failed".to_string())
     });
+
+    let announcements = create_resource(
+        move || class_id.get().map(|id| id.class_id),
+        |class_id| async move {
+            get_announcement_list(class_id.unwrap())
+                .await
+                .unwrap_or_else(|_| vec![])
+        },
+    );
 
     // TODO: Use signal to store the question title when clicking a tile
     let (question_title, _set_question_title) = create_signal("".to_string());
@@ -83,22 +93,15 @@ pub fn ClassPage() -> impl IntoView {
                             </button>
                         </div>
                     </div>
-                    // beginning of creating announcements area maybe put in another file for cleaner code.
-                    <div class="w-full h-7 bg-customBlue rounded-t-lg flex justify-between items-center px-3">
-                        // Left Section
-                        <div class="flex text-white items-center">
-                            <AnnouncementMic size="5em"/>
-                            <h3 class="px-2"> RECENT ANNOUNCEMENTS</h3>
-                        </div>
-                        // Right Section
-                        <div class="flex text-white items-center hover:text-customBlue-HOVER hover:bg-gray-300">
-                            <button>
-                                <details>
-                                    <summary>COLLAPSE</summary>
-                                </details>
-                            </button>
-                        </div>
-                    </div>
+
+                    // announcements section
+                    <Suspense fallback=move || view! { <p>"Loading announcements..."</p> }>
+                        { move || {
+                            let ann_list = announcements().unwrap_or_default();
+                            view! { <Announcements announcements={ann_list} /> }
+                        }}
+                    </Suspense>
+
                     <div class="grid grid-cols-3 gap-4">
                         <Suspense fallback=move || view! { <p>"Loading..."</p> } >
                             <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
