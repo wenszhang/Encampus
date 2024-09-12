@@ -42,8 +42,10 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
                                                         // Clone global_state so it can be used in multiple closures
     let global_state_clone_for_first_name = global_state.clone();
     let global_state_clone_for_last_name = global_state.clone();
-    let name = global_state_clone_for_first_name.first_name.get();
-    let role = global_state_clone_for_last_name.last_name.get();
+    let global_state_clone_for_role = global_state.clone();
+    let first_name = global_state_clone_for_first_name.first_name.get();
+    let last_name = global_state_clone_for_last_name.last_name.get();
+    let role = global_state_clone_for_role.role.get();
 
     view! {
         <>
@@ -53,7 +55,7 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
             </div>
 
             // Name and role
-            <h1 class="text-center text-2xl font-bold">{name}</h1> 
+            <h1 class="text-center text-2xl font-bold">{first_name} " " {last_name}</h1> 
             <h2 class="text-center text-lg font-semibold text-gray-500">{role}</h2>
 
             <div class="px-4">
