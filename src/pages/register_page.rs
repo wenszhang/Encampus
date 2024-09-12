@@ -61,6 +61,7 @@ pub fn RegisterPage() -> impl IntoView {
                 global_state.user_name.set(Some(username.get()));
                 global_state.id.set(Some(user_id.get()));
                 global_state.first_name.set(Some(first_name.get()));
+                global_state.last_name.set(Some(last_name.get()));
                 global_state.role.set(Some("student".to_string()));
 
                 let navigate = leptos_router::use_navigate();

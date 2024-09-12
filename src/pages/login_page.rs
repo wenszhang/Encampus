@@ -24,7 +24,7 @@ pub fn LoginPage() -> impl IntoView {
         let username = username.to_owned();
         async {
             let user = login(username.clone()).await.unwrap_or_default();
-            (username, user.id, user.firstname, user.role)
+            (username, user.id, user.firstname, user.lastname, user.role)
         }
     });
 
@@ -41,10 +41,13 @@ pub fn LoginPage() -> impl IntoView {
                 global_state.user_name.set(Some(userInfo.0));
                 global_state.id.set(Some(userInfo.1));
                 global_state.first_name.set(Some(userInfo.2));
-                global_state.role.set(Some(userInfo.3));
+                global_state.last_name.set(Some(userInfo.3));
+                global_state.role.set(Some(userInfo.4));
 
-                // The variable definition is required
-                // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
+                // Save user info to local storage
+                global_state.save_to_local_storage();
+
+                // Navigate based on the user's role
                 let navigate = leptos_router::use_navigate();
                 match global_state.role.get().unwrap_or_default().as_str() {
                     "student" => navigate("/classes", Default::default()),
