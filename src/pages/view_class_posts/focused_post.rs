@@ -11,7 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::resolve_post;
+use crate::data::database::post_functions::{remove_post, resolve_post};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -102,6 +102,12 @@ pub fn FocusedPost() -> impl IntoView {
             };
         }
     });
+
+    let remove_action = create_action(move |post_id: &PostId| {
+        let post_id = post_id.clone();
+        async move {
+        remove_post(post_id.post_id, global_state.id.get_untracked().unwrap())
+    }});
 
     fn sort_replies(replies: Vec<Reply>, order: &str) -> Vec<Reply> {
         let mut sorted_replies = replies.clone();
@@ -251,12 +257,29 @@ pub fn FocusedPost() -> impl IntoView {
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
+                        
                             {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()) ||
                                 instructor() == Some(global_state.user_name.get().unwrap_or_default()){
 
+                                    // view! {
+                                    //     <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
+                                    //         on:click=move |_| {
+                                    //             remove_action.dispatch(post_id().unwrap())
+                                    //         }
+                                    //     >
+                                    //     "Remove Post"
+                                    //     </button>
+                                    // }
 
                                 if post().map(|post| post.resolved) == Some(false){
                                     view! {
+                                        <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
+                                            on:click=move |_| {
+                                                remove_action.dispatch(post_id().unwrap())
+                                            }
+                                        >
+                                        "Remove Post"
+                                        </button>
                                         <span class="mx-2">"Resolve:"</span>
                                         <input
                                             type="checkbox"
@@ -273,6 +296,13 @@ pub fn FocusedPost() -> impl IntoView {
                                     }
                                 } else{
                                     view! {
+                                        <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
+                                            on:click=move |_| {
+                                                remove_action.dispatch(post_id().unwrap())
+                                            }
+                                        >
+                                        "Remove Post"
+                                        </button>
                                         <span class="mx-2">"Resolved:"</span>
                                         <input
                                             type="checkbox"
