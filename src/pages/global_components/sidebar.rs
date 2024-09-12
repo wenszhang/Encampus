@@ -1,6 +1,5 @@
 use crate::data::database::class_functions::get_class_list;
 use crate::data::database::class_functions::ClassInfo;
-use crate::data::global_state;
 use crate::data::global_state::GlobalState;
 use leptos::*;
 use leptos_router::A;
