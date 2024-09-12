@@ -129,7 +129,7 @@ pub fn CreatePost() -> impl IntoView {
                                 anonymous: anonymous_state(),
                                 limited_visibility: false,
                                 classid: class_id.get().unwrap().class_id,
-                                private: private_state(), // TODO: Hook up to UI to allow for private posts
+                                private: private_state(),
                             })
                     }
                 >

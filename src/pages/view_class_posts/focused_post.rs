@@ -106,7 +106,7 @@ pub fn FocusedPost() -> impl IntoView {
     let remove_action = create_action(move |post_id: &PostId| {
         let post_id = post_id.clone();
         async move {
-        remove_post(post_id.post_id, global_state.id.get_untracked().unwrap())
+        remove_post(post_id.post_id, global_state.id.get_untracked().unwrap()).await
     }});
 
     fn sort_replies(replies: Vec<Reply>, order: &str) -> Vec<Reply> {
