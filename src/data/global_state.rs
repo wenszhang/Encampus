@@ -56,8 +56,8 @@ impl GlobalState {
         if let Some(first_name) = storage.get_item("first_name").unwrap_or(None) {
             self.first_name.set(Some(first_name));
         }
-        if let Some(first_name) = storage.get_item("last_name").unwrap_or(None) {
-            self.first_name.set(Some(first_name));
+        if let Some(last_name) = storage.get_item("last_name").unwrap_or(None) {
+            self.last_name.set(Some(last_name));
         }
         if let Some(id) = storage.get_item("id").unwrap_or(None) {
             self.id.set(Some(id.parse().unwrap()));
@@ -88,8 +88,8 @@ impl GlobalState {
         if let Some(first_name) = self.first_name.get() {
             storage.set_item("first_name", &first_name).unwrap();
         }
-        if let Some(first_name) = self.first_name.get() {
-            storage.set_item("last_name", &first_name).unwrap();
+        if let Some(last_name) = self.last_name.get() {
+            storage.set_item("last_name", &last_name).unwrap();
         }
         if let Some(id) = self.id.get() {
             storage.set_item("id", &id.to_string()).unwrap();
@@ -119,6 +119,7 @@ impl GlobalState {
         self.authenticated.set(false);
         self.user_name.set(None);
         self.first_name.set(None);
+        self.last_name.set(None);
         self.id.set(None);
         self.role.set(None);
     }
