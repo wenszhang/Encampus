@@ -34,8 +34,10 @@ pub fn LoginPage() -> impl IntoView {
             global_state.first_name.set(Some(userInfo.2));
             global_state.role.set(Some(userInfo.3));
 
-            // The variable definition is required
-            // We might want to consider writing a short util that wraps navigate code to make it shorter, i.e. navigate_to("/classes")
+            // Save user info to local storage
+            global_state.save_to_local_storage();
+
+            // Navigate based on the user's role
             let navigate = leptos_router::use_navigate();
             match global_state.role.get().unwrap_or_default().as_str() {
                 "student" => navigate("/classes", Default::default()),
@@ -99,7 +101,7 @@ pub fn LoginPage() -> impl IntoView {
                     </button>
                     <div class="mt-4 text-sm text-gray-600 text-center">
                         Please enter your username.
-                        </div>
+                    </div>
                 </div>
             </div>
         </form>

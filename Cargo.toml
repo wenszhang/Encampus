@@ -26,6 +26,7 @@ cfg-if = "1.0.0"
 tracing-subscriber = { version = "0.3.18", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4.38", features = ["serde"] }
+web-sys = { version = "0.3.70", features = ["Storage"] }
 
 
 [features]
