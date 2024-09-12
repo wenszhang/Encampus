@@ -11,6 +11,7 @@ pub(crate) struct GlobalState {
     pub _user_token: RwSignal<Option<String>>,
     pub user_name: RwSignal<Option<String>>,
     pub first_name: RwSignal<Option<String>>,
+    pub last_name: RwSignal<Option<String>>,
     pub id: RwSignal<Option<i32>>,
     pub role: RwSignal<Option<String>>,
     pub authenticated: RwSignal<bool>,
@@ -22,6 +23,7 @@ impl GlobalState {
             _user_token: create_rw_signal(None),
             user_name: create_rw_signal(None),
             first_name: create_rw_signal(None),
+            last_name: create_rw_signal(None),
             id: create_rw_signal(None),
             role: create_rw_signal(None),
             authenticated: create_rw_signal(false),
@@ -54,6 +56,9 @@ impl GlobalState {
         if let Some(first_name) = storage.get_item("first_name").unwrap_or(None) {
             self.first_name.set(Some(first_name));
         }
+        if let Some(first_name) = storage.get_item("last_name").unwrap_or(None) {
+            self.first_name.set(Some(first_name));
+        }
         if let Some(id) = storage.get_item("id").unwrap_or(None) {
             self.id.set(Some(id.parse().unwrap()));
         }
@@ -83,6 +88,9 @@ impl GlobalState {
         if let Some(first_name) = self.first_name.get() {
             storage.set_item("first_name", &first_name).unwrap();
         }
+        if let Some(first_name) = self.first_name.get() {
+            storage.set_item("last_name", &first_name).unwrap();
+        }
         if let Some(id) = self.id.get() {
             storage.set_item("id", &id.to_string()).unwrap();
         }
@@ -104,6 +112,7 @@ impl GlobalState {
 
         storage.remove_item("user_name").unwrap();
         storage.remove_item("first_name").unwrap();
+        storage.remove_item("last_name").unwrap();
         storage.remove_item("id").unwrap();
         storage.remove_item("role").unwrap();
 

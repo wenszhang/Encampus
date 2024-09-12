@@ -11,6 +11,7 @@ use crate::{
         },
         home::Home,
         login_page::LoginPage,
+        register_page::RegisterPage,
         view_class_posts::{class::ClassPage, create_post::CreatePost, focused_post::FocusedPost},
         view_enrolled_classes::classes::ClassesPage,
     },
@@ -58,6 +59,7 @@ pub fn App() -> impl IntoView {
                         <Route path="" view=UnauthenticatedRoutes>
                             <Route path="" view=Home/>
                             <Route path="/login" view=LoginPage/>
+                            <Route path="/register" view=RegisterPage/>
                         </Route>
                     </Route>
                 </Routes>
