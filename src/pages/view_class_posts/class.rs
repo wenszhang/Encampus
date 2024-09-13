@@ -108,7 +108,7 @@ pub fn ClassPage() -> impl IntoView {
                 </div>
                 <div class="flex align mx-20 my-10 flex-col gap-4">
                     <Show when=move || is_visible() fallback=|| ()>
-                        <CreatePost/>
+                        <CreatePost on_new_post=move || set_is_visible(false)/>
                     </Show>
                     <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
                     // announcements section

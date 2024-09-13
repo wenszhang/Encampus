@@ -41,7 +41,8 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
     let global_state = expect_context::<GlobalState>(); // Access global state
 
     view! {
-        <>
+        <div class="flex flex-col h-full">
+            // Profile Image and User Info
             <div class="flex items-center justify-center mt-10 mb-4">
                 <img src="https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
                     class="rounded-full w-16 h-16" alt="Profile Image" />
@@ -62,8 +63,8 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
                 {move || global_state.role.get().unwrap_or_else(|| "".to_string())}
             </h2>
 
-            <div class="px-4">
-                <h2 class="text-sm text-gray-400 mt-6 mb-2 uppercase tracking-widest">"Fall 24 Courses"</h2>
+            <div class="flex-grow overflow-y-auto px-4 mt-6 custom-scrollbar">
+                <h2 class="text-sm text-gray-400 mb-2 uppercase tracking-widest">"Fall 24 Courses"</h2>
                 <ul>
                     <Suspense fallback=move || view! { <p>"Loading..."</p> }>
                         <For each=move || courses().unwrap_or_default() key=|class| class.id let:class>
@@ -73,26 +74,31 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
                         </For>
                     </Suspense>
                 </ul>
+
                 <h2 class="text-sm text-gray-400 mt-6 mb-2 uppercase tracking-widest">"Tools"</h2>
                 <ul>
                     <li class="py-2">
-                        <A href="/" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"Private Messages"</A>
+                        <A href="/classes" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"Private Messages"</A>
                     </li>
                     <li class="py-2">
-                        <A href="/" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"Course Statistics"</A>
+                        <A href="/classes" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"Course Statistics"</A>
                     </li>
                     <li class="py-2">
-                        <A href="/" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"PollV"</A>
+                        <A href="/classes" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"PollV"</A>
                     </li>
                 </ul>
             </div>
-            <div class="absolute bottom-4 w-full px-4">
-                <A href="/account-settings" class="block w-full text-center py-2 bg-gray-700 hover:bg-gray-600 rounded-md">"Account Settings"</A>
+
+            // Account Settings Button
+            <div class="w-full px-2 py-2 bg-gray-700 hover:bg-gray-600 rounded-md">
+                <A href="/classes" class="block w-full text-center py-1 text-sm text-white">"Account Settings"</A>
             </div>
+
+            // Collapse Button
             <button class="absolute top-4 right-4 text-white" on:click=move |_| set_collapsed.update(|c| *c = !*c)>
                 "←"
             </button>
-        </>
+        </div>
     }
     .into_view()
 }

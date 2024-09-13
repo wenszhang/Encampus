@@ -20,7 +20,7 @@ pub struct AddPostInfo {
 }
 
 #[component]
-pub fn CreatePost() -> impl IntoView {
+pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let class_id = use_params::<ClassId>();
     let global_state = expect_context::<GlobalState>();
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
@@ -129,8 +129,10 @@ pub fn CreatePost() -> impl IntoView {
                                 anonymous: anonymous_state(),
                                 limited_visibility: false,
                                 classid: class_id.get().unwrap().class_id,
-                                private: private_state(),
-                            })
+                                private: private_state(), // TODO: Hook up to UI to allow for private posts
+                            }
+                        );
+                        on_new_post();
                     }
                 >
                 "Post"
