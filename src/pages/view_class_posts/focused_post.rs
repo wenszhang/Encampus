@@ -11,7 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::{remove_post, resolve_post};
+use crate::data::database::post_functions::{remove_post, resolve_post, PostFetcher};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -25,6 +25,7 @@ pub struct PostId {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
+    postid: i32,
     timestamp: NaiveDateTime,
     title: String,
     contents: String,
@@ -105,18 +106,24 @@ pub fn FocusedPost() -> impl IntoView {
     });
 
     let remove_action = create_action(move |post_id: &PostId| {
-        let post_id = post_id.clone();
+        let post_id = post_id.post_id;
         async move {
-            let _ = remove_post(post_id.post_id, global_state.id.get_untracked().unwrap()).await;
+            let current_post = get_post(post_id).await.unwrap();
+            if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
+                // posts.update(|posts| {
+                //     if let Some(posts) = posts {
+                //         if let Some(index) = posts.iter().position(|p| p.postid == post_id) {
+                //             posts.remove(index);
+                //         }
+                //     }
+                // });
 
-            let navigate = leptos_router::use_navigate();
-            navigate(
-                format!("/classes/{}", class_id.get_untracked().unwrap().class_id).as_str(),
-                leptos_router::NavigateOptions {
-                    replace: true, // This replaces the current history state.
-                    ..Default::default()
-                },
-            );
+                let navigate = leptos_router::use_navigate();
+                navigate(
+                    format!("/classes/{}", class_id.get_untracked().unwrap().class_id,).as_str(),
+                    Default::default(),
+                );
+            }
         }
     });
 
@@ -423,6 +430,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
     let (post, replies) = join!(
         sqlx::query_as::<_, Post>(
             "SELECT 
+                postid,
                 timestamp,
                 title, 
                 contents, 
