@@ -1,4 +1,4 @@
-use leptos::{create_rw_signal, RwSignal, SignalGet, SignalSet};
+use leptos::{create_rw_signal, RwSignal, SignalGet, SignalGetUntracked, SignalSet};
 #[cfg(target_arch = "wasm32")]
 use wasm_bindgen::prelude::*;
 #[cfg(target_arch = "wasm32")]
@@ -65,8 +65,7 @@ impl GlobalState {
         if let Some(role) = storage.get_item("role").unwrap_or(None) {
             self.role.set(Some(role));
         }
-
-        if self.user_name.get().is_some() {
+        if self.user_name.get_untracked().is_some() {
             self.authenticated.set(true);
         }
     }
@@ -82,19 +81,19 @@ impl GlobalState {
     pub fn save_to_local_storage(&self) {
         let storage = Self::local_storage();
 
-        if let Some(username) = self.user_name.get() {
+        if let Some(username) = self.user_name.get_untracked() {
             storage.set_item("user_name", &username).unwrap();
         }
-        if let Some(first_name) = self.first_name.get() {
+        if let Some(first_name) = self.first_name.get_untracked() {
             storage.set_item("first_name", &first_name).unwrap();
         }
-        if let Some(last_name) = self.last_name.get() {
+        if let Some(last_name) = self.last_name.get_untracked() {
             storage.set_item("last_name", &last_name).unwrap();
         }
-        if let Some(id) = self.id.get() {
+        if let Some(id) = self.id.get_untracked() {
             storage.set_item("id", &id.to_string()).unwrap();
         }
-        if let Some(role) = self.role.get() {
+        if let Some(role) = self.role.get_untracked() {
             storage.set_item("role", &role).unwrap();
         }
     }
@@ -116,6 +115,7 @@ impl GlobalState {
         storage.remove_item("id").unwrap();
         storage.remove_item("role").unwrap();
 
+        // Reset the state
         self.authenticated.set(false);
         self.user_name.set(None);
         self.first_name.set(None);
