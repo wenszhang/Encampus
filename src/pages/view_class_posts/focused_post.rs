@@ -11,7 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::{remove_post, resolve_post, PostFetcher};
+use crate::data::database::post_functions::{remove_post, resolve_post};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
