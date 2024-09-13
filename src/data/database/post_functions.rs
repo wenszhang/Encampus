@@ -10,10 +10,12 @@ use serde::{Deserialize, Serialize};
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
+    // add field to get authorID in posts table.
     pub title: String,
     pub post_id: i32,
     pub resolved: bool,
     pub private: bool,
+    pub author_id: i32,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -35,7 +37,7 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
     ))?;
 
     let rows: Vec<Post> = sqlx::query_as(
-        "select title, postid as post_id, resolved, private from posts where removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp;",
+        "select title, postid as post_id, resolved, private, authorid as author_id from posts where removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp;",
     )
     .bind(class_id)
     .bind(user_id)
@@ -63,6 +65,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
                         title, 
                         postid as post_id,
                         resolved,
+                        authorid as author_id,
                         private;")
         .bind(new_post_info.title)
         .bind(new_post_info.contents)

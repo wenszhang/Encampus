@@ -8,7 +8,10 @@ use crate::pages::global_components::announcements::Announcements;
 use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::pages::view_class_posts::create_post::CreatePost;
+use crate::resources::images::svgs::filter_icon::FilterIcon;
+use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
+
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
 
@@ -76,10 +79,28 @@ pub fn ClassPage() -> impl IntoView {
         <div class="flex">
             <Sidebar/>
             <div class="flex-1">
-                <Suspense fallback=move || view! { <p>"Loading..."</p> } >
+                <Suspense fallback=move || view! { } >
                     <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
                 </Suspense>
-                <div class="flex justify-end pt-8 mx-20">
+                <span class="inline-flex items-baseline ml-5">
+                    <button class="pr-1 pt-7">
+                        <InformationIcon size="20px"/>
+                    </button>
+                    <h3 class="text-s pb-1"> "Help"</h3>
+                </span>
+                <div class="flex justify-center pt-8 mx-20">
+                    <div class="flex items-center justify-center">
+                        <div class="relative p-2 rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-[35rem] flex items-center bg-white">
+                            <input type="text" placeholder="Search posts by keywords..." class="pl-5 pr-24 w-full border-none focus:outline-none bg-white"/>
+                            <button class="absolute flex items-center justify-between inset-y-0 right-12 top-1 bg-gray-300 text-white  rounded-full py-1 px-10  hover:bg-gray-400" style="height: 30px;">
+                                <p class="text-xs pr-2"> "Filter Posts" </p>
+                                <FilterIcon size="20px"/>
+                            </button>
+                            <button class="absolute inset-y-0 right-0 pr-4 flex items-center">
+                                <MagnifyingGlass size="21px"/>
+                            </button>
+                        </div>
+                    </div>
                     <button class="bg-customBlue hover:bg-customBlue-HOVER text-white py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2"
                         on:click=move |_| set_is_visible(!is_visible())>
                         { move || if is_visible() { "Cancel" } else { "Post +" } }
@@ -90,15 +111,6 @@ pub fn ClassPage() -> impl IntoView {
                         <CreatePost/>
                     </Show>
                     <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
-                    <div class="flex items-center justify-center">
-                        <div class="relative p-2 rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-80 bg-white">
-                            <input type="text" placeholder="Search posts by keywords..." class="pl-5 pr-5 w-full border-none focus:outline-none bg-white"/>
-                            <button class="absolute inset-y-0 right-0 pr-3 flex items-center">
-                                <MagnifyingGlass size="20px"/>
-                            </button>
-                        </div>
-                    </div>
-
                     // announcements section
                     <Suspense fallback=move || view! { <p>"Loading announcements..."</p> }>
                         { move || {
@@ -106,7 +118,6 @@ pub fn ClassPage() -> impl IntoView {
                             view! { <Announcements announcements={ann_list} /> }
                         }}
                     </Suspense>
-
                     <div class="grid grid-cols-3 gap-4">
                         <Suspense fallback=move || view! { <p>"Loading..."</p> } >
                             <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>

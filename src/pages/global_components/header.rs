@@ -27,7 +27,7 @@ pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
 
 #[component]
 pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>) -> impl IntoView {
-    let global_state = expect_context::<GlobalState>(); // Access global state
+    let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
     let navigate = use_navigate(); // Create a navigation function
     let logo_src = logo.as_deref().unwrap_or("images/BlockU_RGB.png");
 
@@ -61,7 +61,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                 {move || class_id().map(|class_id: i32| view! {
                     <div class="group relative">
                     <span class="inline-flex items-baseline">
-                        <h3 class="px-2"> "New Announcements"</h3>
+                        <h3 class="px-2"> "Notifications"</h3>
                             <button class="pr-2">
                                 <AnnouncementBell size="1.3rem"/>
                             </button>
@@ -72,7 +72,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                         </div>
                     </div>})
                 }
-                <span class="text-xl font-bold mr-4 flex items-center">{move || global_state_clone_for_first_name.first_name.get()}</span>
+                <span class="text-xl font-bold mr-4 flex items-center">{move || global_state.first_name.get()}</span>
                 <div class="flex items-center relative group">
                     <button>
                         <DropDownBars size="1.3rem"/>
