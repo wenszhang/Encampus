@@ -110,14 +110,6 @@ pub fn FocusedPost() -> impl IntoView {
         async move {
             let current_post = get_post(post_id).await.unwrap();
             if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
-                // posts.update(|posts| {
-                //     if let Some(posts) = posts {
-                //         if let Some(index) = posts.iter().position(|p| p.postid == post_id) {
-                //             posts.remove(index);
-                //         }
-                //     }
-                // });
-
                 let navigate = leptos_router::use_navigate();
                 navigate(
                     format!("/classes/{}", class_id.get_untracked().unwrap().class_id,).as_str(),
