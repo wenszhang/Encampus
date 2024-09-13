@@ -7,10 +7,10 @@ use crate::data::global_state::GlobalState;
 use crate::pages::global_components::announcements::Announcements;
 use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
+use crate::pages::view_class_posts::create_post::CreatePost;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
-use crate::pages::view_class_posts::create_post::CreatePost;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {
