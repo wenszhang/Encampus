@@ -52,7 +52,6 @@ pub fn App() -> impl IntoView {
                             <Route path="/classes" view=ClassesPage/>
                             <Route path="/classes/:class_id" view=ClassPage>
                                 <Route path="" view=|| {}/>
-                                <Route path="/new" view=CreatePost/>
                                 <Route path="/:post_id" view=FocusedPost/>
                             </Route>
                         </Route>
