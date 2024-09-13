@@ -76,7 +76,7 @@ pub fn ClassPage() -> impl IntoView {
         <div class="flex">
             <Sidebar/>
             <div class="flex-1">
-                <Suspense fallback=move || view! { <p>"Loading..."</p> } >
+                <Suspense fallback=move || view! { } >
                     <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
                 </Suspense>
                 <div class="flex justify-end pt-8 mx-20">

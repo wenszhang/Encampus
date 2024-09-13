@@ -39,13 +39,6 @@ fn collapsed_view(set_collapsed: WriteSignal<bool>) -> View {
 // Expanded view for the sidebar
 fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<ClassInfo>>) -> View {
     let global_state = expect_context::<GlobalState>(); // Access global state
-                                                        // Clone global_state so it can be used in multiple closures
-    let global_state_clone_for_first_name = global_state.clone();
-    let global_state_clone_for_last_name = global_state.clone();
-    let global_state_clone_for_role = global_state.clone();
-    let first_name = global_state_clone_for_first_name.first_name.get();
-    let last_name = global_state_clone_for_last_name.last_name.get();
-    let role = global_state_clone_for_role.role.get();
 
     view! {
         <>
@@ -54,9 +47,20 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
                     class="rounded-full w-16 h-16" alt="Profile Image" />
             </div>
 
-            // Name and role
-            <h1 class="text-center text-2xl font-bold">{first_name} " " {last_name}</h1> 
-            <h2 class="text-center text-lg font-semibold text-gray-500">{role}</h2>
+            // Reactive Name and Role
+            <h1 class="text-center text-2xl font-bold">
+                {move || {
+                    let first_name = global_state.first_name.get();
+                    let last_name = global_state.last_name.get();
+                    format!("{} {}", 
+                        first_name.unwrap_or_else(|| "".to_string()), 
+                        last_name.unwrap_or_else(|| "".to_string())
+                    )
+                }}
+            </h1>
+            <h2 class="text-center text-lg font-semibold text-gray-500">
+                {move || global_state.role.get().unwrap_or_else(|| "".to_string())}
+            </h2>
 
             <div class="px-4">
                 <h2 class="text-sm text-gray-400 mt-6 mb-2 uppercase tracking-widest">"Fall 24 Courses"</h2>
@@ -72,13 +76,13 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
                 <h2 class="text-sm text-gray-400 mt-6 mb-2 uppercase tracking-widest">"Tools"</h2>
                 <ul>
                     <li class="py-2">
-                        <A href="/private-messages" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"Private Messages"</A>
+                        <A href="/" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"Private Messages"</A>
                     </li>
                     <li class="py-2">
-                        <A href="/course-statistics" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"Course Statistics"</A>
+                        <A href="/" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"Course Statistics"</A>
                     </li>
                     <li class="py-2">
-                        <A href="/pollv" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"PollV"</A>
+                        <A href="/" class="block px-4 py-2 rounded-md text-white hover:bg-gray-700">"PollV"</A>
                     </li>
                 </ul>
             </div>
