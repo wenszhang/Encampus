@@ -107,18 +107,18 @@ pub fn FocusedPost() -> impl IntoView {
     let remove_action = create_action(move |post_id: &PostId| {
         let post_id = post_id.clone();
         async move {
-        remove_post(post_id.post_id, global_state.id.get_untracked().unwrap()).await;
+            let _ = remove_post(post_id.post_id, global_state.id.get_untracked().unwrap()).await;
 
-        let navigate = leptos_router::use_navigate();
-        navigate(
-            format!(
-                "/classes/{}",
-                class_id.get_untracked().unwrap().class_id
-            )
-            .as_str(),
-            Default::default(),
-        );
-    }});
+            let navigate = leptos_router::use_navigate();
+            navigate(
+                format!("/classes/{}", class_id.get_untracked().unwrap().class_id).as_str(),
+                leptos_router::NavigateOptions {
+                    replace: true, // This replaces the current history state.
+                    ..Default::default()
+                },
+            );
+        }
+    });
 
     fn sort_replies(replies: Vec<Reply>, order: &str) -> Vec<Reply> {
         let mut sorted_replies = replies.clone();
@@ -268,7 +268,7 @@ pub fn FocusedPost() -> impl IntoView {
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
-                        
+
                             {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()) ||
                                 instructor() == Some(global_state.user_name.get().unwrap_or_default()){
 
