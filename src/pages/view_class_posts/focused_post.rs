@@ -234,7 +234,7 @@ pub fn FocusedPost() -> impl IntoView {
                                         message: "Reply content cannot be empty.".to_string(),
                                         notification_type: NotificationType::Warning,
                                     }));
-                                    return; // Probably want to throw an error message on the screen, might add that sooner if not later
+                                    return;
                                 }
                                 add_reply_action.dispatch(
                                 AddReplyInfo {

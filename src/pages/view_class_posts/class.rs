@@ -10,6 +10,7 @@ use crate::pages::global_components::sidebar::Sidebar;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
+use crate::pages::view_class_posts::create_post::CreatePost;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {
@@ -69,6 +70,8 @@ pub fn ClassPage() -> impl IntoView {
         leptos_dom::document().set_title(&title);
     });
 
+    let (is_visible, set_is_visible) = create_signal(false);
+
     view! {
         <div class="flex">
             <Sidebar/>
@@ -77,13 +80,15 @@ pub fn ClassPage() -> impl IntoView {
                     <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
                 </Suspense>
                 <div class="flex justify-end pt-8 mx-20">
-                    <A href="new">
-                        <button class="bg-customBlue hover:bg-customBlue-HOVER text-white py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2">
-                            "Post +"
-                        </button>
-                    </A>
+                    <button class="bg-customBlue hover:bg-customBlue-HOVER text-white py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2"
+                        on:click=move |_| set_is_visible(!is_visible())>
+                        { move || if is_visible() { "Cancel" } else { "Post +" } }
+                    </button>
                 </div>
                 <div class="flex align mx-20 my-10 flex-col gap-4">
+                    <Show when=move || is_visible() fallback=|| ()>
+                        <CreatePost/>
+                    </Show>
                     <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
                     <div class="flex items-center justify-center">
                         <div class="relative p-2 rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-80 bg-white">
