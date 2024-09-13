@@ -1,8 +1,13 @@
 pub mod announcement_bell;
 pub mod announcement_mic;
+pub mod bump_icon;
 pub mod dots_icon;
 pub mod drop_down_bars;
+pub mod error_icon;
+pub mod filter_icon;
+pub mod information_icon;
 pub mod lock_icon;
 pub mod magnifying_glass;
 pub mod text_area_icon;
 pub mod unresolved_icon;
+pub mod warning_icon;

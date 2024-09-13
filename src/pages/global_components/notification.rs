@@ -1,3 +1,6 @@
+use crate::resources::images::svgs::error_icon::ErrorIcon;
+use crate::resources::images::svgs::warning_icon::WarningIcon;
+
 use leptos::*;
 
 #[derive(Clone, PartialEq)]
@@ -27,7 +30,19 @@ pub fn NotificationComponent(
     };
 
     view! {
-        <div class={format!("rounded p-4 text-white {}", class_name)}>
+        <div class={format!("rounded p-4 text-white flex items-center {}", class_name)}>
+            {move || match notification_details.notification_type {
+                NotificationType::Warning => view! {
+                    <WarningIcon size="2px" />
+                }.into_view(),
+
+                NotificationType::Error => view! {
+                }.into_view(),
+
+                // If no icon is needed for other types, render nothing
+                _ => view! { <></> }.into_view()
+            }}
+
             <span>{&notification_details.message}</span>
             <button class="ml-4" on:click=move |_| on_close()>
                 {"✖"}
