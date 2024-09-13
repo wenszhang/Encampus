@@ -37,7 +37,7 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
     ))?;
 
     let rows: Vec<Post> = sqlx::query_as(
-        "select title, postid as post_id, resolved, private, authorid as author_id from posts where (posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2) ORDER BY timestamp;",
+        "select title, postid as post_id, resolved, private, authorid as author_id from posts where removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp;",
     )
     .bind(class_id)
     .bind(user_id)
@@ -61,7 +61,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
     ))?;
 
     let post: Post = sqlx::query_as("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid, resolved, private) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6, false, $7)
-                        RETURNING                 
+                        RETURNING                
                         title, 
                         postid as post_id,
                         resolved,
@@ -97,5 +97,36 @@ pub async fn resolve_post(post_id: i32, status: bool) -> Result<(), ServerFnErro
         .await
         .expect("Cannot resolve post");
 
+    Ok(())
+}
+
+#[server(RemovePost)]
+pub async fn remove_post(post_id: i32, user_id: i32) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let UserId(instructor_id) = sqlx::query_as("select instructorid from classes where courseid = (select classid from posts where postid = $1)")
+        .bind(post_id)
+        .fetch_one(&pool)
+        .await
+        .expect("Cannot get instructor id");
+
+    let UserId(author_id) = sqlx::query_as("select authorid from posts where postid = $1")
+        .bind(post_id)
+        .fetch_one(&pool)
+        .await
+        .expect("Cannot get author id");
+
+    if author_id == user_id || instructor_id == user_id {
+        sqlx::query("update posts set removed = true where postid = $1")
+            .bind(post_id)
+            .execute(&pool)
+            .await
+            .expect("Cannot remove post");
+    }
     Ok(())
 }

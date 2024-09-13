@@ -11,12 +11,12 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::resolve_post;
+use crate::data::database::post_functions::{remove_post, resolve_post};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
-
+use crate::pages::view_class_posts::class::ClassId;
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
     pub post_id: i32,
@@ -25,6 +25,7 @@ pub struct PostId {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
+    postid: i32,
     timestamp: NaiveDateTime,
     title: String,
     contents: String,
@@ -54,6 +55,7 @@ pub struct AddReplyInfo {
 pub fn FocusedPost() -> impl IntoView {
     // Fetch post id from route in the format of "class/:class_id/:post_id"
     let post_id = use_params::<PostId>();
+    let class_id = use_params::<ClassId>();
     let global_state = expect_context::<GlobalState>();
     let (order_option, set_value) = create_signal("Newest First".to_string());
     let (notification_details, set_notification_details) =
@@ -100,6 +102,20 @@ pub fn FocusedPost() -> impl IntoView {
                     }));
                 }
             };
+        }
+    });
+
+    let remove_action = create_action(move |post_id: &PostId| {
+        let post_id = post_id.post_id;
+        async move {
+            let current_post = get_post(post_id).await.unwrap();
+            if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
+                let navigate = leptos_router::use_navigate();
+                navigate(
+                    format!("/classes/{}", class_id.get_untracked().unwrap().class_id,).as_str(),
+                    Default::default(),
+                );
+            }
         }
     });
 
@@ -251,12 +267,29 @@ pub fn FocusedPost() -> impl IntoView {
                 </DarkenedCard>
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
+
                             {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()) ||
                                 instructor() == Some(global_state.user_name.get().unwrap_or_default()){
 
+                                    // view! {
+                                    //     <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
+                                    //         on:click=move |_| {
+                                    //             remove_action.dispatch(post_id().unwrap())
+                                    //         }
+                                    //     >
+                                    //     "Remove Post"
+                                    //     </button>
+                                    // }
 
                                 if post().map(|post| post.resolved) == Some(false){
                                     view! {
+                                        <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
+                                            on:click=move |_| {
+                                                remove_action.dispatch(post_id().unwrap())
+                                            }
+                                        >
+                                        "Remove Post"
+                                        </button>
                                         <span class="mx-2">"Resolve:"</span>
                                         <input
                                             type="checkbox"
@@ -273,6 +306,13 @@ pub fn FocusedPost() -> impl IntoView {
                                     }
                                 } else{
                                     view! {
+                                        <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
+                                            on:click=move |_| {
+                                                remove_action.dispatch(post_id().unwrap())
+                                            }
+                                        >
+                                        "Remove Post"
+                                        </button>
                                         <span class="mx-2">"Resolved:"</span>
                                         <input
                                             type="checkbox"
@@ -382,6 +422,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
     let (post, replies) = join!(
         sqlx::query_as::<_, Post>(
             "SELECT 
+                postid,
                 timestamp,
                 title, 
                 contents, 
