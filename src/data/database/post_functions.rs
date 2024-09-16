@@ -1,21 +1,36 @@
 #[allow(unused_imports)] // Suppress UserID - false compiler warning due to RowToStruct
 use super::user_functions::UserId;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
+use chrono::NaiveDateTime;
+use leptos::*;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
 /**
  * Struct to hold the post info
  */
+// #[derive(Clone, Serialize, Deserialize, Debug)]
+// #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+// pub struct Post {
+//     pub title: String,
+//     pub post_id: i32,
+//     pub resolved: bool,
+//     pub private: bool,
+//     pub author_id: i32,
+// }
+
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
-    // add field to get authorID in posts table.
-    pub title: String,
     pub post_id: i32,
+    pub timestamp: NaiveDateTime,
+    pub title: String,
+    pub contents: String,
+    pub author_name: String,
+    pub anonymous: bool,
     pub resolved: bool,
-    pub private: bool,
     pub author_id: i32,
+    pub private: bool,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -37,7 +52,18 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
     ))?;
 
     let rows: Vec<Post> = sqlx::query_as(
-        "select title, postid as post_id, resolved, private, authorid as author_id from posts where removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp;",
+        "select postid as post_id, 
+            timestamp, 
+            title, 
+            contents, 
+            CASE WHEN anonymous THEN 'Anonymous Author'
+                ELSE users.firstname 
+                END as author_name, 
+            anonymous,
+            resolved,
+            authorid as author_id,
+            private
+            from posts where removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp;",
     )
     .bind(class_id)
     .bind(user_id)

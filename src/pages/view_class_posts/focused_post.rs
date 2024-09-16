@@ -11,7 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::{remove_post, resolve_post};
+use crate::data::database::post_functions::{remove_post, resolve_post, Post};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -22,18 +22,18 @@ pub struct PostId {
     pub post_id: i32,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct Post {
-    postid: i32,
-    timestamp: NaiveDateTime,
-    title: String,
-    contents: String,
-    author_name: String,
-    anonymous: bool,
-    resolved: bool,
-    author_id: i32,
-}
+// #[derive(Clone, Serialize, Deserialize, Debug)]
+// #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+// pub struct Post {
+//     postid: i32,
+//     timestamp: NaiveDateTime,
+//     title: String,
+//     contents: String,
+//     author_name: String,
+//     anonymous: bool,
+//     resolved: bool,
+//     author_id: i32,
+// }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
@@ -423,7 +423,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
     let (post, replies) = join!(
         sqlx::query_as::<_, Post>(
             "SELECT 
-                postid,
+                postid as post_id,
                 timestamp,
                 title, 
                 contents, 
