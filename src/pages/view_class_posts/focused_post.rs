@@ -32,6 +32,7 @@ pub struct Post {
     author_name: String,
     anonymous: bool,
     resolved: bool,
+    author_id: i32,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
@@ -108,7 +109,7 @@ pub fn FocusedPost() -> impl IntoView {
     let remove_action = create_action(move |post_id: &PostId| {
         let post_id = post_id.post_id;
         async move {
-            let current_post = get_post(post_id).await.unwrap();
+            let _current_post = get_post(post_id).await.unwrap();
             if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
                 let navigate = leptos_router::use_navigate();
                 navigate(
@@ -268,7 +269,7 @@ pub fn FocusedPost() -> impl IntoView {
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
 
-                            {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()) ||
+                            {if post().map(|post| post.author_id) == Some(global_state.id.get().unwrap_or_default()) ||
                                 instructor() == Some(global_state.user_name.get().unwrap_or_default()){
 
                                     // view! {
@@ -430,7 +431,8 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                     ELSE users.firstname 
                 END as author_name, 
                 anonymous,
-                resolved
+                resolved, 
+                authorid as author_id
             FROM posts JOIN users ON posts.authorid = users.id WHERE posts.postid = $1"
         )
         .bind(post_id)
