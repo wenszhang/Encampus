@@ -7,7 +7,7 @@ use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
 /**
- * Struct to hold the post info
+ * Struct to hold information for displaying a post in a list
  */
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
