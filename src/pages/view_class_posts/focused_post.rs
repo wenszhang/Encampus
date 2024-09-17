@@ -1,4 +1,3 @@
-use crate::data::database::post_functions::DetailedPost;
 /**
  * This file contains the FocusedPost component which is used to display a single post and its replies.
  */
@@ -12,7 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::{remove_post, resolve_post, Post};
+use crate::data::database::post_functions::{remove_post, resolve_post};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -23,18 +22,19 @@ pub struct PostId {
     pub post_id: i32,
 }
 
-// #[derive(Clone, Serialize, Deserialize, Debug)]
-// #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-// pub struct Post {
-//     postid: i32,
-//     timestamp: NaiveDateTime,
-//     title: String,
-//     contents: String,
-//     author_name: String,
-//     anonymous: bool,
-//     resolved: bool,
-//     author_id: i32,
-// }
+#[derive(Clone, Serialize, Deserialize, Debug)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct DetailedPost {
+    post_id: i32,
+    timestamp: NaiveDateTime,
+    title: String,
+    contents: String,
+    author_name: String,
+    anonymous: bool,
+    resolved: bool,
+    author_id: i32,
+    private: bool,
+}
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]

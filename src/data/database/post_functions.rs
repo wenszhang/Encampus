@@ -19,20 +19,6 @@ pub struct Post {
     pub author_id: i32,
 }
 
-#[derive(Clone, Serialize, Deserialize, Debug)]
-#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct DetailedPost {
-    pub post_id: i32,
-    pub timestamp: NaiveDateTime,
-    pub title: String,
-    pub contents: String,
-    pub author_name: String,
-    pub anonymous: bool,
-    pub resolved: bool,
-    pub author_id: i32,
-    pub private: bool,
-}
-
 #[derive(PartialEq, Clone, Copy)]
 pub struct PostFetcher {
     pub class_id: i32,
