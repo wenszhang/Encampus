@@ -1,3 +1,4 @@
+use crate::data::database::post_functions::DetailedPost;
 /**
  * This file contains the FocusedPost component which is used to display a single post and its replies.
  */
@@ -411,7 +412,7 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
  * Get all post information for a given the post id
  */
 #[server(GetPost)]
-pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError> {
+pub async fn get_post(post_id: i32) -> Result<(DetailedPost, Vec<Reply>), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
     use tokio::*;
@@ -421,7 +422,7 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
     ))?;
 
     let (post, replies) = join!(
-        sqlx::query_as::<_, Post>(
+        sqlx::query_as::<_, DetailedPost>(
             "SELECT 
                 postid as post_id,
                 timestamp,
@@ -432,7 +433,8 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
                 END as author_name, 
                 anonymous,
                 resolved, 
-                authorid as author_id
+                authorid as author_id,
+                private
             FROM posts JOIN users ON posts.authorid = users.id WHERE posts.postid = $1"
         )
         .bind(post_id)
