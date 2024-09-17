@@ -29,7 +29,8 @@ pub struct DetailedPost {
     timestamp: NaiveDateTime,
     title: String,
     contents: String,
-    author_name: String,
+    author_first_name: String,
+    author_last_name: String,
     anonymous: bool,
     resolved: bool,
     author_id: i32,
@@ -164,7 +165,9 @@ pub fn FocusedPost() -> impl IntoView {
                     <p class="font-bold text-lg">{move || post().map(|post| post.title)}</p>
                     <p class="font-light text-sm">
                         "Posted by "
-                        {move || post().map(|post| post.author_name)}
+                        {move || post().map(|post| post.author_first_name)}
+                        " "
+                        {move || post().map(|post| post.author_last_name)}
                         {move || post().map(|post| format!("{}", post.timestamp.checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap()).unwrap().format(" at %l %p on %b %-d")))}
                     </p>
                     <br/>
@@ -428,9 +431,12 @@ pub async fn get_post(post_id: i32) -> Result<(DetailedPost, Vec<Reply>), Server
                 timestamp,
                 title, 
                 contents, 
-                CASE WHEN anonymous THEN 'Anonymous Author'
+                CASE WHEN anonymous THEN 'Anonymous'
                     ELSE users.firstname 
-                END as author_name, 
+                END as author_first_name, 
+                CASE WHEN anonymous THEN 'Author'
+                    ELSE users.lastname
+                END as author_last_name,
                 anonymous,
                 resolved, 
                 authorid as author_id,
