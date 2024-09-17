@@ -172,7 +172,7 @@ pub fn FocusedPost() -> impl IntoView {
                     </p>
                     <br/>
                     <p>{move || post().map(|post| post.contents)}</p>
-                    // TODO use the post's timestamp, author_name and anonymous info
+                    // TODO use the post's timestamp
                 </DarkenedCard>
                 <div>
                     {move || if replies().is_empty() {
@@ -275,16 +275,6 @@ pub fn FocusedPost() -> impl IntoView {
 
                             {if post().map(|post| post.author_id) == Some(global_state.id.get().unwrap_or_default()) ||
                                 instructor() == Some(global_state.user_name.get().unwrap_or_default()){
-
-                                    // view! {
-                                    //     <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
-                                    //         on:click=move |_| {
-                                    //             remove_action.dispatch(post_id().unwrap())
-                                    //         }
-                                    //     >
-                                    //     "Remove Post"
-                                    //     </button>
-                                    // }
 
                                 if post().map(|post| post.resolved) == Some(false){
                                     view! {
