@@ -151,213 +151,220 @@ pub fn FocusedPost() -> impl IntoView {
     let notification_view = move || {
         notification_details.get().map(|details| {
             view! {
-                <NotificationComponent
-                    notification_details={details.clone()}
-                    on_close={move || set_notification_details(None)}
-                />
+              <NotificationComponent
+                notification_details=details.clone()
+                on_close=move || set_notification_details(None)
+              />
             }
         })
     };
 
     view! {
-        <div class="bg-white rounded shadow p-6 flex flex-col gap-3">
-            <Suspense fallback=|| view! {
-                <DarkenedCard class="h-32">"Loading..."</DarkenedCard>
-            }>
-                <DarkenedCard class="p-5">
-                    <p class="font-bold text-lg">{move || post().map(|post| post.title)}</p>
-                    <p class="font-light text-sm">
-                        "Posted by "
-                        {move || post().map(|post| post.author_first_name)}
-                        " "
-                        {move || post().map(|post| post.author_last_name)}
-                        {move || post().map(|post| format!("{}", post.timestamp.checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap()).unwrap().format(" at %l %p on %b %-d")))}
-                    </p>
-                    <br/>
-                    <p>{move || post().map(|post| post.contents)}</p>
-                    // TODO use the post's timestamp
-                </DarkenedCard>
-                <div>
-                    {move || if replies().is_empty() {
-                        view! {
-                            <span>
-                                <b>"No Replies Yet" </b>
-                            </span>
-                        }
-                    } else {
-                        view! {
-                            <span class="flex justify-between inline-block">
-                                <b class="inline-block"> "Replies:" </b>
-                                <span class="inline-block">
-                                   <select on:change=move |ev| {
-                                        let new_value = event_target_value(&ev);
-                                        set_value(new_value);
-                                    }>
-                                        <SelectOrderOption order_option is="Newest First"/>
-                                        <SelectOrderOption order_option is="Oldest First"/>
-                                        // <SelectOrderOption order_option is="By Rating"/>
-                                    </select>
-                                </span>
-                            </span>
-                        }
-                    }}
+      <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
+        <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
+          <DarkenedCard class="p-5">
+            <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
+            <p class="text-sm font-light">
+              "Posted by " {move || post().map(|post| post.author_first_name)} " "
+              {move || post().map(|post| post.author_last_name)}
+              {move || {
+                post()
+                  .map(|post| {
+                    format!(
+                      "{}",
+                      post
+                        .timestamp
+                        .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
+                        .unwrap()
+                        .format(" at %l %p on %b %-d"),
+                    )
+                  })
+              }}
+            </p>
+            <br />
+            <p>{move || post().map(|post| post.contents)}</p>
+          // TODO use the post's timestamp
+          </DarkenedCard>
+          <div>
+            {move || {
+              if replies().is_empty() {
+                view! {
+                  <span>
+                    <b>"No Replies Yet"</b>
+                  </span>
+                }
+              } else {
+                view! {
+                  <span class="inline-block flex justify-between">
+                    <b class="inline-block">"Replies:"</b>
+                    <span class="inline-block">
+                      <select on:change=move |ev| {
+                        let new_value = event_target_value(&ev);
+                        set_value(new_value);
+                      }>
+                        <SelectOrderOption order_option is="Newest First" />
+                        <SelectOrderOption order_option is="Oldest First" />
+                      // <SelectOrderOption order_option is="By Rating"/>
+                      </select>
+                    </span>
+                  </span>
+                }
+              }
+            }}
+          </div>
+          <For each=sorted_replies key=|reply| reply.replyid let:reply>
+            <DarkenedCard class="p-5">
+              <p class="font-bold">
+                "Answered by " {reply.author_name}
+                {format!(
+                  "{}",
+                  reply
+                    .time
+                    .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
+                    .unwrap()
+                    .format(" at %l %p on %b %-d"),
+                )} ":"
+              </p>
+              <br />
+              <p>{reply.contents}</p>
+            // TODO use the reply's timestamp, author's name and anonymous info
+            </DarkenedCard>
+          </For>
+          <DarkenedCard class="flex flex-col gap-2 p-5">
+            <p>"Answer this post:"</p>
+            <div class="p-3 bg-white rounded-t-lg">
+              // Inner border
+              <div class="flex items-center h-12 rounded-t-lg border border-gray-300">
+                <TextAreaIcon />
+              </div>
+              <textarea
+                class="p-2 w-full h-96 rounded-b-lg border border-gray-300 resize-none"
+                prop:value=reply_contents
+                on:input=move |ev| set_reply_contents(event_target_value(&ev))
+              ></textarea>
+            </div>
+            <div class="flex gap-5 justify-end">
+              <label for="anonymousToggle" class="flex items-center cursor-pointer select-none">
+                <span class="mx-2">"Anonymous:"</span>
+                <div class="relative">
+                  <input
+                    type="checkbox"
+                    id="anonymousToggle"
+                    class="sr-only peer"
+                    prop:checked=reply_anonymous_state
+                    on:change=move |_| set_reply_anonymous_state(!reply_anonymous_state())
+                  />
+                  <div class="flex justify-evenly items-center w-16 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-green-500">
+                    <span class="[&:not(:peer-checked)]:invisible">"On"</span>
+                    <span class="peer-checked:invisible">"Off"</span>
+                  </div>
+                  <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-8 peer-checked:bg-primary"></div>
+
                 </div>
-                <For
-                each=sorted_replies
-                key=|reply| reply.replyid
-                let:reply
-                >
-                    <DarkenedCard class="p-5 ">
-                        <p class="font-bold">
-                            "Answered by "
-                            {reply.author_name}
-                            {format!("{}", reply.time.checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap()).unwrap().format(" at %l %p on %b %-d"))}
-                            ":"
-                        </p>
-                        <br/>
-                        <p>{reply.contents}</p>
-                        // TODO use the reply's timestamp, author's name and anonymous info
-                    </DarkenedCard>
-                </For>
-                <DarkenedCard class="p-5 flex flex-col gap-2">
-                    <p>"Answer this post:"</p>
-                    <div class="bg-white p-3 rounded-t-lg">
-                        // Inner border
-                        <div class="border border-gray-300 rounded-t-lg h-12 flex items-center">
-                            <TextAreaIcon/>
-                        </div>
-                        <textarea class="h-96 w-full resize-none border border-gray-300 rounded-b-lg p-2"
-                            prop:value=reply_contents
-                            on:input=move |ev| set_reply_contents(event_target_value(&ev))
-                        >
-                        </textarea>
-                    </div>
-                    <div class="flex justify-end gap-5">
-                        <label
-                        for="anonymousToggle"
-                        class="flex items-center cursor-pointer select-none"
-                        >
-                            <span class="mx-2">"Anonymous:"</span>
-                            <div class="relative">
-                                <input
-                                    type="checkbox"
-                                    id="anonymousToggle"
-                                    class="peer sr-only"
-                                    prop:checked=reply_anonymous_state
-                                    on:change=move |_| set_reply_anonymous_state(!reply_anonymous_state())
-                                />
-                                <div class="flex items-center justify-evenly text-xs h-8 rounded-full bg-gray-500 w-16 transition-colors peer-checked:bg-green-500"><span class="[&:not(:peer-checked)]:invisible">"On"</span>  <span class="peer-checked:invisible">"Off"</span> </div>
-                                <div class="absolute w-6 h-6 transition bg-white rounded-full left-1 top-1 peer-checked:translate-x-8 peer-checked:bg-primary"></div>
+              </label>
+              <button
+                class="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-700"
+                on:click=move |_| {
+                  if reply_contents().is_empty() {
+                    set_notification_details(
+                      Some(NotificationDetails {
+                        message: "Reply content cannot be empty.".to_string(),
+                        notification_type: NotificationType::Warning,
+                      }),
+                    );
+                    return;
+                  }
+                  add_reply_action
+                    .dispatch(AddReplyInfo {
+                      post_id: post_id().unwrap().post_id,
+                      contents: reply_contents(),
+                      anonymous: reply_anonymous_state(),
+                    })
+                }
+              >
+                "Post Response"
+              </button>
+              {notification_view}
+            </div>
+          </DarkenedCard>
+          <div class="flex gap-5 justify-end">
+            <div class="flex items-center cursor-pointer select-none">
 
-                            </div>
-                        </label>
-                        <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
-                            on:click=move |_| {
-                                if reply_contents().is_empty() {
-                                    set_notification_details(Some(NotificationDetails {
-                                        message: "Reply content cannot be empty.".to_string(),
-                                        notification_type: NotificationType::Warning,
-                                    }));
-                                    return;
-                                }
-                                add_reply_action.dispatch(
-                                AddReplyInfo {
-                                    post_id: post_id().unwrap().post_id,
-                                    contents: reply_contents(),
-                                    anonymous: reply_anonymous_state()
-                                })
-                            }
-                        >
-                        "Post Response"
-                        </button>
-                 {notification_view}
-                    </div>
-                </DarkenedCard>
-                    <div class="flex justify-end gap-5">
-                        <div class="flex items-center cursor-pointer select-none">
+              {if post().map(|post| post.author_id)
+                == Some(global_state.id.get().unwrap_or_default())
+                || instructor() == Some(global_state.user_name.get().unwrap_or_default())
+              {
+                if post().map(|post| post.resolved) == Some(false) {
+                  view! {
+                    <button
+                      class="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-700"
+                      on:click=move |_| { remove_action.dispatch(post_id().unwrap()) }
+                    >
+                      "Remove Post"
+                    </button>
+                    <span class="mx-2">"Resolve:"</span>
+                    <input
+                      type="checkbox"
+                      id="resolveToggle"
+                      class="mx-2"
+                      prop:checked=false
+                      on:change=move |_| {
+                        let resolve_post = resolve_post;
+                        spawn_local(async move {
+                          resolve_post(post_id().unwrap().post_id, true).await.unwrap();
+                        });
+                      }
+                    />
+                  }
+                } else {
+                  view! {
+                    <button
+                      class="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-700"
+                      on:click=move |_| { remove_action.dispatch(post_id().unwrap()) }
+                    >
+                      "Remove Post"
+                    </button>
+                    <span class="mx-2">"Resolved:"</span>
+                    <input
+                      type="checkbox"
+                      id="resolveToggle"
+                      class="mx-2"
+                      prop:checked=true
+                      on:change=move |_| {
+                        let resolve_post = resolve_post;
+                        spawn_local(async move {
+                          resolve_post(post_id().unwrap().post_id, false).await.unwrap();
+                        });
+                      }
+                    />
+                  }
+                }
+              } else {
+                view! {
+                  // Work around cause rust wants there to be and else case so effectively empty else case
+                  <span class="mx-2">""</span>
+                  <div></div>
+                }
+              }}
 
-                            {if post().map(|post| post.author_id) == Some(global_state.id.get().unwrap_or_default()) ||
-                                instructor() == Some(global_state.user_name.get().unwrap_or_default()){
-
-                                if post().map(|post| post.resolved) == Some(false){
-                                    view! {
-                                        <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
-                                            on:click=move |_| {
-                                                remove_action.dispatch(post_id().unwrap())
-                                            }
-                                        >
-                                        "Remove Post"
-                                        </button>
-                                        <span class="mx-2">"Resolve:"</span>
-                                        <input
-                                            type="checkbox"
-                                            id="resolveToggle"
-                                            class="mx-2"
-                                            prop:checked=false
-                                            on:change=move |_| {
-                                                let resolve_post = resolve_post;
-                                                spawn_local(async move {
-                                                    resolve_post(post_id().unwrap().post_id, true).await.unwrap();
-                                                });
-                                            }
-                                        />
-                                    }
-                                } else{
-                                    view! {
-                                        <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
-                                            on:click=move |_| {
-                                                remove_action.dispatch(post_id().unwrap())
-                                            }
-                                        >
-                                        "Remove Post"
-                                        </button>
-                                        <span class="mx-2">"Resolved:"</span>
-                                        <input
-                                            type="checkbox"
-                                            id="resolveToggle"
-                                            class="mx-2"
-                                            prop:checked=true
-                                            on:change=move |_| {
-                                                let resolve_post = resolve_post;
-                                                spawn_local(async move {
-                                                    resolve_post(post_id().unwrap().post_id, false).await.unwrap();
-                                                });
-                                            }
-                                        />
-                                    }
-                                }
-                            }else { // Work around cause rust wants there to be and else case so effectively empty else case
-                                view!{
-                                    <span class="mx-2">""</span>
-                                    <div>
-                                    </div>
-                                }
-                            }
-                        }
-
-                        </div>
-                    </div>
-            </Suspense>
-        </div>
+            </div>
+          </div>
+        </Suspense>
+      </div>
     }
 }
 
 #[component]
 fn DarkenedCard(#[prop(optional, into)] class: String, children: Children) -> impl IntoView {
-    view! {
-        <div class=format!("bg-[#EEEEEE] rounded-xl {}", class)>{children()}</div>
-    }
+    view! { <div class=format!("bg-[#EEEEEE] rounded-xl {}", class)>{children()}</div> }
 }
 
 #[component]
 pub fn SelectOrderOption(is: &'static str, order_option: ReadSignal<String>) -> impl IntoView {
     view! {
-        <option
-            order_option=is
-            selected=move || order_option() == is
-        >
-            {is}
-        </option>
+      <option order_option=is selected=move || order_option() == is>
+        {is}
+      </option>
     }
 }
 

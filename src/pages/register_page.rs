@@ -67,8 +67,10 @@ pub fn RegisterPage() -> impl IntoView {
                 let navigate = leptos_router::use_navigate();
                 match global_state.role.get().unwrap_or_default().as_str() {
                     "student" => navigate("/classes", Default::default()),
-                    "teacher" => navigate("/classes", Default::default()), // Change to instructor page when implemented
-                    "admin" => navigate("/classes", Default::default()), // Change to admin page when implemented
+                    // Change to instructor page when implemented
+                    "teacher" => navigate("/classes", Default::default()),
+                    // Change to admin page when implemented
+                    "admin" => navigate("/classes", Default::default()),
                     _ => navigate("/login", Default::default()),
                 }
             }
@@ -83,96 +85,81 @@ pub fn RegisterPage() -> impl IntoView {
     let notification_view = move || {
         login_error.get().map(|details| {
             view! {
-                <NotificationComponent
-                    notification_details={details.clone()}
-                    on_close={move || set_login_error(None)}
-                />
+              <NotificationComponent
+                notification_details=details.clone()
+                on_close=move || set_login_error(None)
+              />
             }
         })
     };
 
     view! {
-        <form on:submit=on_submit>
+      <form on:submit=on_submit>
         <div class="flex flex-col justify-center items-center h-screen">
-            <div class="bg-white p-20 rounded-lg shadow-md w-96">
-                <div class="flex justify-center items-center">
-                    <img src={format!("/{}", "images/logo.png")} alt="Logo" class="h-16"/>
-                </div>
-                <h1 class="text-2xl font-semibold text-center mb-2">
-                    Create Account
-                </h1>
-                <div class="mt-4 text-sm text-gray-600 text-center mb-4">
-                    Please fill out the following information to create an account.
-                </div>
-                {notification_view}
-                <div class="mb-4">
-                    <label for="username" class="flex row-auto text-gray-700 font-bold mb-2">
-                        Username:
-                    </label>
-                    <input
-                        type="text"
-                        id="username"
-                        placeholder="Enter your Username"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                        on:input=on_input(set_username)
-                        prop:value=username
-                    />
-                </div>
-                <div class="mb-4">
-                    <label for="username" class="flex row-auto text-gray-700 font-bold mb-2">
-                        First Name:
-                    </label>
-                    <input
-                        type="text"
-                        id="first_name"
-                        placeholder="First Name"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                        on:input=on_input(set_first_name)
-                        prop:value=first_name
-                    />
-                </div>
-                <div class="mb-4">
-                    <label for="username" class="flex row-auto text-gray-700 font-bold mb-2">
-                        Last Name:
-                    </label>
-                    <input
-                        type="text"
-                        id="last_name"
-                        placeholder="Last Name"
-                        required
-                        class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                        on:input=on_input(set_last_name)
-                        prop:value=last_name
-                    />
-                </div>
-                // <div class="mb-5">
-                //     <label for="role" class="flex row-auto text-gray-700 font-bold mb-2">
-                //         Role:
-                //     </label>
-                //     <select
-                //         id="role"
-                //         required
-                //         class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                //         on:input=on_input(set_role)
-                //         prop:value=role
-                //     >
-                //         <option value="student">Student</option>
-                //         <option value="teacher">Teacher</option>
-                //     </select>
-                // </div>
-                <button
-                    type="submit"
-                    class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
-                >
-                    Register
-                </button>
-                <div class="mt-4 text-sm text-gray-600 text-center">
-                    Already have an account? <a href="/login" class="text-blue-500">Login</a>
-                    </div>
+          <div class="p-20 w-96 bg-white rounded-lg shadow-md">
+            <div class="flex justify-center items-center">
+              <img src=format!("/{}", "images/logo.png") alt="Logo" class="h-16" />
             </div>
+            <h1 class="mb-2 text-2xl font-semibold text-center">Create Account</h1>
+            <div class="mt-4 mb-4 text-sm text-center text-gray-600">
+              Please fill out the following information to create an account.
+            </div>
+            {notification_view}
+            <div class="mb-4">
+              <label for="username" class="flex row-auto mb-2 font-bold text-gray-700">
+                Username:
+              </label>
+              <input
+                type="text"
+                id="username"
+                placeholder="Enter your Username"
+                required
+                class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
+                on:input=on_input(set_username)
+                prop:value=username
+              />
+            </div>
+            <div class="mb-4">
+              <label for="username" class="flex row-auto mb-2 font-bold text-gray-700">
+                First Name:
+              </label>
+              <input
+                type="text"
+                id="first_name"
+                placeholder="First Name"
+                required
+                class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
+                on:input=on_input(set_first_name)
+                prop:value=first_name
+              />
+            </div>
+            <div class="mb-4">
+              <label for="username" class="flex row-auto mb-2 font-bold text-gray-700">
+                Last Name:
+              </label>
+              <input
+                type="text"
+                id="last_name"
+                placeholder="Last Name"
+                required
+                class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
+                on:input=on_input(set_last_name)
+                prop:value=last_name
+              />
+            </div>
+            <button
+              type="submit"
+              class="py-2 px-4 w-full text-white bg-blue-500 rounded-md hover:bg-blue-600 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:outline-none"
+            >
+              Register
+            </button>
+            <div class="mt-4 text-sm text-center text-gray-600">
+              Already have an account? <a href="/login" class="text-blue-500">
+                Login
+              </a>
+            </div>
+          </div>
         </div>
-    </form>
+      </form>
     }
 }
