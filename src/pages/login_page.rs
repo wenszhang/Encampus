@@ -51,8 +51,10 @@ pub fn LoginPage() -> impl IntoView {
                 let navigate = leptos_router::use_navigate();
                 match global_state.role.get().unwrap_or_default().as_str() {
                     "student" => navigate("/classes", Default::default()),
-                    "instructor" => navigate("/classes", Default::default()), // Change to instructor page when implemented
-                    "admin" => navigate("/classes", Default::default()), // Change to admin page when implemented
+                    // Change to instructor page when implemented
+                    "instructor" => navigate("/classes", Default::default()),
+                    // Change to admin page when implemented
+                    "admin" => navigate("/classes", Default::default()),
                     _ => navigate("/login", Default::default()),
                 }
             }
@@ -68,53 +70,51 @@ pub fn LoginPage() -> impl IntoView {
     let notification_view = move || {
         login_error.get().map(|details| {
             view! {
-                <NotificationComponent
-                    notification_details={details.clone()}
-                    on_close={move || set_login_error(None)}
-                />
+              <NotificationComponent
+                notification_details=details.clone()
+                on_close=move || set_login_error(None)
+              />
             }
         })
     };
 
     view! {
-        <form on:submit=on_submit>
-            <div class="flex flex-col justify-center items-center h-screen">
-                <div class="bg-white p-20 rounded-lg shadow-md w-96">
-                    <div class="flex justify-center items-center">
-                        <img src={format!("/{}", "images/logo.png")} alt="Logo" class="h-16"/>
-                    </div>
-                    <h1 class="text-2xl font-semibold text-center mb-4">
-                        Login
-                    </h1>
-                    {notification_view}
-                    <div class="mb-4">
-                        <label for="username" class="block text-gray-700 font-bold mb-2">
-                            Username:
-                        </label>
-                        <input
-                            type="text"
-                            id="username"
-                            placeholder="Enter your Username"
-                            required
-                            class="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:border-blue-500"
-                            on:input=on_input(set_username)
-                            prop:value=username
-                        />
-                    </div>
-                    <button
-                        type="submit"
-                        class="w-full bg-customBlue hover:bg-customBlue-HOVER text-white py-2 px-4 rounded-md  focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2"
-                    >
-                        Submit
-                    </button>
-                    <div class="mt-4 text-sm text-gray-600 text-center">
-                        Please enter your username.
-                    </div>
-                    <div class="mt-1 text-sm text-gray-600 text-center">
-                        Click here to <a href="/register" class="text-blue-500">register</a>.
-                    </div>
-                </div>
+      <form on:submit=on_submit>
+        <div class="flex flex-col justify-center items-center h-screen">
+          <div class="p-20 w-96 bg-white rounded-lg shadow-md">
+            <div class="flex justify-center items-center">
+              <img src=format!("/{}", "images/logo.png") alt="Logo" class="h-16" />
             </div>
-        </form>
+            <h1 class="mb-4 text-2xl font-semibold text-center">Login</h1>
+            {notification_view}
+            <div class="mb-4">
+              <label for="username" class="block mb-2 font-bold text-gray-700">
+                Username:
+              </label>
+              <input
+                type="text"
+                id="username"
+                placeholder="Enter your Username"
+                required
+                class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
+                on:input=on_input(set_username)
+                prop:value=username
+              />
+            </div>
+            <button
+              type="submit"
+              class="py-2 px-4 w-full text-white rounded-md focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            >
+              Submit
+            </button>
+            <div class="mt-4 text-sm text-center text-gray-600">Please enter your username.</div>
+            <div class="mt-1 text-sm text-center text-gray-600">
+              Click here to <a href="/register" class="text-blue-500">
+                register
+              </a>.
+            </div>
+          </div>
+        </div>
+      </form>
     }
 }

@@ -8,13 +8,13 @@ pub fn Dev() -> impl IntoView {
     let on_click = move |_| set_count.update(|count| *count += 1);
 
     view! {
-        <h1>"Welcome to Leptos!"</h1>
-        <button on:click=on_click>"Click Me: " {count}</button>
+      <h1>"Welcome to Leptos!"</h1>
+      <button on:click=on_click>"Click Me: " {count}</button>
 
-        <div class="bg-gray-200 p-4 rounded-md shadow-md hover:shadow-lg text-gray-700 max-w-md mx-auto">
-            <h2 class="font-bold text-xl pb-2">"Tailwind Test Delete later"</h2>
-        </div>
+      <div class="p-4 mx-auto max-w-md text-gray-700 bg-gray-200 rounded-md shadow-md hover:shadow-lg">
+        <h2 class="pb-2 text-xl font-bold">"Tailwind Test Delete later"</h2>
+      </div>
 
-        <A href="/classes">"Classes Page"</A>
+      <A href="/classes">"Classes Page"</A>
     }
 }

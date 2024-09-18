@@ -28,46 +28,47 @@ pub fn App() -> impl IntoView {
     provide_context(GlobalState::new());
 
     view! {
-        // injects a stylesheet into the document <head>
-        // id=leptos means cargo-leptos will hot-reload this stylesheet
-        <Stylesheet id="leptos" href="/pkg/encampus.css"/>
+      {}
+      // added this empty {} to prevent lint from removing these comments
 
-        // sets the document title
-        <Title text="Encampus"/>
+      // injects a stylesheet into the document <head>
+      // id=leptos means cargo-leptos will hot-reload this stylesheet
+      <Stylesheet id="leptos" href="/pkg/encampus.css" />
 
-        // Routes
-        <Router fallback=|| {
-            let mut outside_errors = Errors::default();
-            outside_errors.insert_with_default_key(AppError::NotFound);
-            view! {
-                <ErrorTemplate outside_errors/>
-            }
-            .into_view()
-        }>
-            <main>
-                <Routes>
-                    <Route path="/dev" view=Dev/>
-                    <Route path="" view=Page>
-                        <Route path="" view=AuthenticatedRoutes>
-                            <Route path="/classes" view=ClassesPage/>
-                            <Route path="/classes/:class_id" view=ClassPage>
-                                <Route path="" view=|| {}/>
-                                <Route path="/:post_id" view=FocusedPost/>
-                            </Route>
-                        </Route>
-                        <Route path="" view=UnauthenticatedRoutes>
-                            <Route path="" view=Home/>
-                            <Route path="/login" view=LoginPage/>
-                            <Route path="/register" view=RegisterPage/>
-                        </Route>
-                    </Route>
-                </Routes>
-            </main>
-        </Router>
+      // sets the document title
+      <Title text="Encampus" />
+
+      // Routes
+      <Router fallback=|| {
+        let mut outside_errors = Errors::default();
+        outside_errors.insert_with_default_key(AppError::NotFound);
+        view! { <ErrorTemplate outside_errors /> }.into_view()
+      }>
+        <main>
+          <Routes>
+            <Route path="/dev" view=Dev />
+            <Route path="" view=Page>
+              <Route path="" view=AuthenticatedRoutes>
+                <Route path="/classes" view=ClassesPage />
+                <Route path="/classes/:class_id" view=ClassPage>
+                  <Route path="" view=|| {} />
+                  <Route path="/:post_id" view=FocusedPost />
+                </Route>
+              </Route>
+              <Route path="" view=UnauthenticatedRoutes>
+                <Route path="" view=Home />
+                <Route path="/login" view=LoginPage />
+                <Route path="/register" view=RegisterPage />
+              </Route>
+            </Route>
+          </Routes>
+        </main>
+      </Router>
     }
 }
 
-/// Prevent errors due to loading pages that require authentication while logged out
+/// Prevent errors due to loading pages that require authentication while logged
+/// out
 #[component]
 pub fn AuthenticatedRoutes() -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
@@ -79,15 +80,11 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
             navigate("/login", Default::default());
         }
     });
-    view! {
-        <Outlet/>
-    }
+    view! { <Outlet /> }
 }
 
 /// General route wrapping
 #[component]
 fn UnauthenticatedRoutes() -> impl IntoView {
-    view! {
-        <Outlet/>
-    }
+    view! { <Outlet /> }
 }

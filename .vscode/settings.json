@@ -25,5 +25,10 @@
     "[rust]": {
         "editor.defaultFormatter": "rust-lang.rust-analyzer",
         "editor.formatOnSave": true
-    }
+    },
+    "files.autoSave": "onFocusChange",
+    "tailwind-fold.unfoldIfLineSelected": false,
+    "tailwind-fold.supportedLanguages": [
+        "rust",
+    ]
 }
