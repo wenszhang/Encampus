@@ -15,13 +15,25 @@ pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
     });
 
     view! {
-        <ul class="py-1 mx-1 text-gray-700 w-40 text-left text-lg">
-        <Suspense fallback=move || view! {<li class= "px-4 py-2 hover:bg-gray-100 cursor-pointer">"Loading..."</li>}>
-        {announcements()
-            .map(|announcement_info_vec| announcement_info_vec.into_iter().map(|announcement_info| view! { <li class= "px-4 py-2 hover:bg-gray-100 cursor-pointer">{announcement_info.title}</li>}).collect_view())
-            }
+      <ul class="py-1 mx-1 w-40 text-lg text-left text-gray-700">
+        <Suspense fallback=move || {
+          view! { <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">"Loading..."</li> }
+        }>
+          {announcements()
+            .map(|announcement_info_vec| {
+              announcement_info_vec
+                .into_iter()
+                .map(|announcement_info| {
+                  view! {
+                    <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
+                      {announcement_info.title}
+                    </li>
+                  }
+                })
+                .collect_view()
+            })}
         </Suspense>
-        </ul>
+      </ul>
     }
 }
 
@@ -51,56 +63,63 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
     };
 
     view! {
-        <div class="bg-white p-4 flex justify-between items-center text-gray-600 ">
-            <div class="flex items-center">
-                <a href="/classes"><img src={format!("/{}", logo_src)} alt="Logo" class="h-8 mr-2"/></a>
-                <a href={header_text_href} class="text-xl font-bold">{text}</a>
-            </div>
-
-            <div class="flex items-center ">
-                {move || class_id().map(|class_id: i32| view! {
-                    <div class="group relative">
-                    <span class="inline-flex items-baseline">
-                        <h3 class="px-2"> "Notifications"</h3>
-                            <button class="pr-2">
-                                <AnnouncementBell size="1.3rem"/>
-                            </button>
-                    </span>
-                        <div class="absolute right-0 top-full mt-[-0.1rem] shadow-md rounded-lg bg-white invisible
-                            group-hover:opacity-100 group-hover:scale-100 group-hover:visible">
-                            <AnnouncementInfo class_id = move || class_id/>
-                        </div>
-                    </div>})
-                }
-                <span class="text-xl font-bold mr-4 flex items-center">{move || global_state.first_name.get()}</span>
-                <div class="flex items-center relative group">
-                    <button>
-                        <DropDownBars size="1.3rem"/>
-                    </button>
-                    <div class="absolute right-0 top-full mt-[-0.1rem] bg-white shadow-md rounded-lg transition
-                        ease-out duration-200 opacity-0 scale-95 invisible group-hover:opacity-100 group-hover:scale-100
-                        group-hover:visible z-50">
-                        <ul class="py-1 text-gray-700 w-36 text-left text-lg">
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">"Profile"</div>
-                            </li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">"Settings"</div>
-                            </li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block">
-                                    <A href="/classes">"Dashboard"</A>
-                                </div>
-                            </li>
-                            <li class="px-4 py-2 hover:bg-gray-100 cursor-pointer">
-                                <div class="block" on:click=logout>
-                                    "Logout"
-                                </div>
-                            </li>
-                        </ul>
-                    </div>
-                </div>
-            </div>
+      <div class="flex justify-between items-center p-4 text-gray-600 bg-white">
+        <div class="flex items-center">
+          <a href="/classes">
+            <img src=format!("/{}", logo_src) alt="Logo" class="mr-2 h-8" />
+          </a>
+          <a href=header_text_href class="text-xl font-bold">
+            {text}
+          </a>
         </div>
+
+        <div class="flex items-center">
+          {move || {
+            class_id()
+              .map(|class_id: i32| {
+                view! {
+                  <div class="relative group">
+                    <span class="inline-flex items-baseline">
+                      <h3 class="px-2">"Notifications"</h3>
+                      <button class="pr-2">
+                        <AnnouncementBell size="1.3rem" />
+                      </button>
+                    </span>
+                    <div class="absolute right-0 top-full invisible bg-white rounded-lg shadow-md group-hover:visible group-hover:opacity-100 group-hover:scale-100 mt-[-0.1rem]">
+                      <AnnouncementInfo class_id=move || class_id />
+                    </div>
+                  </div>
+                }
+              })
+          }}
+          <span class="flex items-center mr-4 text-xl font-bold">
+            {move || global_state.first_name.get()}
+          </span> <div class="flex relative items-center group">
+            <button>
+              <DropDownBars size="1.3rem" />
+            </button>
+            <div class="absolute right-0 top-full invisible z-50 bg-white rounded-lg shadow-md opacity-0 transition duration-200 ease-out scale-95 group-hover:visible group-hover:opacity-100 group-hover:scale-100 mt-[-0.1rem]">
+              <ul class="py-1 w-36 text-lg text-left text-gray-700">
+                <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
+                  <div class="block">"Profile"</div>
+                </li>
+                <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
+                  <div class="block">"Settings"</div>
+                </li>
+                <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
+                  <div class="block">
+                    <A href="/classes">"Dashboard"</A>
+                  </div>
+                </li>
+                <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
+                  <div class="block" on:click=logout>
+                    "Logout"
+                  </div>
+                </li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
     }
 }

@@ -76,58 +76,95 @@ pub fn ClassPage() -> impl IntoView {
     let (is_visible, set_is_visible) = create_signal(false);
 
     view! {
-        <div class="flex">
-            <Sidebar/>
-            <div class="flex-1">
-                <Suspense fallback=move || view! { } >
-                    <Header text={class_name().unwrap_or_default()} logo={None} class_id={Signal::derive(move || class_id().ok().map(|id| id.class_id))}/>
-                </Suspense>
-                <span class="inline-flex items-baseline ml-5">
-                    <button class="pr-1 pt-7">
-                        <InformationIcon size="20px"/>
-                    </button>
-                    <h3 class="text-s pb-1"> "Help"</h3>
-                </span>
-                <div class="flex justify-center pt-8 mx-20">
-                    <div class="flex items-center justify-center">
-                        <div class="relative p-2 rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-[35rem] flex items-center bg-white">
-                            <input type="text" placeholder="Search posts by keywords..." class="pl-5 pr-24 w-full border-none focus:outline-none bg-white"/>
-                            <button class="absolute flex items-center justify-between inset-y-0 right-12 top-1 bg-gray-300 text-white  rounded-full py-1 px-10  hover:bg-gray-400" style="height: 30px;">
-                                <p class="text-xs pr-2"> "Filter Posts" </p>
-                                <FilterIcon size="20px"/>
-                            </button>
-                            <button class="absolute inset-y-0 right-0 pr-4 flex items-center">
-                                <MagnifyingGlass size="21px"/>
-                            </button>
-                        </div>
-                    </div>
-                    <button class="bg-customBlue hover:bg-customBlue-HOVER text-white py-2 px-4 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2"
-                        on:click=move |_| set_is_visible(!is_visible())>
-                        { move || if is_visible() { "Cancel" } else { "Post +" } }
-                    </button>
-                </div>
-                <div class="flex align mx-20 my-10 flex-col gap-4">
-                    <Show when=move || is_visible() fallback=|| ()>
-                        <CreatePost on_new_post=move || set_is_visible(false)/>
-                    </Show>
-                    <Outlet/> // Gets replaced with the focused post if there's one in the route. See router
-                    // announcements section
-                    <Suspense fallback=move || view! { <p>"Loading announcements..."</p> }>
-                        { move || {
-                            let ann_list = announcements().unwrap_or_default();
-                            view! { <Announcements announcements={ann_list} /> }
-                        }}
-                    </Suspense>
-                    <div class="grid grid-cols-3 gap-4">
-                        <Suspense fallback=move || view! { <p>"Loading..."</p> } >
-                            <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
-                                {let private = post.private;
-                                post.resolved.then(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| false).into_signal() is_private=(move || private).into_signal()  />}).unwrap_or_else(|| view! { <QuestionTile post={post.clone()} is_resolved=(|| true).into_signal()  is_private=(move || private).into_signal()  />})}
-                            </For>
-                        </Suspense>
-                    </div>
-                </div>
+      <div class="flex">
+        <Sidebar />
+        <div class="flex-1">
+          <Suspense fallback=move || view! {}>
+            <Header
+              text=class_name().unwrap_or_default()
+              logo=None
+              class_id=Signal::derive(move || class_id().ok().map(|id| id.class_id))
+            />
+          </Suspense>
+          <span class="inline-flex items-baseline ml-5">
+            <button class="pt-7 pr-1">
+              <InformationIcon size="20px" />
+            </button>
+            <h3 class="pb-1 text-s">"Help"</h3>
+          </span>
+          <div class="flex justify-center pt-8 mx-20">
+            <div class="flex justify-center items-center">
+              <div class="flex relative items-center p-2 bg-white rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-[35rem]">
+                <input
+                  type="text"
+                  placeholder="Search posts by keywords..."
+                  class="pr-24 pl-5 w-full bg-white border-none focus:outline-none"
+                />
+                <button
+                  class="flex absolute inset-y-0 top-1 right-12 justify-between items-center py-1 px-10 text-white bg-gray-300 rounded-full hover:bg-gray-400"
+                  style="height: 30px;"
+                >
+                  <p class="pr-2 text-xs">"Filter Posts"</p>
+                  <FilterIcon size="20px" />
+                </button>
+                <button class="flex absolute inset-y-0 right-0 items-center pr-4">
+                  <MagnifyingGlass size="21px" />
+                </button>
+              </div>
             </div>
+            <button
+              class="py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+              on:click=move |_| set_is_visible(!is_visible())
+            >
+              {move || if is_visible() { "Cancel" } else { "Post +" }}
+            </button>
+          </div>
+          <div class="flex flex-col gap-4 my-10 mx-20 align">
+            <Show when=move || is_visible() fallback=|| ()>
+              <CreatePost on_new_post=move || set_is_visible(false) />
+            </Show>
+            // Gets replaced with the focused post if there's one in the route. See router
+            <Outlet />
+            // announcements section
+            <Suspense fallback=move || {
+              view! { <p>"Loading announcements..."</p> }
+            }>
+              {move || {
+                let ann_list = announcements().unwrap_or_default();
+                view! { <Announcements announcements=ann_list /> }
+              }}
+            </Suspense>
+            <div class="grid grid-cols-3 gap-4">
+              <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+                <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
+                  {
+                    let private = post.private;
+                    post
+                      .resolved
+                      .then(|| {
+                        view! {
+                          <QuestionTile
+                            post=post.clone()
+                            is_resolved=(|| false).into_signal()
+                            is_private=(move || private).into_signal()
+                          />
+                        }
+                      })
+                      .unwrap_or_else(|| {
+                        view! {
+                          <QuestionTile
+                            post=post.clone()
+                            is_resolved=(|| true).into_signal()
+                            is_private=(move || private).into_signal()
+                          />
+                        }
+                      })
+                  }
+                </For>
+              </Suspense>
+            </div>
+          </div>
         </div>
+      </div>
     }
 }
