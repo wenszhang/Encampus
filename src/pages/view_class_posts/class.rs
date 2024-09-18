@@ -11,6 +11,7 @@ use crate::pages::view_class_posts::create_post::CreatePost;
 use crate::resources::images::svgs::filter_icon::FilterIcon;
 use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
+use crate::data::database::filter_functions::filter_posts;
 
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
@@ -19,6 +20,12 @@ use leptos_router::{use_params, Outlet, Params, A};
 pub struct ClassId {
     pub class_id: i32,
 }
+
+#[derive(Params, PartialEq, Clone)]
+pub struct FilterKeywords{
+  keywords: String,
+}
+
 
 /**
  * Page getting and displaying all posts in a class
@@ -42,6 +49,16 @@ pub fn ClassPage() -> impl IntoView {
         },
     );
     provide_context(posts);
+
+    let filter_posts_action = create_action(move |keywords: &FilterKeywords|{
+      async move{
+        match filter_posts(class_id, keywords).await{
+          Ok(posts) => {
+            
+          }
+        }
+      }
+    });
 
     let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
