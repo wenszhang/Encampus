@@ -22,16 +22,22 @@ pub struct PostId {
     pub post_id: i32,
 }
 
+/**
+ * Struct that holds post details
+ */
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct Post {
-    postid: i32,
+pub struct PostDetails {
+    post_id: i32,
     timestamp: NaiveDateTime,
     title: String,
     contents: String,
-    author_name: String,
+    author_first_name: String,
+    author_last_name: String,
     anonymous: bool,
     resolved: bool,
+    author_id: i32,
+    private: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
@@ -108,7 +114,7 @@ pub fn FocusedPost() -> impl IntoView {
     let remove_action = create_action(move |post_id: &PostId| {
         let post_id = post_id.post_id;
         async move {
-            let current_post = get_post(post_id).await.unwrap();
+            let _current_post = get_post(post_id).await.unwrap();
             if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
                 let navigate = leptos_router::use_navigate();
                 navigate(
@@ -162,12 +168,14 @@ pub fn FocusedPost() -> impl IntoView {
                     <p class="font-bold text-lg">{move || post().map(|post| post.title)}</p>
                     <p class="font-light text-sm">
                         "Posted by "
-                        {move || post().map(|post| post.author_name)}
+                        {move || post().map(|post| post.author_first_name)}
+                        " "
+                        {move || post().map(|post| post.author_last_name)}
                         {move || post().map(|post| format!("{}", post.timestamp.checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap()).unwrap().format(" at %l %p on %b %-d")))}
                     </p>
                     <br/>
                     <p>{move || post().map(|post| post.contents)}</p>
-                    // TODO use the post's timestamp, author_name and anonymous info
+                    // TODO use the post's timestamp
                 </DarkenedCard>
                 <div>
                     {move || if replies().is_empty() {
@@ -268,18 +276,8 @@ pub fn FocusedPost() -> impl IntoView {
                     <div class="flex justify-end gap-5">
                         <div class="flex items-center cursor-pointer select-none">
 
-                            {if post().map(|post| post.author_name) == Some(global_state.user_name.get().unwrap_or_default()) ||
+                            {if post().map(|post| post.author_id) == Some(global_state.id.get().unwrap_or_default()) ||
                                 instructor() == Some(global_state.user_name.get().unwrap_or_default()){
-
-                                    // view! {
-                                    //     <button class="bg-blue-500 p-2 rounded-full text-white hover:bg-blue-700"
-                                    //         on:click=move |_| {
-                                    //             remove_action.dispatch(post_id().unwrap())
-                                    //         }
-                                    //     >
-                                    //     "Remove Post"
-                                    //     </button>
-                                    // }
 
                                 if post().map(|post| post.resolved) == Some(false){
                                     view! {
@@ -410,7 +408,7 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
  * Get all post information for a given the post id
  */
 #[server(GetPost)]
-pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError> {
+pub async fn get_post(post_id: i32) -> Result<(PostDetails, Vec<Reply>), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
     use tokio::*;
@@ -420,17 +418,22 @@ pub async fn get_post(post_id: i32) -> Result<(Post, Vec<Reply>), ServerFnError>
     ))?;
 
     let (post, replies) = join!(
-        sqlx::query_as::<_, Post>(
+        sqlx::query_as::<_, PostDetails>(
             "SELECT 
-                postid,
+                postid as post_id,
                 timestamp,
                 title, 
                 contents, 
-                CASE WHEN anonymous THEN 'Anonymous Author'
+                CASE WHEN anonymous THEN 'Anonymous'
                     ELSE users.firstname 
-                END as author_name, 
+                END as author_first_name, 
+                CASE WHEN anonymous THEN 'Author'
+                    ELSE users.lastname
+                END as author_last_name,
                 anonymous,
-                resolved
+                resolved, 
+                authorid as author_id,
+                private
             FROM posts JOIN users ON posts.authorid = users.id WHERE posts.postid = $1"
         )
         .bind(post_id)

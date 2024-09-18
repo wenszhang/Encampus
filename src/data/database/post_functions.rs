@@ -1,16 +1,17 @@
 #[allow(unused_imports)] // Suppress UserID - false compiler warning due to RowToStruct
 use super::user_functions::UserId;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
+use chrono::NaiveDateTime;
+use leptos::*;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
 /**
- * Struct to hold the post info
+ * Struct to hold information for displaying a post in a list
  */
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Post {
-    // add field to get authorID in posts table.
     pub title: String,
     pub post_id: i32,
     pub resolved: bool,
