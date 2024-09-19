@@ -35,6 +35,7 @@ pub fn ClassPage() -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
+    let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
 
     let post_data = PostFetcher {
         class_id: class_id.get().unwrap().class_id,
@@ -50,14 +51,13 @@ pub fn ClassPage() -> impl IntoView {
     );
     provide_context(posts);
 
-    let filter_posts_action = create_action(move |keywords: &FilterKeywords|{
+    let filter_posts_action = create_action(move |keywords: &Vec<String>|{
+      let class_id = class_id.clone();
       async move{
-        match filter_posts(class_id, keywords).await{
-          Ok(posts) => {
-            
-          }
-        }
+        if let Ok(new_posts) = filter_posts(class_id.get().unwrap().class_id, filter_keywords.get()).await {
+            posts.get().unwrap().clear();
       }
+    }
     });
 
     let class_name = create_local_resource(class_id, |class_id| async {
