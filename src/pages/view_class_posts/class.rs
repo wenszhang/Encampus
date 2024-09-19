@@ -55,10 +55,13 @@ pub fn ClassPage() -> impl IntoView {
       let class_id = class_id.clone();
       async move{
         if let Ok(new_posts) = filter_posts(class_id.get().unwrap().class_id, filter_keywords.get()).await {
-            posts.get().unwrap().clear();
+          posts.get().unwrap().clear();
+          let mut new_posts = new_posts.clone();
+          posts.get().unwrap().append(&mut new_posts);
+        }
       }
-    }
     });
+    provide_context(filter_posts_action);
 
     let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
@@ -120,6 +123,7 @@ pub fn ClassPage() -> impl IntoView {
                 <button
                   class="flex absolute inset-y-0 top-1 right-12 justify-between items-center py-1 px-10 text-white bg-gray-300 rounded-full hover:bg-gray-400"
                   style="height: 30px;"
+                  on:click=move |_| set_filter_keywords()
                 >
                   <p class="pr-2 text-xs">"Filter Posts"</p>
                   <FilterIcon size="20px" />
