@@ -1,6 +1,5 @@
 use crate::data::database::post_functions::Post;
 use leptos::{server, ServerFnError};
-use serde::{Deserialize, Serialize};
 
 #[server(FilterPosts)]
 pub async fn filter_posts(

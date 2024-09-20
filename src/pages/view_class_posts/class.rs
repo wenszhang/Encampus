@@ -36,6 +36,13 @@ pub fn ClassPage() -> impl IntoView {
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
     let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
+    let(filtering, set_filtering) = create_signal(false);
+
+    let on_input = |setter: WriteSignal<String>| {
+      move |ev| {
+          setter(event_target_value(&ev));
+      }
+  };
 
     let post_data = PostFetcher {
         class_id: class_id.get().unwrap().class_id,
@@ -51,17 +58,22 @@ pub fn ClassPage() -> impl IntoView {
     );
     provide_context(posts);
 
-    let filter_posts_action = create_action(move |keywords: &Vec<String>|{
+    let filtered_posts = create_action(move |filtered_posts: &String|{
       let class_id = class_id.clone();
       async move{
         if let Ok(new_posts) = filter_posts(class_id.get().unwrap().class_id, filter_keywords.get()).await {
           posts.get().unwrap().clear();
           let mut new_posts = new_posts.clone();
           posts.get().unwrap().append(&mut new_posts);
+          set_filtering(true);
+          (posts)
+
+        } else{
+          (posts)
         }
       }
     });
-    provide_context(filter_posts_action);
+    provide_context(filtered_posts);
 
     let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
@@ -119,11 +131,15 @@ pub fn ClassPage() -> impl IntoView {
                   type="text"
                   placeholder="Search posts by keywords..."
                   class="pr-24 pl-5 w-full bg-white border-none focus:outline-none"
+                  on:input=on_input(set_filter_keywords)
+                  prop:value=filter_keywords
                 />
                 <button
                   class="flex absolute inset-y-0 top-1 right-12 justify-between items-center py-1 px-10 text-white bg-gray-300 rounded-full hover:bg-gray-400"
                   style="height: 30px;"
-                  on:click=move |_| set_filter_keywords()
+                  on:click=move |_| {
+                    filtered_posts.dispatch(filter_keywords());
+                  }
                 >
                   <p class="pr-2 text-xs">"Filter Posts"</p>
                   <FilterIcon size="20px" />
@@ -157,8 +173,16 @@ pub fn ClassPage() -> impl IntoView {
             </Suspense>
             <div class="grid grid-cols-3 gap-4">
               <Suspense fallback=move || view! { <p>"Loading..."</p> }>
-                <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
+                <For each=move || { 
+                  if filtering.get(){
+                    filtered_posts.value()().and_then(|res| res.Ok()).unwrap_or_default()
+                  } else {
+                    posts().unwrap_or_default()
+                  }} key=|post| post.post_id let:post>
                   {
+                    if filtering.get(){
+                      posts = filtered_posts.value()().unwrap_or_default();
+                    }
                     let private = post.private;
                     post
                       .resolved
