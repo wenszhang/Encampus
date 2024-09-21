@@ -35,6 +35,7 @@ pub fn ClassPage() -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
+    let (posts, set_posts) = create_signal(vec![]);
     let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
     let(filtering, set_filtering) = create_signal(false);
 
@@ -51,29 +52,29 @@ pub fn ClassPage() -> impl IntoView {
     let posts = create_resource(
         move || (post_data),
         |post_data| async move {
-            get_posts(post_data.class_id, post_data.user_id)
+            set_posts(get_posts(post_data.class_id, post_data.user_id)
                 .await
-                .unwrap_or_default()
+                .unwrap_or_default());
         },
     );
     provide_context(posts);
 
-    let filtered_posts = create_action(move |filtered_posts: &String|{
-      let class_id = class_id.clone();
-      async move{
-        if let Ok(new_posts) = filter_posts(class_id.get().unwrap().class_id, filter_keywords.get()).await {
-          posts.get().unwrap().clear();
-          let mut new_posts = new_posts.clone();
-          posts.get().unwrap().append(&mut new_posts);
-          set_filtering(true);
-          (posts)
+    // let filtered_posts = create_action(move |filtered_posts: &String|{
+    //   let class_id = class_id.clone();
+    //   async move{
+    //     if let Ok(new_posts) = filter_posts(class_id.get().unwrap().class_id, filter_keywords.get()).await {
+    //       posts.get().unwrap().clear();
+    //       let mut new_posts = new_posts.clone();
+    //       posts.get().unwrap().append(&mut new_posts);
+    //       set_filtering(true);
+    //       (posts)
 
-        } else{
-          (posts)
-        }
-      }
-    });
-    provide_context(filtered_posts);
+    //     } else{
+    //       (posts)
+    //     }
+    //   }
+    // });
+    // provide_context(filtered_posts);
 
     let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
@@ -138,7 +139,7 @@ pub fn ClassPage() -> impl IntoView {
                   class="flex absolute inset-y-0 top-1 right-12 justify-between items-center py-1 px-10 text-white bg-gray-300 rounded-full hover:bg-gray-400"
                   style="height: 30px;"
                   on:click=move |_| {
-                    filtered_posts.dispatch(filter_keywords());
+                    // filtered_posts.dispatch(filter_keywords());
                   }
                 >
                   <p class="pr-2 text-xs">"Filter Posts"</p>
@@ -173,16 +174,8 @@ pub fn ClassPage() -> impl IntoView {
             </Suspense>
             <div class="grid grid-cols-3 gap-4">
               <Suspense fallback=move || view! { <p>"Loading..."</p> }>
-                <For each=move || { 
-                  if filtering.get(){
-                    filtered_posts.value()().and_then(|res| res.Ok()).unwrap_or_default()
-                  } else {
-                    posts().unwrap_or_default()
-                  }} key=|post| post.post_id let:post>
-                  {
-                    if filtering.get(){
-                      posts = filtered_posts.value()().unwrap_or_default();
-                    }
+                <For each=move || posts.get() key=|post| post.post_id let:post> {
+                    
                     let private = post.private;
                     post
                       .resolved
