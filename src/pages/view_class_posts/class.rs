@@ -106,7 +106,7 @@ pub fn ClassPage() -> impl IntoView {
         };
         leptos_dom::document().set_title(&title);
 
-        if let Some(fetched_posts) = posts.read() {
+        if let Some(fetched_posts) = posts.get() {
           set_posts(fetched_posts.clone()); // Set the signal to the fetched posts
       }
     });
