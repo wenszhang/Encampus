@@ -44,7 +44,7 @@ cfg_if::cfg_if! {
         #[tokio::main]
         async fn main() {
             // Uncomment to turn on detailed logging for all crates that use the tracing crate.
-            tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
+            // tracing_subscriber::fmt().with_max_level(tracing::Level::DEBUG).init();
 
             let pool = PgPoolOptions::new()
                 .max_connections(5)

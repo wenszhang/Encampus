@@ -12,6 +12,7 @@ use crate::resources::images::svgs::filter_icon::FilterIcon;
 use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 use crate::data::database::filter_functions::filter_posts;
+use crate::data::database::post_functions::Post;
 
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params, A};
@@ -35,7 +36,7 @@ pub fn ClassPage() -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
-    let (post_list, set_posts) = create_signal(vec![]);
+    let (post_list, set_posts) = create_signal::<Vec<Post>>(vec![]);
     let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
     let(filtering, set_filtering) = create_signal(false);
 
@@ -52,9 +53,9 @@ pub fn ClassPage() -> impl IntoView {
     let posts = create_resource(
         move || (post_data),
         |post_data| async move {
-            set_posts(get_posts(post_data.class_id, post_data.user_id)
+            get_posts(post_data.class_id, post_data.user_id)
                 .await
-                .unwrap_or_default());
+                .unwrap_or_default()
         },
     );
     provide_context(posts);
@@ -104,6 +105,10 @@ pub fn ClassPage() -> impl IntoView {
             format!("{} - {}", current_class_name, question_title())
         };
         leptos_dom::document().set_title(&title);
+
+        if let Some(fetched_posts) = posts.read() {
+          set_posts(fetched_posts.clone()); // Set the signal to the fetched posts
+      }
     });
 
     let (is_visible, set_is_visible) = create_signal(false);
@@ -174,31 +179,31 @@ pub fn ClassPage() -> impl IntoView {
             </Suspense>
             <div class="grid grid-cols-3 gap-4">
               <Suspense fallback=move || view! { <p>"Loading..."</p> }>
-                <For each=move || posts.unwrap_or_default() key=|post| post.post_id let:post> {
-                    
-                  let private = post.private;
-                  post
-                    .resolved
-                    .then(|| {
-                      view! {
-                        <QuestionTile
-                          post=post.clone()
-                          is_resolved=(|| false).into_signal()
-                          is_private=(move || private).into_signal()
-                        />
-                      }
-                    })
-                    .unwrap_or_else(|| {
-                      view! {
-                        <QuestionTile
-                          post=post.clone()
-                          is_resolved=(|| true).into_signal()
-                          is_private=(move || private).into_signal()
-                        />
-                      }
-                    })
-                  }
-                </For>
+              <For each=move || post_list.get() key=|post| post.post_id let:post>
+              {
+                let private = post.private;
+                post
+                  .resolved
+                  .then(|| {
+                    view! {
+                      <QuestionTile
+                        post=post.clone()
+                        is_resolved=(|| false).into_signal()
+                        is_private=(move || private).into_signal()
+                      />
+                    }
+                  })
+                  .unwrap_or_else(|| {
+                    view! {
+                      <QuestionTile
+                        post=post.clone()
+                        is_resolved=(|| true).into_signal()
+                        is_private=(move || private).into_signal()
+                      />
+                    }
+                  })
+              }
+            </For>
               </Suspense>
             </div>
           </div>
