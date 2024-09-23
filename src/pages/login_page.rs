@@ -30,26 +30,32 @@ pub fn LoginPage() -> impl IntoView {
 
     create_effect(move |_| {
         let global_state = expect_context::<GlobalState>();
-        if let Some(userInfo) = login_action.value()() {
-            if userInfo.1 == 0 {
+
+        if let Some(user_info) = login_action.value()() {
+            if user_info.1 == 0 {
                 set_login_error.set(Some(NotificationDetails {
                     message: "Failed Signing In, User doesn't exist.".to_string(),
                     notification_type: NotificationType::Error,
                 }));
             } else {
-                global_state.authenticated.set(true);
-                global_state.user_name.set(Some(userInfo.0));
-                global_state.id.set(Some(userInfo.1));
-                global_state.first_name.set(Some(userInfo.2));
-                global_state.last_name.set(Some(userInfo.3));
-                global_state.role.set(Some(userInfo.4));
+                // Update the user_state with new values
+                global_state.user_state.update(|state| {
+                    state.authenticated = true;
+                    state.user_name = Some(user_info.0.clone());
+                    state.id = Some(user_info.1);
+                    state.first_name = Some(user_info.2.clone());
+                    state.last_name = Some(user_info.3.clone());
+                    state.role = Some(user_info.4.clone());
+                });
 
                 // Save user info to local storage
                 global_state.save_to_local_storage();
 
                 // Navigate based on the user's role
                 let navigate = leptos_router::use_navigate();
-                match global_state.role.get().unwrap_or_default().as_str() {
+                let role = global_state.user_state.get().role.clone().unwrap_or_default();
+
+                match role.as_str() {
                     "student" => navigate("/classes", Default::default()),
                     // Change to instructor page when implemented
                     "instructor" => navigate("/classes", Default::default()),

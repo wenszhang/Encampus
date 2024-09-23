@@ -1,46 +1,39 @@
-use crate::data::database::user_functions::add_user;
-use crate::data::database::user_functions::User;
+use crate::data::database::user_functions::{add_user, User};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 /**
- * Component for the login page where users can login to their account
+ * Component for the registration page where users can create a new account
  */
 use leptos::{ev::SubmitEvent, *};
 
 #[component]
 pub fn RegisterPage() -> impl IntoView {
+    // Signals for form inputs
     let (username, set_username) = create_signal("".to_string());
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
     let (user_id, set_user_id) = create_signal(0);
     let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
 
+    // Input event handler for controlled components
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
             setter(event_target_value(&ev));
         }
     };
 
-    let new_user = User {
-        username: username.get(),
-        firstname: first_name.get(),
-        lastname: last_name.get(),
-        role: "student".to_string(),
-        id: 0,
-    };
-
+    // Action to add a new user
     let new_user_action = create_action(move |_| async move {
-        match add_user(User {
+        let user = User {
             username: username.get(),
             firstname: first_name.get(),
             lastname: last_name.get(),
             role: "student".to_string(),
             id: 0,
-        })
-        .await
-        {
+        };
+        match add_user(user).await {
             Ok(id) => {
                 set_user_id(id);
             }
@@ -53,35 +46,45 @@ pub fn RegisterPage() -> impl IntoView {
         }
     });
 
+    // Effect to update global state and navigate after successful registration
     create_effect(move |_| {
         let global_state = expect_context::<GlobalState>();
-        if let Some(_id) = new_user_action.value()() {
-            if user_id.get() > 0 {
-                global_state.authenticated.set(true);
-                global_state.user_name.set(Some(username.get()));
-                global_state.id.set(Some(user_id.get()));
-                global_state.first_name.set(Some(first_name.get()));
-                global_state.last_name.set(Some(last_name.get()));
-                global_state.role.set(Some("student".to_string()));
+        if new_user_action.value().with(|v| v.is_some()) && user_id.get() > 0 {
+          // Update the user_state with new values
+          global_state.user_state.update(|state| {
+              state.authenticated = true;
+              state.user_name = Some(username.get());
+              state.id = Some(user_id.get());
+              state.first_name = Some(first_name.get());
+              state.last_name = Some(last_name.get());
+              state.role = Some("student".to_string());
+          });
 
-                let navigate = leptos_router::use_navigate();
-                match global_state.role.get().unwrap_or_default().as_str() {
-                    "student" => navigate("/classes", Default::default()),
-                    // Change to instructor page when implemented
-                    "teacher" => navigate("/classes", Default::default()),
-                    // Change to admin page when implemented
-                    "admin" => navigate("/classes", Default::default()),
-                    _ => navigate("/login", Default::default()),
-                }
-            }
+          // Save user info to local storage
+          global_state.save_to_local_storage();
+
+          // Navigate based on the user's role
+          let navigate = leptos_router::use_navigate();
+          let role = global_state.user_state.get().role.clone().unwrap_or_default();
+
+          match role.as_str() {
+              "student" => navigate("/classes", Default::default()),
+              // Change to instructor page when implemented
+              "instructor" => navigate("/classes", Default::default()),
+              // Change to admin page when implemented
+              "admin" => navigate("/classes", Default::default()),
+              _ => navigate("/login", Default::default()),
+          }
         }
     });
 
+    // Form submission handler
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
-        new_user_action.dispatch(new_user.clone());
+        new_user_action.dispatch(());
     };
 
+    // View for displaying notifications
     let notification_view = move || {
         login_error.get().map(|details| {
             view! {
@@ -120,7 +123,7 @@ pub fn RegisterPage() -> impl IntoView {
               />
             </div>
             <div class="mb-4">
-              <label for="username" class="flex row-auto mb-2 font-bold text-gray-700">
+              <label for="first_name" class="flex row-auto mb-2 font-bold text-gray-700">
                 First Name:
               </label>
               <input
@@ -134,7 +137,7 @@ pub fn RegisterPage() -> impl IntoView {
               />
             </div>
             <div class="mb-4">
-              <label for="username" class="flex row-auto mb-2 font-bold text-gray-700">
+              <label for="last_name" class="flex row-auto mb-2 font-bold text-gray-700">
                 Last Name:
               </label>
               <input
