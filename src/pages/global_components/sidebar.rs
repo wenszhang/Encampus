@@ -45,7 +45,6 @@ fn collapsed_view(set_collapsed: WriteSignal<bool>) -> View {
 // Expanded view for the sidebar
 fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<ClassInfo>>) -> View {
     let global_state = expect_context::<GlobalState>(); // Access global state
-    let user_state = global_state.user_state.get(); 
 
     view! {
       <div class="flex flex-col h-full">
@@ -61,8 +60,8 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
         // Reactive Name and Role
         <h1 class="text-2xl font-bold text-center">
           {move || {
-            let first_name = user_state.first_name.clone();
-            let last_name = user_state.last_name.clone();
+            let first_name = global_state.first_name.get();
+            let last_name = global_state.last_name.get();
             format!(
               "{} {}",
               first_name.unwrap_or_else(|| "".to_string()),
@@ -71,7 +70,7 @@ fn expanded_view(set_collapsed: WriteSignal<bool>, courses: Resource<(), Vec<Cla
           }}
         </h1>
         <h2 class="text-lg font-semibold text-center text-gray-500">
-          {move || user_state.role.clone().unwrap_or_else(|| "".to_string())}
+          {move || global_state.role.get().unwrap_or_else(|| "".to_string())}
         </h2>
 
         <div class="overflow-y-auto flex-grow px-4 mt-6 custom-scrollbar">

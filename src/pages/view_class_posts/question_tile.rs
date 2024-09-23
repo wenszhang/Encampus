@@ -27,8 +27,8 @@ pub fn DropDownMenu(post_author_id: i32) -> impl IntoView {
     let global_state: GlobalState = expect_context::<GlobalState>();
     // let user_role = global_state.role.get();
     // let is_authenticated = global_state.authenticated.get();
-    let is_on_my_post = move || global_state.user_state.get().id == Some(post_author_id);
-    let is_professor = move || global_state.user_state.get().role == Some("instructor".to_string());
+    let is_on_my_post = move || global_state.id.get() == Some(post_author_id);
+    let is_professor = move || global_state.role.get() == Some("instructor".to_string());
     view! {
       <div class="pr-2 text-right">
         {move || {

@@ -1,3 +1,4 @@
+use crate::resources::images::svgs::error_icon::ErrorIcon;
 use crate::resources::images::svgs::warning_icon::WarningIcon;
 
 use leptos::*;

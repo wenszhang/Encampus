@@ -40,7 +40,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
         async move {
-            match add_post(postInfo, global_state.user_state.get().id.unwrap()).await {
+            match add_post(postInfo, global_state.id.get_untracked().unwrap()).await {
                 Ok(post) => {
                     let post_id = post.post_id;
                     posts.update(|posts| {

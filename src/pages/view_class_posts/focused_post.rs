@@ -89,7 +89,7 @@ pub fn FocusedPost() -> impl IntoView {
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
         async move {
-            match add_reply(reply_info, global_state.user_state.get().user_name.unwrap()).await {
+            match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
                 Ok(reply) => {
                     post_and_replies.update(|post_and_replies| {
                         if let Some(outer_option) = post_and_replies.as_mut() {
@@ -115,7 +115,7 @@ pub fn FocusedPost() -> impl IntoView {
         let post_id = post_id.post_id;
         async move {
             let _current_post = get_post(post_id).await.unwrap();
-            if let Ok(_) = remove_post(post_id, global_state.user_state.get().id.unwrap()).await {
+            if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
                 let navigate = leptos_router::use_navigate();
                 navigate(
                     format!("/classes/{}", class_id.get_untracked().unwrap().class_id,).as_str(),
@@ -291,8 +291,8 @@ pub fn FocusedPost() -> impl IntoView {
             <div class="flex items-center cursor-pointer select-none">
 
               {if post().map(|post| post.author_id)
-                == Some(global_state.user_state.get().id.unwrap_or_default())
-                || instructor() == Some(global_state.user_state.get().user_name.unwrap_or_default())
+                == Some(global_state.id.get().unwrap_or_default())
+                || instructor() == Some(global_state.user_name.get().unwrap_or_default())
               {
                 if post().map(|post| post.resolved) == Some(false) {
                   view! {

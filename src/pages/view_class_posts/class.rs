@@ -31,7 +31,7 @@ pub fn ClassPage() -> impl IntoView {
 
     let post_data = PostFetcher {
         class_id: class_id.get().unwrap().class_id,
-        user_id: global_state.user_state.get().id.unwrap(),
+        user_id: global_state.id.get_untracked().unwrap_or_default(),
     };
     let posts = create_resource(
         move || (post_data),

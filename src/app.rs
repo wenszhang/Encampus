@@ -76,7 +76,7 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
     let navigate = use_navigate();
 
     create_effect(move |_| {
-        if !global_state.user_state.get().authenticated {
+        if !global_state.authenticated.get() {
             navigate("/login", Default::default());
         }
     });
