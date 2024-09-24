@@ -58,7 +58,7 @@ pub fn ClassPage() -> impl IntoView {
     );
     provide_context(posts);
 
-    let filtered_posts = create_action(move |_| async move {
+    let filtered_posts_action = create_action(move |_| async move {
         if let Ok(new_posts) = filter_posts(
             class_id.get().unwrap().class_id,
             global_state.id.get_untracked().unwrap_or_default(),
@@ -131,13 +131,22 @@ pub fn ClassPage() -> impl IntoView {
                   placeholder="Search posts by keywords..."
                   class="pr-24 pl-5 w-full bg-white border-none focus:outline-none"
                   on:input=on_input(set_filter_keywords)
+                  on:keydown=move |ev: web_sys::KeyboardEvent| {
+                    if ev.key() == "Enter" {
+                      if filter_keywords.get() != "" {
+                        filtered_posts_action.dispatch(filter_keywords.get());
+                      } else {
+                        set_posts(posts.get().unwrap());
+                      }
+                    }
+                  }
                   prop:value=filter_keywords
                 />
                 <button
                   class="flex absolute inset-y-0 top-1 right-12 justify-between items-center py-1 px-10 text-white bg-gray-300 rounded-full hover:bg-gray-400"
                   style="height: 30px;"
                   on:click=move |_| {
-                    filtered_posts.dispatch(filter_keywords.get());
+                    filtered_posts_action.dispatch(filter_keywords.get());
                   }
                 >
                   <p class="pr-2 text-xs">"Filter Posts"</p>
