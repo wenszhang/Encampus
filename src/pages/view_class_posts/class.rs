@@ -58,13 +58,15 @@ pub fn ClassPage() -> impl IntoView {
     );
     provide_context(posts);
 
-    let filtered_posts = create_action(move |_| {
-        async move {
-            if let Ok(new_posts) =
-                filter_posts(class_id.get().unwrap().class_id, filter_keywords.get()).await
-            {
-                set_posts(new_posts);
-            }
+    let filtered_posts = create_action(move |_| async move {
+        if let Ok(new_posts) = filter_posts(
+            class_id.get().unwrap().class_id,
+            global_state.id.get_untracked().unwrap_or_default(),
+            filter_keywords.get(),
+        )
+        .await
+        {
+            set_posts(new_posts);
         }
     });
 
