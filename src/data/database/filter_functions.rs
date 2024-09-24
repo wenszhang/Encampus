@@ -13,7 +13,7 @@ pub async fn filter_posts(
         "Unable to complete Request".to_string(),
     ))?;
 
-    let posts: Vec<Post> = sqlx::query_as("select title, postid as post_id, resolved, private, authorid as author_id from posts where to_tsvector(title || ' ' || contents) @@ to_tsquery($1) and classid = $2")
+    let posts: Vec<Post> = sqlx::query_as("select title, postid as post_id, resolved, private, authorid as author_id from posts where to_tsvector(title || ' ' || contents) @@ to_tsquery($1) and classid = $2 and removed = false ORDER BY timestamp desc")
         .bind(filter_keyword)
         .bind(class_id)
         .fetch_all(&pool)

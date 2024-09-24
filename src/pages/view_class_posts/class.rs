@@ -37,7 +37,6 @@ pub fn ClassPage() -> impl IntoView {
     let class_id = use_params::<ClassId>();
     let (post_list, set_posts) = create_signal::<Vec<Post>>(vec![]);
     let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
-    let (filtering, set_filtering) = create_signal(false);
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
@@ -59,8 +58,7 @@ pub fn ClassPage() -> impl IntoView {
     );
     provide_context(posts);
 
-    let filtered_posts = create_action(move |filtered_posts: &String| {
-        let class_id = class_id.clone();
+    let filtered_posts = create_action(move |_| {
         async move {
             if let Ok(new_posts) =
                 filter_posts(class_id.get().unwrap().class_id, filter_keywords.get()).await
@@ -69,7 +67,6 @@ pub fn ClassPage() -> impl IntoView {
             }
         }
     });
-    provide_context(filtered_posts);
 
     let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
@@ -103,11 +100,6 @@ pub fn ClassPage() -> impl IntoView {
         if let Some(fetched_posts) = posts.get() {
             set_posts(fetched_posts.clone()); // Set the signal to the fetched posts
         }
-
-        // if filtering() {
-        //     let filtered_posts = filtered_posts.value()().unwrap();
-        //     set_posts(filtered_posts.get().unwrap().clone());
-        // }
     });
 
     let (is_visible, set_is_visible) = create_signal(false);
