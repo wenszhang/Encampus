@@ -1,8 +1,8 @@
 use super::question_tile::QuestionTile;
 use crate::data::database::announcement_functions::get_announcement_list;
 use crate::data::database::class_functions::get_class_name;
-use crate::data::database::filter_functions::filter_posts;
 use crate::data::database::post_functions::get_posts;
+use crate::data::database::post_functions::get_search_posts;
 use crate::data::database::post_functions::Post;
 use crate::data::database::post_functions::PostFetcher;
 use crate::data::global_state::GlobalState;
@@ -15,7 +15,7 @@ use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 
 use leptos::*;
-use leptos_router::{use_params, Outlet, Params, A};
+use leptos_router::{use_params, Outlet, Params};
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {
@@ -59,7 +59,7 @@ pub fn ClassPage() -> impl IntoView {
     provide_context(posts);
 
     let filtered_posts_action = create_action(move |_| async move {
-        if let Ok(new_posts) = filter_posts(
+        if let Ok(new_posts) = get_search_posts(
             class_id.get().unwrap().class_id,
             global_state.id.get_untracked().unwrap_or_default(),
             filter_keywords.get(),
