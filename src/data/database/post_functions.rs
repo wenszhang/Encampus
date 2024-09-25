@@ -1,7 +1,6 @@
 #[allow(unused_imports)] // Suppress UserID - false compiler warning due to RowToStruct
 use super::user_functions::UserId;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
-use chrono::NaiveDateTime;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
@@ -46,24 +45,6 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
     .expect("select should work");
 
     Ok(rows)
-}
-
-#[server(GetPost)]
-pub async fn get_post(post_id: i32) -> Result<Post, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to complete Request".to_string(),
-    ))?;
-
-    let post: Post = sqlx::query_as("select title, postid as post_id, resolved, private, authorid as author_id from posts where postid = $1")
-        .bind(post_id)
-        .fetch_one(&pool)
-        .await
-        .expect("No post found");
-
-    Ok(post)
 }
 
 /**

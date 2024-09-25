@@ -11,7 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::{remove_post, resolve_post, get_post, Post, PostFetcher};
+use crate::data::database::post_functions::{remove_post, resolve_post, Post, PostFetcher};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -115,32 +115,38 @@ pub fn FocusedPost() -> impl IntoView {
     let remove_action = create_action(move |post_id: &PostId| {
         let post_id = post_id.post_id;
         async move {
-          match get_post_details(post_id).await {
-              Ok(current_post) => {
+            match get_post_details(post_id).await {
+                Ok(current_post) => {
+                    if let Ok(_) =
+                        remove_post(post_id, global_state.id.get_untracked().unwrap()).await
+                    {
+                        posts.update(|posts| {
+                            if let Some(index) = posts
+                                .as_mut()
+                                .unwrap()
+                                .iter()
+                                .position(|post| post.post_id == current_post.0.post_id)
+                            {
+                                posts.as_mut().unwrap().remove(index);
+                            }
 
-              if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
-                posts.update(|posts| {
-
-                  if let Some(index) = posts.as_mut().unwrap().iter().position(|post| post.post_id == current_post.0.post_id){
-                    posts.as_mut().unwrap().remove(index);
-                  }
-                
-                  let navigate = leptos_router::use_navigate();
-                  navigate(
-                      format!("/classes/{}", class_id.get_untracked().unwrap().class_id,).as_str(),
-                      Default::default(),
-                  );
-                });
+                            let navigate = leptos_router::use_navigate();
+                            navigate(
+                                format!("/classes/{}", class_id.get_untracked().unwrap().class_id,)
+                                    .as_str(),
+                                Default::default(),
+                            );
+                        });
+                    }
                 }
-              }
-              Err(_) => {
-                logging::error!("Attempt to remove post failed. Please try again");
-                set_notification_details(Some(NotificationDetails {
-                  message: "Failed to remove post. Please try again.".to_string(),
-                  notification_type: NotificationType::Error,
-                }));
-              }
-          }
+                Err(_) => {
+                    logging::error!("Attempt to remove post failed. Please try again");
+                    set_notification_details(Some(NotificationDetails {
+                        message: "Failed to remove post. Please try again.".to_string(),
+                        notification_type: NotificationType::Error,
+                    }));
+                }
+            }
         }
     });
 
