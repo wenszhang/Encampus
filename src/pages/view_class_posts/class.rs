@@ -16,6 +16,7 @@ use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params};
+use serde::de;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {

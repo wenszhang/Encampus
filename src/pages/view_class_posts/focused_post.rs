@@ -11,7 +11,7 @@ use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::{remove_post, resolve_post};
+use crate::data::database::post_functions::{remove_post, resolve_post, get_post, Post, PostFetcher};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -66,10 +66,11 @@ pub fn FocusedPost() -> impl IntoView {
     let (order_option, set_value) = create_signal("Newest First".to_string());
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
+    let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
-            Some(get_post(post_id.post_id).await.unwrap())
+            Some(get_post_details(post_id.post_id).await.unwrap())
         } else {
             None
         }
@@ -114,14 +115,32 @@ pub fn FocusedPost() -> impl IntoView {
     let remove_action = create_action(move |post_id: &PostId| {
         let post_id = post_id.post_id;
         async move {
-            let _current_post = get_post(post_id).await.unwrap();
-            if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
-                let navigate = leptos_router::use_navigate();
-                navigate(
-                    format!("/classes/{}", class_id.get_untracked().unwrap().class_id,).as_str(),
-                    Default::default(),
-                );
-            }
+          match get_post_details(post_id).await {
+              Ok(current_post) => {
+
+              if let Ok(_) = remove_post(post_id, global_state.id.get_untracked().unwrap()).await {
+                posts.update(|posts| {
+
+                  if let Some(index) = posts.as_mut().unwrap().iter().position(|post| post.post_id == current_post.0.post_id){
+                    posts.as_mut().unwrap().remove(index);
+                  }
+                
+                  let navigate = leptos_router::use_navigate();
+                  navigate(
+                      format!("/classes/{}", class_id.get_untracked().unwrap().class_id,).as_str(),
+                      Default::default(),
+                  );
+                });
+                }
+              }
+              Err(_) => {
+                logging::error!("Attempt to remove post failed. Please try again");
+                set_notification_details(Some(NotificationDetails {
+                  message: "Failed to remove post. Please try again.".to_string(),
+                  notification_type: NotificationType::Error,
+                }));
+              }
+          }
         }
     });
 
@@ -414,8 +433,8 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
 /**
  * Get all post information for a given the post id
  */
-#[server(GetPost)]
-pub async fn get_post(post_id: i32) -> Result<(PostDetails, Vec<Reply>), ServerFnError> {
+#[server(GetPostDetails)]
+pub async fn get_post_details(post_id: i32) -> Result<(PostDetails, Vec<Reply>), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
     use tokio::*;
