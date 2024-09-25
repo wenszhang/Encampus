@@ -45,7 +45,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                     let post_id = post.post_id;
                     posts.update(|posts| {
                         if let Some(posts) = posts {
-                            posts.push(post);
+                            posts.insert(0, post);
                         }
                     });
                     let navigate = leptos_router::use_navigate();

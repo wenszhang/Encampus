@@ -2,6 +2,8 @@ use super::question_tile::QuestionTile;
 use crate::data::database::announcement_functions::get_announcement_list;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
+use crate::data::database::post_functions::get_search_posts;
+use crate::data::database::post_functions::Post;
 use crate::data::database::post_functions::PostFetcher;
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::announcements::Announcements;
@@ -13,11 +15,16 @@ use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 
 use leptos::*;
-use leptos_router::{use_params, Outlet, Params, A};
+use leptos_router::{use_params, Outlet, Params};
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {
     pub class_id: i32,
+}
+
+#[derive(Params, PartialEq, Clone)]
+pub struct FilterKeywords {
+    keywords: String,
 }
 
 /**
@@ -28,6 +35,14 @@ pub fn ClassPage() -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
+    let (post_list, set_posts) = create_signal::<Vec<Post>>(vec![]);
+    let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
+
+    let on_input = |setter: WriteSignal<String>| {
+        move |ev| {
+            setter(event_target_value(&ev));
+        }
+    };
 
     let post_data = PostFetcher {
         class_id: class_id.get().unwrap().class_id,
@@ -42,6 +57,18 @@ pub fn ClassPage() -> impl IntoView {
         },
     );
     provide_context(posts);
+
+    let filtered_posts_action = create_action(move |_| async move {
+        if let Ok(new_posts) = get_search_posts(
+            class_id.get().unwrap().class_id,
+            global_state.id.get_untracked().unwrap_or_default(),
+            filter_keywords.get(),
+        )
+        .await
+        {
+            set_posts(new_posts);
+        }
+    });
 
     let class_name = create_local_resource(class_id, |class_id| async {
         get_class_name(class_id.unwrap().class_id)
@@ -71,6 +98,10 @@ pub fn ClassPage() -> impl IntoView {
             format!("{} - {}", current_class_name, question_title())
         };
         leptos_dom::document().set_title(&title);
+
+        if let Some(fetched_posts) = posts.get() {
+            set_posts(fetched_posts.clone()); // Set the signal to the fetched posts
+        }
     });
 
     let (is_visible, set_is_visible) = create_signal(false);
@@ -99,10 +130,24 @@ pub fn ClassPage() -> impl IntoView {
                   type="text"
                   placeholder="Search posts by keywords..."
                   class="pr-24 pl-5 w-full bg-white border-none focus:outline-none"
+                  on:input=on_input(set_filter_keywords)
+                  on:keydown=move |ev: web_sys::KeyboardEvent| {
+                    if ev.key() == "Enter" {
+                      if filter_keywords.get() != "" {
+                        filtered_posts_action.dispatch(filter_keywords.get());
+                      } else {
+                        set_posts(posts.get().unwrap());
+                      }
+                    }
+                  }
+                  prop:value=filter_keywords
                 />
                 <button
                   class="flex absolute inset-y-0 top-1 right-12 justify-between items-center py-1 px-10 text-white bg-gray-300 rounded-full hover:bg-gray-400"
                   style="height: 30px;"
+                  on:click=move |_| {
+                    filtered_posts_action.dispatch(filter_keywords.get());
+                  }
                 >
                   <p class="pr-2 text-xs">"Filter Posts"</p>
                   <FilterIcon size="20px" />
@@ -136,7 +181,7 @@ pub fn ClassPage() -> impl IntoView {
             </Suspense>
             <div class="grid grid-cols-3 gap-4">
               <Suspense fallback=move || view! { <p>"Loading..."</p> }>
-                <For each=move || posts().unwrap_or_default() key=|post| post.post_id let:post>
+                <For each=move || post_list.get() key=|post| post.post_id let:post>
                   {
                     let private = post.private;
                     post
