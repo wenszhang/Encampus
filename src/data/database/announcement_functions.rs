@@ -1,8 +1,10 @@
+use std::string::ToString;
 /**
  * This file contains all the database functions that are used in the server
  */
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
+use crate::pages::view_class_posts::create_post::AddPostInfo;
 
 /**
  * Struct to hold the class info
@@ -16,6 +18,13 @@ pub struct AnnouncementInfo {
     pub contents: String,
     pub class_id: i32,
     pub author_id: i32,
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
+pub struct AddAnnouncementInfo {
+    pub title: String,
+    pub contents: String,
+    pub class_id: i32,
 }
 
 /**
@@ -40,3 +49,33 @@ pub async fn get_announcement_list(class_id: i32) -> Result<Vec<AnnouncementInfo
 
     Ok(announcements)
 }
+
+#[server(PostAnnouncement)]
+pub async fn post_announcement(new_announcement_info: AddAnnouncementInfo, user_id: i32) -> Result<AnnouncementInfo, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let announcement:AnnouncementInfo = sqlx::query_as(
+        "INSERT INTO announcements (classid, authorid, title, contents, time)
+         VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
+            RETURNING
+            announcementid as announcement_id,
+            title,
+            contents,
+            authorid as author_id")
+        .bind(new_announcement_info.class_id)
+        .bind(user_id)
+        .bind(new_announcement_info.title)
+        .bind(new_announcement_info.contents)
+        .fetch_one(&pool)
+        .await
+        .expect("failed adding announcement");
+
+
+    Ok(announcement)
+}
+

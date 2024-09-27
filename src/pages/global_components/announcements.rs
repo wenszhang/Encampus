@@ -1,15 +1,41 @@
-use crate::data::database::announcement_functions::AnnouncementInfo;
+use crate::data::database::announcement_functions::{post_announcement, AddAnnouncementInfo, AnnouncementInfo};
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
+use crate::data::global_state::GlobalState;
 use leptos::*;
+use crate::pages::view_class_posts::class::ClassId;
 
 #[component]
 
 //TODO handle too many announcements and href to announcements page
-pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
-    let (is_expanded, set_is_expanded) = create_signal(true);
+pub fn Announcements(announcements: Vec<AnnouncementInfo>, class_id: i32) -> impl IntoView {
+  let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
+  let global_state_clone = global_state.clone();
 
-    let mut sorted_announcements = announcements.clone();
-    sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
+  let (is_expanded, set_is_expanded) = create_signal(true);
+  let (title, set_title) = create_signal(String::new());
+  let (contents, set_contents) = create_signal(String::new());
+  let (error, set_error) = create_signal(None::<String>);
+
+  let mut sorted_announcements = announcements.clone();
+  sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
+
+  let on_input = |setter: WriteSignal<String>| {
+    move |ev| {
+      setter(event_target_value(&ev));
+    }
+  };
+
+  let add_announcement_action = create_action(move |announcementInfo: &AddAnnouncementInfo| {
+    let announcementInfo = announcementInfo.clone();
+    async move {
+      match post_announcement(announcementInfo, global_state.id.get_untracked().unwrap()).await {
+        Ok(announcement) => {
+
+        }
+        Err(_) => logging::error!("Attempt to post post failed. Please try again"),
+      }
+    }
+  });
 
     view! {
       <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg bg-card-bg">
@@ -28,6 +54,51 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
             </button>
           </div>
         </div>
+
+      {move || {
+                let role = global_state_clone.role.get().unwrap();
+                if role == "instructor" {
+                    view! {
+                        <div class="flex flex-col p-4">
+                            <input
+                                class="mb-2 p-2 border border-gray-300 rounded"
+                                type="text"
+                                placeholder="Announcement Title"
+                                prop:value=title
+                                on:input=on_input(set_title)
+                            />
+                            <textarea
+                                class="mb-2 p-2 border border-gray-300 rounded"
+                                placeholder="Announcement Contents"
+                                prop:value=contents
+                                on:input=on_input(set_contents)
+                            />
+                            <button
+                                class="bg-customBlue hover:bg-customBlue-HOVER text-white py-1 px-3 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2"
+                                on:click=move |_| {
+                                    let new_announcement = AddAnnouncementInfo {
+                                        title: title.get(),
+                                        contents: contents.get(),
+                                        class_id,
+                                    };
+                                    add_announcement_action.dispatch(new_announcement);
+                                }
+                            >
+                                "Post Announcement"
+                            </button>
+                            {move || if let Some(ref err) = error.get() {
+                                view! {
+                                    <div class="text-red-500 mt-2">{err.clone()}</div>
+                                }
+                            } else {
+                                view! { <div></div> }
+                            }}
+                        </div>
+                    }
+                } else {
+                    view! { <div></div> }
+                }
+            }}
 
         // Announcement info
         <div class=format!(
