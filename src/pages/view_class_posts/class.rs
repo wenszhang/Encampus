@@ -176,7 +176,8 @@ pub fn ClassPage() -> impl IntoView {
             }>
               {move || {
                 let ann_list = announcements().unwrap_or_default();
-                view! { <Announcements announcements=ann_list /> }
+                let class_id = class_id.get().unwrap().class_id;
+                view! { <Announcements announcements=ann_list class_id=class_id /> }
               }}
             </Suspense>
             <div class="grid grid-cols-3 gap-4">

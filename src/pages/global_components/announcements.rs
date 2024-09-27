@@ -22,8 +22,8 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let (title, set_title) = create_signal(String::new());
     let (contents, set_contents) = create_signal(String::new());
 
-    let mut sorted_announcements = announcements.clone();
-    sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
+  let mut sorted_announcements = announcements.clone();
+  sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
