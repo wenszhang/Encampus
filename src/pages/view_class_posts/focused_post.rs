@@ -18,6 +18,8 @@ use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 use crate::pages::view_class_posts::class::ClassId;
+use crate::pages::view_class_posts::question_tile::DropDownMenu;
+
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
     pub post_id: i32,
@@ -195,41 +197,6 @@ pub fn FocusedPost() -> impl IntoView {
           <DarkenedCard class="p-5">
             <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
 
-            <div class="pr-2 text-right">
-              {move || {
-                if is_professor() {
-                  view! {
-                    <button>Endorse</button>
-                    <button>remove</button>
-                    <button>pin</button>
-                  }
-                    .into_view()
-                } else {
-                  view! {
-                    <div class="p-3 rounded-md w-30">
-                      <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100">
-                        <BumpIcon size="20px" />
-                        <span class="ml-2">bump</span>
-                      </button>
-                    </div>
-                  }
-                    .into_view()
-                }
-              }}
-              {move || {
-                if is_on_my_post() {
-                  Some(
-                    view! {
-                      <button>remove</button>
-                      <button>pin</button>
-                    },
-                  )
-                } else {
-                  None
-                }
-              }}
-            </div>
-
             <p class="text-sm font-light">
               "Posted by " {move || post().map(|post| post.author_first_name)} " "
               {move || post().map(|post| post.author_last_name)}
@@ -247,6 +214,13 @@ pub fn FocusedPost() -> impl IntoView {
                   })
               }}
             </p>
+
+            // Dropdown menu
+            <div class=move || {
+              "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+            }>
+              <DropDownMenu post_author_id=post().map(|post| post.author_id).unwrap_or_default()/>
+            </div>
             <br />
             <p>{move || post().map(|post| post.contents)}</p>
           // TODO use the post's timestamp
