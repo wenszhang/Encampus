@@ -1,3 +1,4 @@
+use crate::resources::images::svgs::bump_icon::BumpIcon;
 /**
  * This file contains the FocusedPost component which is used to display a single post and its replies.
  */
@@ -67,7 +68,6 @@ pub fn FocusedPost() -> impl IntoView {
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
-
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
             Some(get_post_details(post_id.post_id).await.unwrap())
@@ -184,11 +184,52 @@ pub fn FocusedPost() -> impl IntoView {
         })
     };
 
+    let is_professor = move || global_state.role.get() == Some("instructor".to_string());
+    let is_on_my_post = move || {
+        global_state.id.get() == Some(post().map(|post| post.author_id).unwrap_or_default())
+    };
+
     view! {
       <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
         <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
           <DarkenedCard class="p-5">
             <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
+
+            <div class="pr-2 text-right">
+              {move || {
+                if is_professor() {
+                  view! {
+                    <button>Endorse</button>
+                    <button>remove</button>
+                    <button>pin</button>
+                  }
+                    .into_view()
+                } else {
+                  view! {
+                    <div class="p-3 rounded-md w-30">
+                      <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100">
+                        <BumpIcon size="20px" />
+                        <span class="ml-2">bump</span>
+                      </button>
+                    </div>
+                  }
+                    .into_view()
+                }
+              }}
+              {move || {
+                if is_on_my_post() {
+                  Some(
+                    view! {
+                      <button>remove</button>
+                      <button>pin</button>
+                    },
+                  )
+                } else {
+                  None
+                }
+              }}
+            </div>
+
             <p class="text-sm font-light">
               "Posted by " {move || post().map(|post| post.author_first_name)} " "
               {move || post().map(|post| post.author_last_name)}
