@@ -3,6 +3,7 @@ use crate::resources::images::svgs::bump_icon::BumpIcon;
  * This file contains the FocusedPost component which is used to display a single post and its replies.
  */
 use crate::resources::images::svgs::text_area_icon::TextAreaIcon;
+use crate::resources::images::svgs::dots_icon::DotsIcon;
 use chrono::FixedOffset;
 use chrono::NaiveDateTime;
 use leptos::*;
@@ -19,6 +20,7 @@ use crate::pages::global_components::notification::{
 };
 use crate::pages::view_class_posts::class::ClassId;
 use crate::pages::view_class_posts::question_tile::DropDownMenu;
+use ev::MouseEvent;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
@@ -191,11 +193,33 @@ pub fn FocusedPost() -> impl IntoView {
         global_state.id.get() == Some(post().map(|post| post.author_id).unwrap_or_default())
     };
 
+    let (menu_invisible, set_menu_invisible) = create_signal(true);
+
+    let toggle_menu = move |e: MouseEvent| {
+      e.stop_propagation();
+      set_menu_invisible.update(|visible| *visible = !*visible);
+    };
+
     view! {
       <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
         <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
-          <DarkenedCard class="p-5">
+          <DarkenedCard class="relative p-5">
             <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
+
+            <div class="flex absolute top-0 right-2 z-20 items-center">
+              <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+                <DotsIcon size="36px" />
+              </button>
+              // Dropdown menu
+              <div class=move || {
+            if menu_invisible() {
+              "hidden"
+            } else {
+              "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+            }}>
+                <DropDownMenu post_author_id=post().map(|post| post.author_id).unwrap_or_default()/>
+              </div>
+            </div>
 
             <p class="text-sm font-light">
               "Posted by " {move || post().map(|post| post.author_first_name)} " "
@@ -214,13 +238,6 @@ pub fn FocusedPost() -> impl IntoView {
                   })
               }}
             </p>
-
-            // Dropdown menu
-            <div class=move || {
-              "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-            }>
-              <DropDownMenu post_author_id=post().map(|post| post.author_id).unwrap_or_default()/>
-            </div>
             <br />
             <p>{move || post().map(|post| post.contents)}</p>
           // TODO use the post's timestamp
