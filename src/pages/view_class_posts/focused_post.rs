@@ -19,7 +19,7 @@ use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 use crate::pages::view_class_posts::class::ClassId;
-use crate::pages::view_class_posts::question_tile::DropDownMenu;
+use crate::pages::view_class_posts::question_tile::FocusedDropdown;
 use ev::MouseEvent;
 
 #[derive(Params, PartialEq, Clone)]
@@ -212,12 +212,12 @@ pub fn FocusedPost() -> impl IntoView {
               </button>
               // Dropdown menu
               <div class=move || {
-            if menu_invisible() {
-              "hidden"
-            } else {
-              "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-            }}>
-                <DropDownMenu post_author_id=post().map(|post| post.author_id).unwrap_or_default()/>
+                if menu_invisible() {
+                  "hidden"
+                } else {
+                  "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                }}>
+                  <FocusedDropdown post_author_id=post().map(|post| post.author_id).unwrap_or_default()/>
               </div>
             </div>
 
