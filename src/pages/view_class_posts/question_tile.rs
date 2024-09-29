@@ -68,6 +68,51 @@ pub fn DropDownMenu(post_author_id: i32) -> impl IntoView {
 }
 
 #[component]
+pub fn FocusedDropdown(post_author_id: i32) -> impl IntoView {
+  let global_state: GlobalState = expect_context::<GlobalState>();
+  let is_on_my_post = move || global_state.id.get() == Some(post_author_id);
+  let is_professor = move || global_state.role.get() == Some("instructor".to_string());
+
+  view! {
+    <div class="pr-2 text-right">
+      {move || {
+        if is_professor() {
+          view! {
+            <button>remove</button>
+            <button>pin</button>
+          }
+            .into_view()
+        } else {
+          view! {
+            <div class="p-3 rounded-md w-30">
+              <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"> 
+                <span class="ml-2">Resolve</span>
+              </button>
+              <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"> 
+                <span class="ml-2">Remove</span>
+              </button>
+            </div>
+          }
+            .into_view()
+        }
+      }}
+      {move || {
+        if is_on_my_post() {
+          Some(
+            view! {
+              // <button>Resolve</button>
+              // <button>Remove</button>
+            },
+          )
+        } else {
+          None
+        }
+      }}
+    </div>
+  }
+}
+
+#[component]
 pub fn QuestionTile(
     post: Post,
     is_resolved: Signal<bool>,
