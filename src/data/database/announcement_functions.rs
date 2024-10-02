@@ -64,8 +64,10 @@ pub async fn post_announcement(new_announcement_info: AddAnnouncementInfo, user_
          VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
             RETURNING
             announcementid as announcement_id,
+            time,
             title,
             contents,
+            classid as class_id,
             authorid as author_id")
         .bind(new_announcement_info.class_id)
         .bind(user_id)
