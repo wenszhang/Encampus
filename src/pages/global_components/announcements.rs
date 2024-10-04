@@ -2,14 +2,16 @@ use crate::data::database::announcement_functions::{post_announcement, AddAnnoun
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use crate::data::global_state::GlobalState;
 use leptos::*;
+use leptos_router::use_params;
 use crate::pages::view_class_posts::class::ClassId;
 
 #[component]
 
 //TODO handle too many announcements and href to announcements page
-pub fn Announcements(announcements: Vec<AnnouncementInfo>, class_id: i32) -> impl IntoView {
+pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
   let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
-  let global_state_clone = global_state.clone();
+  let class_id = use_params::<ClassId>();
+  let is_instructor = move || global_state.role.get() == Some("instructor".to_string());
 
   let (is_expanded, set_is_expanded) = create_signal(true);
   let (title, set_title) = create_signal(String::new());
@@ -56,8 +58,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>, class_id: i32) -> imp
         </div>
 
       {move || {
-                let role = global_state_clone.role.get().unwrap();
-                if role == "instructor" {
+                if is_instructor() {
                     view! {
                         <div class="flex flex-col p-4">
                             <input
@@ -79,20 +80,13 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>, class_id: i32) -> imp
                                     let new_announcement = AddAnnouncementInfo {
                                         title: title.get(),
                                         contents: contents.get(),
-                                        class_id,
+                                        class_id: class_id.get_untracked().unwrap().class_id,
                                     };
                                     add_announcement_action.dispatch(new_announcement);
                                 }
                             >
                                 "Post Announcement"
                             </button>
-                            {move || if let Some(ref err) = error.get() {
-                                view! {
-                                    <div class="text-red-500 mt-2">{err.clone()}</div>
-                                }
-                            } else {
-                                view! { <div></div> }
-                            }}
                         </div>
                     }
                 } else {
