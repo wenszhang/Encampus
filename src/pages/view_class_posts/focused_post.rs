@@ -192,7 +192,23 @@ pub fn FocusedPost() -> impl IntoView {
         <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
           <DarkenedCard class="relative p-5">
             <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
-            <FocusedDropdown post_author_id=post().map(|post| post.author_id).unwrap_or_default()/> // Dropdown menu
+
+            {post().map(|post| post.author_id)
+              .filter(|author_id| *author_id == global_state.id.get().unwrap_or_default())
+              .or_else(|| {
+                if instructor() == Some(global_state.user_name.get().unwrap_or_default()) {
+                  Some(global_state.id.get().unwrap_or_default())
+                } else {
+                  None
+                }
+              })
+              .map(|_|{
+                view! {
+                  <FocusedDropdown post_author_id=post().map(|post| post.author_id).unwrap_or_default()/> // Dropdown menu
+                }
+              })
+            }
+            
 
             <p class="text-sm font-light">
               "Posted by " {move || post().map(|post| post.author_first_name)} " "
