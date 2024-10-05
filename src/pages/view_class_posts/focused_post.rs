@@ -17,7 +17,8 @@ use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 use crate::pages::view_class_posts::class::ClassId;
-use crate::pages::view_class_posts::question_tile::FocusedDropdown;
+use crate::resources::images::svgs::dots_icon::DotsIcon;
+use ev::MouseEvent;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
@@ -59,6 +60,7 @@ pub struct AddReplyInfo {
     anonymous: bool,
 }
 
+
 #[component]
 pub fn FocusedPost() -> impl IntoView {
     // Fetch post id from route in the format of "class/:class_id/:post_id"
@@ -68,7 +70,12 @@ pub fn FocusedPost() -> impl IntoView {
     let (order_option, set_value) = create_signal("Newest First".to_string());
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
-    let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
+    let posts_resource = expect_context::<Resource<PostFetcher, Vec<Post>>>();
+    let (posts, set_posts) = create_signal(None::<Vec<Post>>);
+    posts_resource.get().map(|posts| {
+      set_posts(Some(posts));
+    });
+
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
             Some(get_post_details(post_id.post_id).await.unwrap())
@@ -121,7 +128,7 @@ pub fn FocusedPost() -> impl IntoView {
                     if let Ok(_) =
                         remove_post(post_id, global_state.id.get_untracked().unwrap()).await
                     {
-                        posts.update(|posts| {
+                        set_posts.update(|posts| {
                             if let Some(index) = posts
                                 .as_mut()
                                 .unwrap()
@@ -204,7 +211,10 @@ pub fn FocusedPost() -> impl IntoView {
               })
               .map(|_|{
                 view! {
-                  <FocusedDropdown post_author_id=post().map(|post| post.author_id).unwrap_or_default()/> // Dropdown menu
+                  <FocusedDropdown post_author_id=post().map(|post| post.author_id).unwrap_or_default() 
+                                   post_id=post().map(|post| post.post_id).unwrap_or_default()
+                                   class_id=class_id().unwrap().class_id
+                                   posts=set_posts/>// Dropdown menu
                 }
               })
             }
@@ -507,4 +517,117 @@ pub async fn get_post_details(post_id: i32) -> Result<(PostDetails, Vec<Reply>),
         .fetch_all(&pool)
     );
     Ok((post.unwrap().unwrap(), replies.unwrap()))
+}
+
+
+
+
+#[component]
+pub fn FocusedDropdown(post_author_id: i32, post_id: i32, class_id: i32, posts: WriteSignal<Option<Vec<Post>>>) -> impl IntoView {
+  let global_state: GlobalState = expect_context::<GlobalState>();
+  let is_on_my_post = move || global_state.id.get() == Some(post_author_id);
+  let is_professor = move || global_state.role.get() == Some("instructor".to_string());
+  let (notification_details, set_notification_details) =
+        create_signal(None::<NotificationDetails>);
+
+  let remove_action = create_action(move |post_id: &PostId| {
+    let post_id = post_id.post_id;
+    async move {
+        match get_post_details(post_id).await {
+            Ok(current_post) => {
+                if let Ok(_) =
+                    remove_post(post_id, global_state.id.get_untracked().unwrap()).await
+                {
+                    posts.update(|posts| {
+                        if let Some(index) = posts
+                            .as_mut()
+                            .unwrap()
+                            .iter()
+                            .position(|post| post.post_id == current_post.0.post_id)
+                        {
+                            posts.as_mut().unwrap().remove(index);
+                        }
+
+                        let navigate = leptos_router::use_navigate();
+                        navigate(
+                            format!("/classes/{}", class_id,)
+                                .as_str(),
+                            Default::default(),
+                        );
+                    });
+                }
+            }
+            Err(_) => {
+                logging::error!("Attempt to remove post failed. Please try again");
+                set_notification_details(Some(NotificationDetails {
+                    message: "Failed to remove post. Please try again.".to_string(),
+                    notification_type: NotificationType::Error,
+                }));
+            }
+        }
+    }
+  });
+
+  let (menu_invisible, set_menu_invisible) = create_signal(true);
+
+
+  let toggle_menu = move |e: MouseEvent| {
+    e.stop_propagation();
+    set_menu_invisible.update(|visible| *visible = !*visible);
+  };
+
+  view! {
+    <div class="flex absolute top-0 right-2 z-20 items-center">
+    <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+      <DotsIcon size="36px" />
+    </button>
+    // Dropdown menu
+    <div class=move || {
+      if menu_invisible() {
+        "hidden"
+      } else {
+        "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+      }}>
+
+
+      <div class="pr-2 text-right">
+        {move || {
+          if is_professor() {
+            view! {
+              <button>remove</button>
+              <button>pin</button>
+            }
+              .into_view()
+          } else {
+            view! {
+              <div class="p-3 rounded-md w-30">
+                <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                > 
+                  <span class="ml-2">Resolve</span>
+                </button>
+                <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                on:click = move |_| {remove_action.dispatch(PostId{post_id: post_id})}> 
+                  <span class="ml-2">Remove</span>
+                </button>
+              </div>
+            }
+              .into_view()
+          }
+        }}
+        {move || {
+          if is_on_my_post() {
+            Some(
+              view! {
+                // <button>Resolve</button>
+                // <button>Remove</button>
+              },
+            )
+          } else {
+            None
+          }
+        }}
+      </div>
+    </div>
+    </div>
+  }
 }
