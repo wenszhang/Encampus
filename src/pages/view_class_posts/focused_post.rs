@@ -214,7 +214,8 @@ pub fn FocusedPost() -> impl IntoView {
                   <FocusedDropdown post_author_id=post().map(|post| post.author_id).unwrap_or_default() 
                                    post_id=post().map(|post| post.post_id).unwrap_or_default()
                                    class_id=class_id().unwrap().class_id
-                                   posts=set_posts/>// Dropdown menu
+                                   posts=set_posts
+                                   post=post().unwrap()/>// Dropdown menu
                 }
               })
             }
@@ -523,7 +524,7 @@ pub async fn get_post_details(post_id: i32) -> Result<(PostDetails, Vec<Reply>),
 
 
 #[component]
-pub fn FocusedDropdown(post_author_id: i32, post_id: i32, class_id: i32, posts: WriteSignal<Option<Vec<Post>>>) -> impl IntoView {
+pub fn FocusedDropdown(post_author_id: i32, post_id: i32, class_id: i32, posts: WriteSignal<Option<Vec<Post>>>, post: PostDetails) -> impl IntoView {
   let global_state: GlobalState = expect_context::<GlobalState>();
   let is_on_my_post = move || global_state.id.get() == Some(post_author_id);
   let is_professor = move || global_state.role.get() == Some("instructor".to_string());
@@ -570,7 +571,6 @@ pub fn FocusedDropdown(post_author_id: i32, post_id: i32, class_id: i32, posts: 
 
   let (menu_invisible, set_menu_invisible) = create_signal(true);
 
-
   let toggle_menu = move |e: MouseEvent| {
     e.stop_propagation();
     set_menu_invisible.update(|visible| *visible = !*visible);
@@ -601,12 +601,34 @@ pub fn FocusedDropdown(post_author_id: i32, post_id: i32, class_id: i32, posts: 
           } else {
             view! {
               <div class="p-3 rounded-md w-30">
+                {if post.resolved {
+                  view! {
+                    <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| {
+                      let resolve_post = resolve_post;
+                      spawn_local(async move {
+                        resolve_post(post_id, false).await.unwrap();
+                      });
+                    }> 
+                      <span class="ml-2">Unresolve</span>
+                    </button>
+                  }
+                } else {
+                  view! {
+                    <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| {
+                      let resolve_post = resolve_post;
+                      spawn_local(async move {
+                        resolve_post(post_id, true).await.unwrap();
+                      });
+                    }> 
+                      <span class="ml-2">Resolve</span>
+                    </button>
+                  }
+                }}
+                
                 <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                > 
-                  <span class="ml-2">Resolve</span>
-                </button>
-                <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                on:click = move |_| {remove_action.dispatch(PostId{post_id: post_id})}> 
+                on:click =move |_| {remove_action.dispatch(PostId{post_id: post_id})}> 
                   <span class="ml-2">Remove</span>
                 </button>
               </div>
