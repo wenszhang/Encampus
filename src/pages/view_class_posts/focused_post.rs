@@ -304,14 +304,12 @@ pub fn FocusedPost() -> impl IntoView {
           </DarkenedCard>
           <div class="flex gap-5 justify-end">
             <div class="flex items-center cursor-pointer select-none">
-
               // For some crazy reason removing this makes the dropdown up above not show up
               // It's totally not related but no clue why
               {if post().map(|post| post.author_id)
                 == Some(global_state.id.get().unwrap_or_default())
                 || instructor() == Some(global_state.user_name.get().unwrap_or_default())
               {}}
-
             </div>
           </div>
         </Suspense>
@@ -523,7 +521,7 @@ pub fn FocusedDropdown(
             {move || {
               view! {
                 <div class="p-3 rounded-md w-30">
-                  {if post.resolved == true {
+                  {if post.resolved {
                     view! {
                       <button
                         class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
