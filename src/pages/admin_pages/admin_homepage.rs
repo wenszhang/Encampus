@@ -3,6 +3,8 @@ use crate::data::database::user_functions::get_users;
 use crate::pages::global_components::header::Header;
 use leptos::{component, create_resource, view, For, IntoView, Signal, Suspense};
 
+use leptos_router::A;
+
 #[component]
 pub fn AdminHomePage() -> impl IntoView {
     let users = create_resource(|| {}, |_| async { get_users().await.unwrap_or_default() });
@@ -49,7 +51,12 @@ pub fn AdminHomePage() -> impl IntoView {
             <div class="mt-4 space-y-2"></div>
             <For each=move || classes().unwrap_or_default() key=|class| class.id let:class>
               <div class="grid grid-cols-2 gap-4 p-2 border-b border-gray-200">
-                <div>{class.name}</div>
+                <A
+                  href=format!("/classes/{}", class.id)
+                  class="text-blue-500 underline hover:text-blue-700"
+                >
+                  {class.name}
+                </A>
                 <div>{class.instructor}</div>
               </div>
             </For>
