@@ -489,7 +489,6 @@ pub fn FocusedDropdown(
                                 }
                             }
                         }
-                        // Might want to navigate back to class page here but not sure if that's the best action
                     });
                 }
             }
@@ -501,11 +500,7 @@ pub fn FocusedDropdown(
     let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
 
     view! {
-      <div
-        class="flex absolute top-0 right-2 z-20 items-center"
-        on:mouseenter=move |_| set_menu_visible(true)
-        on:mouseleave=move |_| set_menu_visible(false)
-      >
+      <div class="flex absolute top-0 right-2 z-20 items-center">
         <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
           <DotsIcon size="36px" />
         </button>
