@@ -17,6 +17,8 @@ use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 use crate::pages::view_class_posts::class::ClassId;
+use crate::resources::images::svgs::dots_icon::DotsIcon;
+
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
     pub post_id: i32,
@@ -112,44 +114,6 @@ pub fn FocusedPost() -> impl IntoView {
         }
     });
 
-    let remove_action = create_action(move |post_id: &PostId| {
-        let post_id = post_id.post_id;
-        async move {
-            match get_post_details(post_id).await {
-                Ok(current_post) => {
-                    if let Ok(_) =
-                        remove_post(post_id, global_state.id.get_untracked().unwrap()).await
-                    {
-                        posts.update(|posts| {
-                            if let Some(index) = posts
-                                .as_mut()
-                                .unwrap()
-                                .iter()
-                                .position(|post| post.post_id == current_post.0.post_id)
-                            {
-                                posts.as_mut().unwrap().remove(index);
-                            }
-
-                            let navigate = leptos_router::use_navigate();
-                            navigate(
-                                format!("/classes/{}", class_id.get_untracked().unwrap().class_id,)
-                                    .as_str(),
-                                Default::default(),
-                            );
-                        });
-                    }
-                }
-                Err(_) => {
-                    logging::error!("Attempt to remove post failed. Please try again");
-                    set_notification_details(Some(NotificationDetails {
-                        message: "Failed to remove post. Please try again.".to_string(),
-                        notification_type: NotificationType::Error,
-                    }));
-                }
-            }
-        }
-    });
-
     fn sort_replies(replies: Vec<Reply>, order: &str) -> Vec<Reply> {
         let mut sorted_replies = replies.clone();
         match order {
@@ -187,8 +151,34 @@ pub fn FocusedPost() -> impl IntoView {
     view! {
       <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
         <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
-          <DarkenedCard class="p-5">
+          <DarkenedCard class="relative p-5">
             <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
+
+            <div class="flex gap-5 justify-end">
+              <div class="flex items-center cursor-pointer select-none">
+                // Post Dropdown
+                {post()
+                  .map(|post| post.author_id)
+                  .filter(|&author_id| author_id == global_state.id.get().unwrap_or_default())
+                  .or_else(|| {
+                    if instructor() == Some(global_state.user_name.get().unwrap_or_default()) {
+                      Some(class_id.get().unwrap().class_id)
+                    } else {
+                      None
+                    }
+                  })
+                  .map(|_| {
+                    view! {
+                      <FocusedDropdown
+                        class_id=class_id.get().unwrap().class_id
+                        posts=posts
+                        post=post().unwrap()
+                      />
+                    }
+                  })}
+              </div>
+            </div>
+
             <p class="text-sm font-light">
               "Posted by " {move || post().map(|post| post.author_first_name)} " "
               {move || post().map(|post| post.author_last_name)}
@@ -314,64 +304,12 @@ pub fn FocusedPost() -> impl IntoView {
           </DarkenedCard>
           <div class="flex gap-5 justify-end">
             <div class="flex items-center cursor-pointer select-none">
-
+              // For some crazy reason removing this makes the dropdown up above not show up
+              // It's totally not related but no clue why
               {if post().map(|post| post.author_id)
                 == Some(global_state.id.get().unwrap_or_default())
                 || instructor() == Some(global_state.user_name.get().unwrap_or_default())
-              {
-                if post().map(|post| post.resolved) == Some(false) {
-                  view! {
-                    <button
-                      class="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-700"
-                      on:click=move |_| { remove_action.dispatch(post_id().unwrap()) }
-                    >
-                      "Remove Post"
-                    </button>
-                    <span class="mx-2">"Resolve:"</span>
-                    <input
-                      type="checkbox"
-                      id="resolveToggle"
-                      class="mx-2"
-                      prop:checked=false
-                      on:change=move |_| {
-                        let resolve_post = resolve_post;
-                        spawn_local(async move {
-                          resolve_post(post_id().unwrap().post_id, true).await.unwrap();
-                        });
-                      }
-                    />
-                  }
-                } else {
-                  view! {
-                    <button
-                      class="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-700"
-                      on:click=move |_| { remove_action.dispatch(post_id().unwrap()) }
-                    >
-                      "Remove Post"
-                    </button>
-                    <span class="mx-2">"Resolved:"</span>
-                    <input
-                      type="checkbox"
-                      id="resolveToggle"
-                      class="mx-2"
-                      prop:checked=true
-                      on:change=move |_| {
-                        let resolve_post = resolve_post;
-                        spawn_local(async move {
-                          resolve_post(post_id().unwrap().post_id, false).await.unwrap();
-                        });
-                      }
-                    />
-                  }
-                }
-              } else {
-                view! {
-                  // Work around cause rust wants there to be and else case so effectively empty else case
-                  <span class="mx-2">""</span>
-                  <div></div>
-                }
-              }}
-
+              {}}
             </div>
           </div>
         </Suspense>
@@ -486,4 +424,133 @@ pub async fn get_post_details(post_id: i32) -> Result<(PostDetails, Vec<Reply>),
         .fetch_all(&pool)
     );
     Ok((post.unwrap().unwrap(), replies.unwrap()))
+}
+
+#[component]
+pub fn FocusedDropdown(
+    class_id: i32,
+    posts: Resource<PostFetcher, Vec<Post>>,
+    post: PostDetails,
+) -> impl IntoView {
+    let global_state: GlobalState = expect_context::<GlobalState>();
+    let (_notification_details, set_notification_details) =
+        create_signal(None::<NotificationDetails>);
+
+    let remove_action = create_action(move |post_id: &PostId| {
+        let post_id = post_id.post_id;
+        async move {
+            match get_post_details(post_id).await {
+                Ok(current_post) => {
+                    if let Ok(_) =
+                        remove_post(post_id, global_state.id.get_untracked().unwrap()).await
+                    {
+                        posts.update(|posts| {
+                            if let Some(index) = posts
+                                .as_mut()
+                                .unwrap()
+                                .iter()
+                                .position(|post| post.post_id == current_post.0.post_id)
+                            {
+                                posts.as_mut().unwrap().remove(index);
+                            }
+
+                            let navigate = leptos_router::use_navigate();
+                            navigate(
+                                format!("/classes/{}", class_id,).as_str(),
+                                Default::default(),
+                            );
+                        });
+                    }
+                }
+                Err(_) => {
+                    logging::error!("Attempt to remove post failed. Please try again");
+                    set_notification_details(Some(NotificationDetails {
+                        message: "Failed to remove post. Please try again.".to_string(),
+                        notification_type: NotificationType::Error,
+                    }));
+                }
+            }
+        }
+    });
+
+    let resolve_action = create_action(move |post_id: &PostId| {
+        let post_id = post_id.post_id;
+        async move {
+            if let Ok(current_post) = get_post_details(post_id).await {
+                if (resolve_post(post_id, !current_post.0.resolved).await).is_ok() {
+                    posts.update(|posts| {
+                        if let Some(posts) = posts.as_mut() {
+                            if let Some(index) = posts
+                                .iter()
+                                .position(|post| post.post_id == current_post.0.post_id)
+                            {
+                                if let Some(post) = posts.get_mut(index) {
+                                    post.resolved = !post.resolved;
+                                }
+                            }
+                        }
+                    });
+                }
+            }
+        }
+    });
+
+    let (menu_visible, set_menu_visible) = create_signal(false);
+
+    let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
+
+    view! {
+      <div class="flex absolute top-0 right-2 z-20 items-center">
+        <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+          <DotsIcon size="36px" />
+        </button>
+        <div class=move || {
+          if menu_visible.get() {
+            "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+          } else {
+            "hidden"
+          }
+        }>
+
+          <div class="pr-2 text-right">
+            {move || {
+              view! {
+                <div class="p-3 rounded-md w-30">
+                  {if post.resolved {
+                    view! {
+                      <button
+                        class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                        on:click=move |_| {
+                          resolve_action.dispatch(PostId { post_id: post.post_id })
+                        }
+                      >
+                        <span class="ml-2">Unresolve</span>
+                      </button>
+                    }
+                  } else {
+                    view! {
+                      <button
+                        class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                        on:click=move |_| {
+                          resolve_action.dispatch(PostId { post_id: post.post_id })
+                        }
+                      >
+                        <span class="ml-2">Resolve</span>
+                      </button>
+                    }
+                  }}
+                  <button
+                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| { remove_action.dispatch(PostId { post_id: post.post_id }) }
+                  >
+                    <span class="ml-2">Remove</span>
+                  </button>
+                </div>
+              }
+                .into_view()
+            }}
+          </div>
+        </div>
+      </div>
+    }
 }

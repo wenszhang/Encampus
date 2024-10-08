@@ -12,7 +12,7 @@ use crate::{
         home::Home,
         login_page::LoginPage,
         register_page::RegisterPage,
-        view_class_posts::{class::ClassPage, create_post::CreatePost, focused_post::FocusedPost},
+        view_class_posts::{class::ClassPage, focused_post::FocusedPost},
         view_enrolled_classes::classes::ClassesPage,
     },
 };
