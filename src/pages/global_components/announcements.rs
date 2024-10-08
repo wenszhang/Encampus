@@ -3,41 +3,42 @@ use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use crate::data::global_state::GlobalState;
 use leptos::*;
 use leptos_router::use_params;
+use leptos_router::A;
+
 use crate::pages::view_class_posts::class::ClassId;
 
 #[component]
 
 //TODO handle too many announcements and href to announcements page
 pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
-  let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
-  let class_id = use_params::<ClassId>();
-  let is_instructor = move || global_state.role.get() == Some("instructor".to_string());
+    let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
+    let class_id = use_params::<ClassId>();
+    let class_id_val = class_id.get_untracked().unwrap().class_id;
+    let is_instructor = move || global_state.role.get() == Some("instructor".to_string());
 
-  let (is_expanded, set_is_expanded) = create_signal(true);
-  let (title, set_title) = create_signal(String::new());
-  let (contents, set_contents) = create_signal(String::new());
-  let (error, set_error) = create_signal(None::<String>);
+    let (is_expanded, set_is_expanded) = create_signal(true);
+    let (title, set_title) = create_signal(String::new());
+    let (contents, set_contents) = create_signal(String::new());
+    let (error, set_error) = create_signal(None::<String>);
 
-  let mut sorted_announcements = announcements.clone();
-  sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
+    let mut sorted_announcements = announcements.clone();
+    sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
 
-  let on_input = |setter: WriteSignal<String>| {
-    move |ev| {
-      setter(event_target_value(&ev));
-    }
-  };
-
-  let add_announcement_action = create_action(move |announcementInfo: &AddAnnouncementInfo| {
-    let announcementInfo = announcementInfo.clone();
-    async move {
-      match post_announcement(announcementInfo, global_state.id.get_untracked().unwrap()).await {
-        Ok(announcement) => {
-
+    let on_input = |setter: WriteSignal<String>| {
+        move |ev| {
+            setter(event_target_value(&ev));
         }
-        Err(_) => logging::error!("Attempt to post post failed. Please try again"),
-      }
-    }
-  });
+    };
+
+    let add_announcement_action = create_action(move |announcementInfo: &AddAnnouncementInfo| {
+        let announcementInfo = announcementInfo.clone();
+        async move {
+            match post_announcement(announcementInfo, global_state.id.get_untracked().unwrap()).await {
+                Ok(announcement) => {}
+                Err(_) => logging::error!("Attempt to post post failed. Please try again"),
+            }
+        }
+    });
 
     view! {
       <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg bg-card-bg">
@@ -80,7 +81,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                                     let new_announcement = AddAnnouncementInfo {
                                         title: title.get(),
                                         contents: contents.get(),
-                                        class_id: class_id.get_untracked().unwrap().class_id,
+                                        class_id: class_id_val,
                                     };
                                     add_announcement_action.dispatch(new_announcement);
                                 }
@@ -109,11 +110,13 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                     .map(|announcement| {
                       view! {
                         <li class="p-2 border-b border-gray-300 hover:bg-gray-100">
+                          <A href={format!("/classes/{}/announcement/{}", class_id_val, announcement.announcement_id)} class="block">
                           <h4 class="font-bold">{announcement.title.clone()}</h4>
                           <p class="text-sm">{announcement.contents.clone()}</p>
-                          <p class="text-xs text-gray-500">
-                            {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
-                          </p>
+                            <p class="text-xs text-gray-500">
+                                {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
+                            </p>
+                          </A>
                         </li>
                       }
                     })
@@ -121,7 +124,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                 </ul>
               }
             } else {
-              view! { <ul></ul> }
+                view! { <ul></ul> }
             }
           }}
         </div>

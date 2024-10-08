@@ -81,3 +81,25 @@ pub async fn post_announcement(new_announcement_info: AddAnnouncementInfo, user_
     Ok(announcement)
 }
 
+#[server(GetAnnouncementByID)]
+pub async fn get_announcement_by_id(announcement_id: i32) -> Result<AnnouncementInfo, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    // Access the database connection pool
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    // Fetch the specific announcement by announcement_id
+    let announcement: AnnouncementInfo =
+        sqlx::query_as("SELECT announcementid as announcement_id, time, title, contents, classid as class_id, authorid as author_id
+                        FROM announcements
+                        WHERE announcementid = $1")
+            .bind(announcement_id)
+            .fetch_one(&pool)
+            .await
+            .expect("select should work");
+
+    Ok(announcement)
+}
