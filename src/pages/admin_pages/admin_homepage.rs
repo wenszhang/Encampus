@@ -1,8 +1,8 @@
 use crate::data::database::class_functions::get_class_list;
 use crate::data::database::user_functions::get_users;
 use crate::pages::global_components::header::Header;
-use leptos::{component, create_resource, view, For, IntoView, Signal, Suspense};
-
+use leptos::*;
+use leptos::{component, create_resource, view, For, IntoView, Signal};
 use leptos_router::A;
 
 #[component]
@@ -13,12 +13,22 @@ pub fn AdminHomePage() -> impl IntoView {
         |_| async { get_class_list().await.unwrap_or_default() },
     );
 
+    let (is_visible, set_is_visible) = create_signal(false);
+
     view! {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
       <div class="flex mx-6 mt-6 space-x-4">
         <div class="w-1/2">
           <div class="p-6 bg-white rounded-lg shadow-md">
-            <h2 class="mb-4 text-lg font-semibold">"Users"</h2>
+            <div class="flex justify-between items-center">
+              <h2 class="mb-4 text-lg font-semibold">"Users"</h2>
+              <button
+                class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+                on:click=move |_| set_is_visible(!is_visible())
+              >
+                "Create User"
+              </button>
+            </div>
 
             <div class="grid grid-cols-3 gap-4">
               <div class="font-semibold">"Name"</div>
@@ -41,7 +51,15 @@ pub fn AdminHomePage() -> impl IntoView {
 
         <div class="w-1/2">
           <div class="p-6 bg-white rounded-lg shadow-md">
-            <h2 class="mb-4 text-lg font-semibold">"Open Classes"</h2>
+            <div class="flex justify-between items-center">
+              <h2 class="mb-4 text-lg font-semibold">"Open Classes"</h2>
+              <button
+                class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+                on:click=move |_| set_is_visible(!is_visible())
+              >
+                "Create Class"
+              </button>
+            </div>
 
             <div class="grid grid-cols-2 gap-4">
               <div class="font-semibold">"Course Name"</div>
@@ -65,4 +83,9 @@ pub fn AdminHomePage() -> impl IntoView {
 
       </div>
     }
+}
+
+#[component]
+fn AddUserOptions() -> impl IntoView {
+    view! { <div class="p-6 bg-white rounded-lg shadow-md"></div> }
 }
