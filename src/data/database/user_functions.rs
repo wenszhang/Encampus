@@ -91,3 +91,20 @@ pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
 
     Ok(user_id)
 }
+
+#[server(GetUsers)]
+pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let users: Vec<User> =
+        sqlx::query_as("select username, firstname, lastname, id, role from users order by role")
+            .fetch_all(&pool)
+            .await
+            .expect("no users found");
+    Ok(users)
+}

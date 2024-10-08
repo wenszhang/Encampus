@@ -12,6 +12,7 @@ use serde::{Deserialize, Serialize};
 pub struct ClassInfo {
     pub id: i32,
     pub name: String,
+    pub instructor: String,
 }
 
 /**
@@ -39,7 +40,8 @@ pub async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
     ))?;
 
     let classes: Vec<ClassInfo> =
-        sqlx::query_as("SELECT courseid as id, coursename as name from classes")
+        sqlx::query_as("select classes.courseid as id, classes.coursename as name, CONCAT(users.firstname, ' ', users.lastname) as instructor 
+        from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id")
             .fetch_all(&pool)
             .await
             .expect("select should work");
