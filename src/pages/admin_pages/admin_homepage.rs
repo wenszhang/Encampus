@@ -13,7 +13,7 @@ pub fn AdminHomePage() -> impl IntoView {
 
     view! {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
-      <div class="flex mt-6 space-x-4">
+      <div class="flex mx-6 mt-6 space-x-4">
         <div class="w-1/2">
           <div class="p-6 bg-white rounded-lg shadow-md">
             <h2 class="mb-4 text-lg font-semibold">"Users"</h2>
