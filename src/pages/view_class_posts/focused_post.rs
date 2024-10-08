@@ -18,7 +18,6 @@ use crate::pages::global_components::notification::{
 };
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
-use ev::MouseEvent;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
@@ -70,10 +69,6 @@ pub fn FocusedPost() -> impl IntoView {
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
-    // let (_posts, set_posts) = create_signal(None::<Vec<Post>>);
-    // posts_resource.get().map(|posts| {
-    //   set_posts(Some(posts));
-    // });
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
@@ -119,67 +114,6 @@ pub fn FocusedPost() -> impl IntoView {
         }
     });
 
-    let remove_action = create_action(move |post_id: &PostId| {
-        let post_id = post_id.post_id;
-        async move {
-            match get_post_details(post_id).await {
-                Ok(current_post) => {
-                    if (remove_post(post_id, global_state.id.get_untracked().unwrap()).await)
-                        .is_ok()
-                    {
-                        posts.update(|posts| {
-                            if let Some(index) = posts
-                                .as_mut()
-                                .unwrap()
-                                .iter()
-                                .position(|post| post.post_id == current_post.0.post_id)
-                            {
-                                posts.as_mut().unwrap().remove(index);
-                            }
-
-                            let navigate = leptos_router::use_navigate();
-                            navigate(
-                                format!("/classes/{}", class_id.get_untracked().unwrap().class_id,)
-                                    .as_str(),
-                                Default::default(),
-                            );
-                        });
-                    }
-                }
-                Err(_) => {
-                    logging::error!("Attempt to remove post failed. Please try again");
-                    set_notification_details(Some(NotificationDetails {
-                        message: "Failed to remove post. Please try again.".to_string(),
-                        notification_type: NotificationType::Error,
-                    }));
-                }
-            }
-        }
-    });
-
-    let resolve_action = create_action(move |post_id: &PostId| {
-        let post_id = post_id.post_id;
-        async move {
-            if let Ok(current_post) = get_post_details(post_id).await {
-                if (resolve_post(post_id, !current_post.0.resolved).await).is_ok() {
-                    posts.update(|posts| {
-                        if let Some(posts) = posts.as_mut() {
-                            if let Some(index) = posts
-                                .iter()
-                                .position(|post| post.post_id == current_post.0.post_id)
-                            {
-                                if let Some(post) = posts.get_mut(index) {
-                                    post.resolved = !post.resolved;
-                                }
-                            }
-                        }
-                        // Might want to navigate back to class page here but not sure if that's the best action
-                    });
-                }
-            }
-        }
-    });
-
     fn sort_replies(replies: Vec<Reply>, order: &str) -> Vec<Reply> {
         let mut sorted_replies = replies.clone();
         match order {
@@ -214,13 +148,6 @@ pub fn FocusedPost() -> impl IntoView {
         })
     };
 
-    // let (menu_visible, set_menu_visible) = create_signal(false);
-
-    // let toggle_menu = {
-    //     // let menu_visible = menu_visible.clone();
-    //     move |_| set_menu_visible(!menu_visible.get())
-    // };
-
     view! {
       <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
         <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
@@ -229,11 +156,7 @@ pub fn FocusedPost() -> impl IntoView {
 
             <div class="flex gap-5 justify-end">
               <div class="flex items-center cursor-pointer select-none">
-
                 // Post Dropdown
-                // {if post().map(|post| post.author_id)
-                // == Some(global_state.id.get().unwrap_or_default())
-                // || instructor() == Some(global_state.user_name.get().unwrap_or_default())
                 {post()
                   .map(|post| post.author_id)
                   .filter(|&author_id| author_id == global_state.id.get().unwrap_or_default())
@@ -387,7 +310,7 @@ pub fn FocusedPost() -> impl IntoView {
               {if post().map(|post| post.author_id)
                 == Some(global_state.id.get().unwrap_or_default())
                 || instructor() == Some(global_state.user_name.get().unwrap_or_default())
-              {} else {}}
+              {}}
 
             </div>
           </div>
@@ -516,7 +439,7 @@ pub fn FocusedDropdown(
         create_signal(None::<NotificationDetails>);
 
     let remove_action = create_action(move |post_id: &PostId| {
-        let post_id = post.post_id;
+        let post_id = post_id.post_id;
         async move {
             match get_post_details(post_id).await {
                 Ok(current_post) => {
@@ -577,10 +500,7 @@ pub fn FocusedDropdown(
 
     let (menu_visible, set_menu_visible) = create_signal(false);
 
-    let toggle_menu = {
-        // let menu_visible = menu_visible.clone();
-        move |_| set_menu_visible(!menu_visible.get())
-    };
+    let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
 
     view! {
       <div
