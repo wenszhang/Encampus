@@ -92,6 +92,29 @@ pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
     Ok(user_id)
 }
 
+#[server(UpdateUser)]
+pub async fn update_user(user: User) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("update users set username = $1, firstname = $2, lastname = $3 where id = $4")
+        .bind(user.username.clone())
+        .bind(user.firstname.clone())
+        .bind(user.lastname.clone())
+        .bind(user.id)
+        .execute(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Unable to update user".to_string())
+        })?;
+
+    Ok(())
+}
+
 #[server(GetUsers)]
 pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};

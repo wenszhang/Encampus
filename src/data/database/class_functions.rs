@@ -85,3 +85,40 @@ pub async fn get_instructor(post_id: i32) -> Result<String, ServerFnError> {
     .expect("select should work");
     Ok(name)
 }
+
+#[server(AddStudentToClass)]
+pub async fn add_student_to_class(class_id: i32, user_id: i32) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("insert into enrolled (studentid, courseid) values ($1, $2)")
+        .bind(user_id)
+        .bind(class_id)
+        .execute(&pool)
+        .await
+        .expect("Failed adding user to class");
+    Ok(())
+}
+
+#[server(GetStudentsClasses)]
+pub async fn get_students_classes(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, CONCAT(users.firstname, ' ', users.lastname) as instructor 
+    from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id join enrolled on classes.courseid = enrolled.courseid where enrolled.studentid = $1")
+        .bind(user_id)
+        .fetch_all(&pool)
+        .await
+        .expect("select should work");
+
+    Ok(classes)
+}
