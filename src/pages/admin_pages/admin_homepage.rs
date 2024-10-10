@@ -1,9 +1,13 @@
+use std::collections::HashMap;
 use std::iter;
 
 use crate::data::database::class_functions::{
-    add_student_to_class, get_class_list, get_students_classes, ClassInfo,
+    add_class, add_student_to_class, get_class_list, get_students_classes,
+    remove_student_from_class, ClassInfo,
 };
-use crate::data::database::user_functions::{add_user, get_users, update_user, User};
+use crate::data::database::user_functions::{
+    add_user, get_users, get_users_by_role, update_user, User,
+};
 use crate::pages::global_components::header::Header;
 use leptos::ev::Event;
 use leptos::*;
@@ -19,17 +23,27 @@ pub fn AdminHomePage() -> impl IntoView {
     );
 
     let (new_user_visible, set_new_user_visible) = create_signal(false);
-    let(user_options_visible, set_user_options_visible) = create_signal(false);
-    let(display_user, set_display_user) = create_signal(User{username: "".to_string(), firstname: "".to_string(), lastname: "".to_string(), id: 0, role: "Student".to_string(),});
+    let (user_options_visible, set_user_options_visible) = create_signal(false);
+    let (display_user, set_display_user) = create_signal(User {
+        username: "".to_string(),
+        firstname: "".to_string(),
+        lastname: "".to_string(),
+        id: 0,
+        role: "Student".to_string(),
+    });
 
     view! {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
       <div class="mx-6 mt-6 space-x-4">
         <Show when=move || user_options_visible.get() fallback=|| ()>
-          <UserOptions user=display_user.get()/>
+          <UserOptions user=display_user() />
         </Show>
         <Show when=move || new_user_visible.get() fallback=|| ()>
-          <AddNewUser this_window_open=set_new_user_visible show_user_options=set_user_options_visible display_user=set_display_user/>
+          <AddNewUser
+            this_window_open=set_new_user_visible
+            show_user_options=set_user_options_visible
+            display_user=set_display_user
+          />
         </Show>
       </div>
 
@@ -54,11 +68,28 @@ pub fn AdminHomePage() -> impl IntoView {
 
             <div class="mt-4 space-y-2">
               <For each=move || users().unwrap_or_default() key=|user| user.id let:user>
-                <div class="grid grid-cols-3 gap-4 p-2 border-b border-gray-200">
-                  <div>{user.firstname} " " {user.lastname}</div>
-                  <div>{user.username}</div>
-                  <div>{user.role}</div>
-                </div>
+                {
+                  let cloned_user = user.clone();
+                  view! {
+                    <div class="grid grid-cols-3 gap-4 p-2 border-b border-gray-200">
+                      <a
+                        href="#"
+                        class="text-blue-600 underline"
+                        on:click=move |_| {
+                          set_display_user(cloned_user.clone());
+                          set_user_options_visible(!user_options_visible());
+                          set_new_user_visible(false);
+                        }
+                      >
+                        {user.firstname}
+                        " "
+                        {user.lastname}
+                      </a>
+                      <div>{user.username}</div>
+                      <div>{user.role}</div>
+                    </div>
+                  }
+                }
               </For>
 
             </div>
@@ -69,7 +100,6 @@ pub fn AdminHomePage() -> impl IntoView {
             <div class="flex justify-between items-center">
               <h2 class="mb-4 text-lg font-semibold">"Open Classes"</h2>
               <button class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue">
-                // on:click=move |_| set_is_visible(!is_visible())
                 "Create Class"
               </button>
             </div>
@@ -88,7 +118,7 @@ pub fn AdminHomePage() -> impl IntoView {
                 >
                   {class.name}
                 </A>
-                <div>{class.instructor}</div>
+                <div>{class.instructor_name}</div>
               </div>
             </For>
           </div>
@@ -109,6 +139,8 @@ fn UserOptions(user: User) -> impl IntoView {
     let (role_editable, set_role_editable) = create_signal(false);
     let (role, set_role) = create_signal(user.role.clone());
 
+    let (update_info, set_update_info) = create_signal(false);
+
     let all_classes = create_resource(
         || {},
         |_| async { get_class_list().await.unwrap_or_default() },
@@ -118,11 +150,11 @@ fn UserOptions(user: User) -> impl IntoView {
         |user_id| async move { get_students_classes(user_id).await.unwrap_or_default() },
     );
 
-    let on_input = |setter: WriteSignal<String>| {
-        move |ev| {
-            setter(event_target_value(&ev));
-        }
-    };
+    // let on_input = |setter: WriteSignal<String>| {
+    //     move |ev| {
+    //         setter(event_target_value(&ev));
+    //     }
+    // };
 
     let update_user_action = create_action(move |user: &User| {
         let user = user.clone();
@@ -139,10 +171,19 @@ fn UserOptions(user: User) -> impl IntoView {
         }
     });
 
-    let update_user_classes_action = create_action(move |class: &ClassInfo| {
-        let class = class.clone();
+    let (class_selections, set_class_selections) = create_signal(HashMap::new());
+
+    let add_user_classes_action = create_action(move |class_id: &i32| {
+        let class_id = *class_id;
         async move {
-            add_student_to_class(class.id, user.id).await.unwrap();
+            add_student_to_class(class_id, user.id).await.unwrap();
+        }
+    });
+
+    let remove_user_from_class_action = create_action(move |class_id: &i32| {
+        let class_id = *class_id;
+        async move {
+            remove_student_from_class(class_id, user.id).await.unwrap();
         }
     });
 
@@ -159,8 +200,12 @@ fn UserOptions(user: User) -> impl IntoView {
                 type="text"
                 value=user.firstname
                 readonly=move || !first_name_editable()
-                on:input=on_input(set_first_name)
+                on:input=move |ev| {
+                  set_first_name(event_target_value(&ev));
+                  set_update_info(true);
+                }
               />
+
               <div
                 class="ml-2 text-sm text-gray-500 cursor-pointer"
                 on:click=move |_| set_first_name_editable.update(|editable| *editable = !*editable)
@@ -174,7 +219,10 @@ fn UserOptions(user: User) -> impl IntoView {
                 type="text"
                 value=user.lastname
                 readonly=move || !last_name_editable()
-                on:input=on_input(set_last_name)
+                on:input=move |ev| {
+                  set_last_name(event_target_value(&ev));
+                  set_update_info(true);
+                }
               />
               <div
                 class="ml-2 text-sm text-gray-500 cursor-pointer"
@@ -189,7 +237,10 @@ fn UserOptions(user: User) -> impl IntoView {
                 type="text"
                 value=user.username
                 readonly=move || !username_editable()
-                on:input=on_input(set_username)
+                on:input=move |ev| {
+                  set_username(event_target_value(&ev));
+                  set_update_info(true)
+                }
               />
               <div
                 class="ml-2 text-sm text-gray-500 cursor-pointer"
@@ -201,7 +252,10 @@ fn UserOptions(user: User) -> impl IntoView {
             <div class="flex items-center">
               <select
                 class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-                on:change=on_input(set_role)
+                on:change=move |ev: web_sys::Event| {
+                  set_role(event_target_value(&ev));
+                  set_update_info(true)
+                }
                 prop:value=role
                 readonly=move || !role_editable()
               >
@@ -237,9 +291,10 @@ fn UserOptions(user: User) -> impl IntoView {
                     on:change=move |event| {
                       let checked = event_target_checked(&event);
                       let class = class.clone();
-                      if checked {
-                        update_user_classes_action.dispatch(class);
-                      }
+                      set_class_selections
+                        .update(move |selections| {
+                          selections.insert(class.id, checked);
+                        });
                     }
                   />
                 </li>
@@ -252,14 +307,23 @@ fn UserOptions(user: User) -> impl IntoView {
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
-              update_user_action
-                .dispatch(User {
-                  username: username.get(),
-                  firstname: first_name.get(),
-                  lastname: last_name.get(),
-                  role: role.get(),
-                  id: user.id,
-                });
+              if update_info() {
+                update_user_action
+                  .dispatch(User {
+                    username: username.get(),
+                    firstname: first_name.get(),
+                    lastname: last_name.get(),
+                    role: role.get(),
+                    id: user.id,
+                  });
+              }
+              for (class_id, selected) in class_selections.get().iter() {
+                if *selected {
+                  add_user_classes_action.dispatch(*class_id);
+                } else {
+                  remove_user_from_class_action.dispatch(*class_id);
+                }
+              }
             }
           >
             "Submit"
@@ -271,7 +335,11 @@ fn UserOptions(user: User) -> impl IntoView {
 }
 
 #[component]
-fn AddNewUser(this_window_open: WriteSignal<bool>, show_user_options: WriteSignal<bool>, display_user: WriteSignal<User>) -> impl IntoView {
+fn AddNewUser(
+    this_window_open: WriteSignal<bool>,
+    show_user_options: WriteSignal<bool>,
+    display_user: WriteSignal<User>,
+) -> impl IntoView {
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
@@ -350,10 +418,71 @@ fn AddNewUser(this_window_open: WriteSignal<bool>, show_user_options: WriteSigna
               set_last_name("".to_string());
               set_username("".to_string());
               set_role("Student".to_string());
-
               this_window_open.update(|value| *value = !*value);
               show_user_options.update(|value2| *value2 = !*value2);
             }
+          >
+            "Submit"
+          </button>
+        </div>
+      </div>
+    }
+}
+
+#[component]
+fn AddClass() -> impl IntoView {
+    let (class_name, set_class_name) = create_signal("".to_string());
+    let (instructor, set_instructor) = create_signal(0);
+    let instructors = create_resource(
+        || {},
+        |_| async {
+            get_users_by_role("instructor".to_string())
+                .await
+                .unwrap_or_default()
+        },
+    );
+
+    let add_class_action = create_action(move |class: &ClassInfo| {
+        let class = class.clone();
+        async move {
+            add_class().await.unwrap();
+        }
+    });
+
+    view! {
+      <div class="p-6 bg-white rounded-lg shadow-md">
+        <h2 class="mb-4 text-lg font-semibold">"New Class"</h2>
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Class Name"</label>
+            <input
+              type="text"
+              class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+            />
+          // on:input=on_input(set_first_name)
+          // prop:value=first_name
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Instructor"</label>
+            <select class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none">
+              // on:change=on_input(set_role)
+              // prop:value=role
+              <For
+                each=move || instructors().unwrap_or_default()
+                key=|instructor| instructor.id
+                let:instructor
+              >
+                <option value=instructor
+                  .id
+                  .to_string()>{instructor.firstname} " " {instructor.lastname}</option>
+              </For>
+            </select>
+          </div>
+        </div>
+        <div class="mt-4 text-right">
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {}
           >
             "Submit"
           </button>
