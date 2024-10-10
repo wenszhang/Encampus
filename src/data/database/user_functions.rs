@@ -69,7 +69,7 @@ pub async fn login(username: String) -> Result<User, ServerFnError> {
 }
 
 #[server(AddUser)]
-pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
+pub async fn add_user(user: User) -> Result<User, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -77,8 +77,13 @@ pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let UserId(user_id) = sqlx::query_as(
-        "insert into users(username, firstname, lastname, role) values($1, $2, $3, 'student') returning id",
+    let user: User = sqlx::query_as(
+        "insert into users(username, firstname, lastname, role) values($1, $2, $3, 'student') 
+        returning username,
+        firstname,
+        lastname,   
+        id,
+        role",
     )
     .bind(user.username.clone())
     .bind(user.firstname.clone())
@@ -89,7 +94,7 @@ pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
         ServerFnError::<NoCustomError>::ServerError("Unable to create user, username already exists".to_string())
     })?;
 
-    Ok(user_id)
+    Ok(user)
 }
 
 #[server(UpdateUser)]

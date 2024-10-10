@@ -29,7 +29,7 @@ pub fn AdminHomePage() -> impl IntoView {
           <UserOptions user=display_user.get()/>
         </Show>
         <Show when=move || new_user_visible.get() fallback=|| ()>
-          <AddNewUser />
+          <AddNewUser this_window_open=set_new_user_visible show_user_options=set_user_options_visible display_user=set_display_user/>
         </Show>
       </div>
 
@@ -271,7 +271,7 @@ fn UserOptions(user: User) -> impl IntoView {
 }
 
 #[component]
-fn AddNewUser() -> impl IntoView {
+fn AddNewUser(this_window_open: WriteSignal<bool>, show_user_options: WriteSignal<bool>, display_user: WriteSignal<User>) -> impl IntoView {
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
@@ -286,7 +286,8 @@ fn AddNewUser() -> impl IntoView {
     let add_user_action = create_action(move |user: &User| {
         let user = user.clone();
         async move {
-            add_user(user).await.unwrap();
+            let user = add_user(user).await.unwrap();
+            display_user(user);
         }
     });
     view! {
@@ -349,6 +350,9 @@ fn AddNewUser() -> impl IntoView {
               set_last_name("".to_string());
               set_username("".to_string());
               set_role("Student".to_string());
+
+              this_window_open.update(|value| *value = !*value);
+              show_user_options.update(|value2| *value2 = !*value2);
             }
           >
             "Submit"
