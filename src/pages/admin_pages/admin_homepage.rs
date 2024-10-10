@@ -19,18 +19,15 @@ pub fn AdminHomePage() -> impl IntoView {
     );
 
     let (new_user_visible, set_new_user_visible) = create_signal(false);
+    let(user_options_visible, set_user_options_visible) = create_signal(false);
+    let(display_user, set_display_user) = create_signal(User{username: "".to_string(), firstname: "".to_string(), lastname: "".to_string(), id: 0, role: "Student".to_string(),});
 
     view! {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
       <div class="mx-6 mt-6 space-x-4">
-        <UserOptions user=User {
-          username: "admin".to_string(),
-          firstname: "Admin".to_string(),
-          lastname: "User".to_string(),
-          id: 2,
-          role: "Admin".to_string(),
-        } />
-        // all_classes=classes().unwrap_or_default().clone()
+        <Show when=move || user_options_visible.get() fallback=|| ()>
+          <UserOptions user=display_user.get()/>
+        </Show>
         <Show when=move || new_user_visible.get() fallback=|| ()>
           <AddNewUser />
         </Show>
