@@ -3,7 +3,7 @@ use std::iter;
 
 use crate::data::database::class_functions::{
     add_class, add_student_to_class, get_class_list, get_students_classes,
-    remove_student_from_class, ClassInfo,
+    remove_student_from_class, update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
     add_user, get_users, get_users_by_role, update_user, User,
@@ -13,6 +13,7 @@ use leptos::ev::Event;
 use leptos::*;
 use leptos::{component, create_resource, view, For, IntoView, Signal};
 use leptos_router::A;
+use tracing_subscriber::field::display;
 
 #[component]
 pub fn AdminHomePage() -> impl IntoView {
@@ -32,10 +33,14 @@ pub fn AdminHomePage() -> impl IntoView {
         role: "Student".to_string(),
     });
     let (display_add_class, set_display_add_class) = create_signal(false);
+    let (display_class_options, set_display_class_options) = create_signal(false);
 
     view! {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
       <div class="mx-6 mt-6 space-x-4">
+        <Show when=move || display_class_options.get() fallback=|| ()>
+          <UserOptions user=display_user() />
+        </Show>
         <Show when=move || user_options_visible.get() fallback=|| ()>
           <UserOptions user=display_user() />
         </Show>
@@ -505,6 +510,109 @@ fn AddClass() -> impl IntoView {
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
               add_class_action.dispatch(|| {});
+            }
+          >
+            "Submit"
+          </button>
+        </div>
+      </div>
+    }
+}
+
+#[component]
+fn class_options(class: ClassInfo) -> impl IntoView {
+    let (class_name, set_class_name) = create_signal(class.name.clone());
+    let (class_name_editable, set_class_name_editable) = create_signal(false);
+    let (instructor_id, set_instructor_id) = create_signal(class.instructor_id.clone());
+    let (instructor_name_editable, set_instructor_name_editable) = create_signal(false);
+
+    let update_class_action = create_action(move |class: &ClassInfo| {
+        let class = class.clone();
+        async move {
+            update_class_info(class, instructor_id()).await.unwrap();
+        }
+    });
+
+    let instructors = create_resource(
+        || {},
+        |_| async {
+            get_users_by_role("instructor".to_string())
+                .await
+                .unwrap_or_default()
+        },
+    );
+
+    view! {
+      <div class="p-6 bg-white rounded-lg shadow-md">
+        <h2 class="mb-4 text-lg font-semibold">"Class Options"</h2>
+        <div class="grid grid-cols-1 gap-4">
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Class Name"</label>
+            <input
+              type="text"
+              class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              prop:value=class.name
+              readonly=move || !class_name_editable()
+              on:input=move |ev| {
+                set_class_name(event_target_value(&ev));
+              }
+            />
+            <div
+              class="ml-2 text-sm text-gray-500 cursor-pointer"
+              on:click=move |_| set_class_name_editable.update(|editable| *editable = !*editable)
+            >
+              {if class_name_editable() { "Save" } else { "Edit" }}
+            </div>
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Instructor"</label>
+            <select
+              class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              on:change=move |ev| {
+                let new_value = event_target_value(&ev);
+                set_instructor_id(new_value.parse().unwrap());
+              }
+              prop:value=move || instructor_id.get()
+            >
+              <For
+                each=move || instructors().unwrap_or_default()
+                key=|current_instructor| current_instructor.id
+                let:current_instructor
+              >
+                <option value=current_instructor
+                  .id>{current_instructor.firstname} " " {current_instructor.lastname}</option>
+              </For>
+            </select>
+            <div
+              class="ml-2 text-sm text-gray-500 cursor-pointer"
+              on:click=move |_| {
+                set_instructor_name_editable.update(|editable| *editable = !*editable)
+              }
+            >
+              {if instructor_name_editable() { "Save" } else { "Edit" }}
+            </div>
+          </div>
+
+        </div>
+
+        <div class="mt-4 text-right">
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              update_class_action
+                .dispatch(ClassInfo {
+                  id: class.id,
+                  name: class_name.get(),
+                  instructor_id: instructor_id.get(),
+                  instructor_name: instructors
+                    .get()
+                    .unwrap()
+                    .iter()
+                    .find(|i| i.id == instructor_id.get())
+                    .unwrap()
+                    .firstname
+                    .clone(),
+                });
             }
           >
             "Submit"

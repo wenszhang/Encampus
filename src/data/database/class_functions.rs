@@ -12,7 +12,7 @@ pub struct ClassId(pub i32);
 /**
  * Struct to hold the class info
  */
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct ClassInfo {
     pub id: i32,
@@ -185,4 +185,34 @@ pub async fn get_students_classes(user_id: i32) -> Result<Vec<ClassInfo>, Server
         .expect("select should work");
 
     Ok(classes)
+}
+
+#[server(UpdateClassInfo)]
+pub async fn update_class_info(class: ClassInfo, instructor_id: i32) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("update classes set coursename = $1, instructorid = $2 where courseid = $3")
+        .bind(class.name)
+        .bind(instructor_id)
+        .bind(class.id)
+        .execute(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Unable to update user".to_string())
+        })?;
+
+    sqlx::query("update instructing set professorid = $1 where courseid = $2")
+        .bind(instructor_id)
+        .bind(class.id)
+        .execute(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Unable to update user".to_string())
+        })?;
+    Ok(())
 }
