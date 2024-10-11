@@ -73,6 +73,13 @@ pub async fn add_class(name: String, instructor: User) -> Result<ClassInfo, Serv
     .await
     .expect("insert should work");
 
+    sqlx::query("insert into instructing (professorid, courseid) values ($1, $2)")
+        .bind(instructor.id)
+        .bind(class_id)
+        .execute(&pool)
+        .await
+        .expect("Failed adding instructor to class");
+
     Ok(ClassInfo {
         id: class_id,
         name,

@@ -1,6 +1,5 @@
 use std::collections::HashMap;
 use std::iter;
-use web_sys::console;
 
 use crate::data::database::class_functions::{
     add_class, add_student_to_class, get_class_list, get_students_classes,
@@ -440,13 +439,7 @@ fn AddNewUser(
 #[component]
 fn AddClass() -> impl IntoView {
     let (class_name, set_class_name) = create_signal("".to_string());
-    let (instructor, set_instructor) = create_signal(User {
-        username: "".to_string(),
-        firstname: "".to_string(),
-        lastname: "".to_string(),
-        id: 0,
-        role: "Student".to_string(),
-    });
+    let (instructor, set_instructor) = create_signal(0);
     let instructors = create_resource(
         || {},
         |_| async {
@@ -487,25 +480,24 @@ fn AddClass() -> impl IntoView {
             <select
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
               on:change=move |event| {
-                let selected_id = event_target_value(&event);
-                console::log_1(&selected_id.clone().into());
-                if let Some(instructor) = instructors()
-                  .unwrap_or_default()
-                  .into_iter()
-                  .find(|instructor| instructor.id.to_string() == selected_id)
+                let selected = event_target_value(&event);
+                logging::log!("Selected: {}", selected);
+                if let Some(selected_instructor) = instructors()
+                  .and_then(|instructors_list| {
+                    instructors_list.into_iter().find(|instructor| instructor.firstname == selected)
+                  })
                 {
-                  set_instructor(instructor.clone());
+                  set_instructor(selected_instructor.clone());
                 }
               }
+              prop:value=instructor().username
             >
               <For
                 each=move || instructors().unwrap_or_default()
                 key=|instructor| instructor.id
                 let:instructor
               >
-                <option value=instructor
-                  .id
-                  .to_string()>{instructor.firstname} " " {instructor.lastname}</option>
+                <option>{instructor.firstname} " " {instructor.lastname}</option>
               </For>
             </select>
           </div>
