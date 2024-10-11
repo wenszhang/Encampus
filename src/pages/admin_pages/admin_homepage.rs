@@ -440,6 +440,7 @@ fn AddNewUser(
 fn AddClass() -> impl IntoView {
     let (class_name, set_class_name) = create_signal("".to_string());
     let (instructor, set_instructor) = create_signal(0);
+
     let instructors = create_resource(
         || {},
         |_| async {
@@ -479,25 +480,17 @@ fn AddClass() -> impl IntoView {
             <label class="block text-sm font-medium text-gray-700">"Instructor"</label>
             <select
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              on:change=move |event| {
-                let selected = event_target_value(&event);
-                logging::log!("Selected: {}", selected);
-                if let Some(selected_instructor) = instructors()
-                  .and_then(|instructors_list| {
-                    instructors_list.into_iter().find(|instructor| instructor.firstname == selected)
-                  })
-                {
-                  set_instructor(selected_instructor.clone());
-                }
+              on:change=move |ev| {
+                set_instructor(event_target_value(&ev).parse().unwrap());
               }
-              prop:value=instructor().username
+              prop:value=move || instructor.get()
             >
               <For
                 each=move || instructors().unwrap_or_default()
-                key=|instructor| instructor.id
-                let:instructor
+                key=|current_instructor| current_instructor.id
+                let:current_instructor
               >
-                <option>{instructor.firstname} " " {instructor.lastname}</option>
+                <option value={current_instructor.id}>{current_instructor.firstname} " " {current_instructor.lastname}</option>
               </For>
             </select>
           </div>
@@ -507,12 +500,8 @@ fn AddClass() -> impl IntoView {
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
               add_class_action
-                .dispatch(ClassInfo {
-                  name: class_name(),
-                  instructor_id: instructor().id,
-                  instructor_name: format!("{} {}", instructor().firstname, instructor().lastname),
-                  id: 0,
-                });
+                .dispatch(|| {}
+                );
             }
           >
             "Submit"

@@ -56,7 +56,7 @@ pub async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
 }
 
 #[server(AddClass)]
-pub async fn add_class(name: String, instructor: User) -> Result<ClassInfo, ServerFnError> {
+pub async fn add_class(name: String, instructor_id: i32) -> Result<ClassInfo, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -64,17 +64,23 @@ pub async fn add_class(name: String, instructor: User) -> Result<ClassInfo, Serv
         "Unable to complete Request".to_string(),
     ))?;
 
+    let instructor: User = sqlx::query_as("select firstname, lastname from users where id = $1")
+        .bind(instructor_id)
+        .fetch_one(&pool)
+        .await
+        .expect("Failed getting instructor");
+
     let ClassId(class_id) = sqlx::query_as(
         "insert into classes (coursename, instructorid, coursesection) values ($1, $2, 90) returning courseid as id",
     )
     .bind(name.clone())
-    .bind(instructor.id)
+    .bind(instructor_id)
     .fetch_one(&pool)
     .await
-    .expect("insert should work");
+    .expect("Failed adding class");
 
     sqlx::query("insert into instructing (professorid, courseid) values ($1, $2)")
-        .bind(instructor.id)
+        .bind(instructor_id)
         .bind(class_id)
         .execute(&pool)
         .await
@@ -83,7 +89,7 @@ pub async fn add_class(name: String, instructor: User) -> Result<ClassInfo, Serv
     Ok(ClassInfo {
         id: class_id,
         name,
-        instructor_id: instructor.id,
+        instructor_id: instructor_id,
         instructor_name: format!("{} {}", instructor.firstname, instructor.lastname),
     })
 }
