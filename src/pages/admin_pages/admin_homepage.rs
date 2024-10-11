@@ -259,16 +259,16 @@ fn UserOptions(user: User) -> impl IntoView {
             <div class="flex items-center">
               <select
                 class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-                on:change=move |ev: web_sys::Event| {
-                  set_role(event_target_value(&ev));
-                  set_update_info(true)
+                on:change=move |ev| {
+                  let new_value = event_target_value(&ev);
+                  set_role(new_value);
                 }
-                prop:value=role
+                prop:value=move || role.get()
                 readonly=move || !role_editable()
               >
-                <option>"Student"</option>
-                <option>"Instructor"</option>
-                <option>"Admin"</option>
+                <option value="Student">"Student"</option>
+                <option value="Instructor">"Instructor"</option>
+                <option value="Admin">"Admin"</option>
               </select>
               <div
                 class="ml-2 text-sm text-gray-500 cursor-pointer"
@@ -350,7 +350,7 @@ fn AddNewUser(
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
-    let (role, set_role) = create_signal("Student".to_string());
+    let (role, set_role) = create_signal("".to_string());
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
@@ -400,12 +400,15 @@ fn AddNewUser(
             <label class="block text-sm font-medium text-gray-700">"Role"</label>
             <select
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              on:change=on_input(set_role)
-              prop:value=role
+              on:change=move |ev| {
+                let new_value = event_target_value(&ev);
+                set_role(new_value);
+              }
+              prop:value=move || role.get()
             >
-              <option>"Student"</option>
-              <option>"Instructor"</option>
-              <option>"Admin"</option>
+              <option value="student">"Student"</option>
+              <option value="instructor">"Instructor"</option>
+              <option value="admin">"Admin"</option>
             </select>
           </div>
         </div>
@@ -439,7 +442,7 @@ fn AddNewUser(
 #[component]
 fn AddClass() -> impl IntoView {
     let (class_name, set_class_name) = create_signal("".to_string());
-    let (instructor, set_instructor) = create_signal(0);
+    let (instructor_id, set_instructor_id) = create_signal(0);
 
     let instructors = create_resource(
         || {},
@@ -453,7 +456,7 @@ fn AddClass() -> impl IntoView {
     let add_class_action = create_action(move |_| {
         // let class = class.clone();
         async move {
-            add_class(class_name(), instructor()).await.unwrap();
+            add_class(class_name(), instructor_id()).await.unwrap();
         }
     });
 
@@ -481,16 +484,18 @@ fn AddClass() -> impl IntoView {
             <select
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
               on:change=move |ev| {
-                set_instructor(event_target_value(&ev).parse().unwrap());
+                let new_value = event_target_value(&ev);
+                set_instructor_id(new_value.parse().unwrap());
               }
-              prop:value=move || instructor.get()
+              prop:value=move || instructor_id.get()
             >
               <For
                 each=move || instructors().unwrap_or_default()
                 key=|current_instructor| current_instructor.id
                 let:current_instructor
               >
-                <option value={current_instructor.id}>{current_instructor.firstname} " " {current_instructor.lastname}</option>
+                <option value=current_instructor
+                  .id>{current_instructor.firstname} " " {current_instructor.lastname}</option>
               </For>
             </select>
           </div>
@@ -499,9 +504,7 @@ fn AddClass() -> impl IntoView {
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
-              add_class_action
-                .dispatch(|| {}
-                );
+              add_class_action.dispatch(|| {});
             }
           >
             "Submit"

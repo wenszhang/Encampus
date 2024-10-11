@@ -78,7 +78,7 @@ pub async fn add_user(new_user: User) -> Result<User, ServerFnError> {
     ))?;
 
     let user: User = sqlx::query_as(
-        "insert into users(username, firstname, lastname, role) values($1, $2, $3, 'student') 
+        "insert into users(username, firstname, lastname, role) values($1, $2, $3, $4) 
         returning username,
         firstname,
         lastname,   
@@ -88,6 +88,7 @@ pub async fn add_user(new_user: User) -> Result<User, ServerFnError> {
     .bind(new_user.username.clone())
     .bind(new_user.firstname.clone())
     .bind(new_user.lastname.clone())
+    .bind(new_user.role.clone())
     .fetch_one(&pool)
     .await
     .map_err(|_| {
@@ -98,7 +99,7 @@ pub async fn add_user(new_user: User) -> Result<User, ServerFnError> {
 
     if user.role == *"student" {
         let user = user.clone();
-        sqlx::query("insert into students(studentid, name) values($1, $2)")
+        sqlx::query("insert into students(id, name) values($1, $2)")
             .bind(user.id)
             .bind(user.username)
             .execute(&pool)
