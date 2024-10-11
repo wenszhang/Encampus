@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 use std::iter;
+use web_sys::console;
 
 use crate::data::database::class_functions::{
     add_class, add_student_to_class, get_class_list, get_students_classes,
@@ -31,6 +32,7 @@ pub fn AdminHomePage() -> impl IntoView {
         id: 0,
         role: "Student".to_string(),
     });
+    let (display_add_class, set_display_add_class) = create_signal(false);
 
     view! {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
@@ -44,6 +46,9 @@ pub fn AdminHomePage() -> impl IntoView {
             show_user_options=set_user_options_visible
             display_user=set_display_user
           />
+        </Show>
+        <Show when=move || display_add_class.get() fallback=|| ()>
+          <AddClass />
         </Show>
       </div>
 
@@ -99,7 +104,10 @@ pub fn AdminHomePage() -> impl IntoView {
           <div class="p-6 bg-white rounded-lg shadow-md">
             <div class="flex justify-between items-center">
               <h2 class="mb-4 text-lg font-semibold">"Open Classes"</h2>
-              <button class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue">
+              <button
+                class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+                on:click=move |_| set_display_add_class(!display_add_class())
+              >
                 "Create Class"
               </button>
             </div>
@@ -432,7 +440,13 @@ fn AddNewUser(
 #[component]
 fn AddClass() -> impl IntoView {
     let (class_name, set_class_name) = create_signal("".to_string());
-    let (instructor, set_instructor) = create_signal(0);
+    let (instructor, set_instructor) = create_signal(User {
+        username: "".to_string(),
+        firstname: "".to_string(),
+        lastname: "".to_string(),
+        id: 0,
+        role: "Student".to_string(),
+    });
     let instructors = create_resource(
         || {},
         |_| async {
@@ -442,12 +456,18 @@ fn AddClass() -> impl IntoView {
         },
     );
 
-    let add_class_action = create_action(move |class: &ClassInfo| {
-        let class = class.clone();
+    let add_class_action = create_action(move |_| {
+        // let class = class.clone();
         async move {
-            add_class().await.unwrap();
+            add_class(class_name(), instructor()).await.unwrap();
         }
     });
+
+    let on_input = |setter: WriteSignal<String>| {
+        move |ev| {
+            setter(event_target_value(&ev));
+        }
+    };
 
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
@@ -458,15 +478,26 @@ fn AddClass() -> impl IntoView {
             <input
               type="text"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              on:input=on_input(set_class_name)
+              prop:value=class_name
             />
-          // on:input=on_input(set_first_name)
-          // prop:value=first_name
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">"Instructor"</label>
-            <select class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none">
-              // on:change=on_input(set_role)
-              // prop:value=role
+            <select
+              class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              on:change=move |event| {
+                let selected_id = event_target_value(&event);
+                console::log_1(&selected_id.clone().into());
+                if let Some(instructor) = instructors()
+                  .unwrap_or_default()
+                  .into_iter()
+                  .find(|instructor| instructor.id.to_string() == selected_id)
+                {
+                  set_instructor(instructor.clone());
+                }
+              }
+            >
               <For
                 each=move || instructors().unwrap_or_default()
                 key=|instructor| instructor.id
@@ -482,7 +513,15 @@ fn AddClass() -> impl IntoView {
         <div class="mt-4 text-right">
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
-            on:click=move |_| {}
+            on:click=move |_| {
+              add_class_action
+                .dispatch(ClassInfo {
+                  name: class_name(),
+                  instructor_id: instructor().id,
+                  instructor_name: format!("{} {}", instructor().firstname, instructor().lastname),
+                  id: 0,
+                });
+            }
           >
             "Submit"
           </button>

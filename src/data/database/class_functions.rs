@@ -65,7 +65,7 @@ pub async fn add_class(name: String, instructor: User) -> Result<ClassInfo, Serv
     ))?;
 
     let ClassId(class_id) = sqlx::query_as(
-        "insert into classes (coursename, instructorid) values ($1, $2) returning courseid as id",
+        "insert into classes (coursename, instructorid, coursesection) values ($1, $2, 90) returning courseid as id",
     )
     .bind(name.clone())
     .bind(instructor.id)
