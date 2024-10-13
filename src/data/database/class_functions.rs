@@ -12,7 +12,7 @@ pub struct ClassId(pub i32);
 /**
  * Struct to hold the class info
  */
-#[derive(Clone, Serialize, Deserialize, Debug)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct ClassInfo {
     pub id: i32,

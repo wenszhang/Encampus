@@ -13,7 +13,6 @@ use leptos::ev::Event;
 use leptos::*;
 use leptos::{component, create_resource, view, For, IntoView, Signal};
 use leptos_router::A;
-use tracing_subscriber::field::display;
 
 #[component]
 pub fn AdminHomePage() -> impl IntoView {
@@ -34,12 +33,18 @@ pub fn AdminHomePage() -> impl IntoView {
     });
     let (display_add_class, set_display_add_class) = create_signal(false);
     let (display_class_options, set_display_class_options) = create_signal(false);
+    let (display_class, set_display_class) = create_signal(ClassInfo {
+        id: 0,
+        name: "".to_string(),
+        instructor_id: 0,
+        instructor_name: "".to_string(),
+    });
 
     view! {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
       <div class="mx-6 mt-6 space-x-4">
         <Show when=move || display_class_options.get() fallback=|| ()>
-          <UserOptions user=display_user() />
+          <ClassOptions class=display_class() />
         </Show>
         <Show when=move || user_options_visible.get() fallback=|| ()>
           <UserOptions user=display_user() />
@@ -123,15 +128,45 @@ pub fn AdminHomePage() -> impl IntoView {
 
             <div class="mt-4 space-y-2"></div>
             <For each=move || classes().unwrap_or_default() key=|class| class.id let:class>
-              <div class="grid grid-cols-2 gap-4 p-2 border-b border-gray-200">
-                <A
-                  href=format!("/classes/{}", class.id)
-                  class="text-blue-500 underline hover:text-blue-700"
-                >
-                  {class.name}
-                </A>
-                <div>{class.instructor_name}</div>
-              </div>
+              {
+                let class_clone = class.clone();
+                view! {
+                  <div class="grid grid-cols-3 gap-4 p-2 border-b border-gray-200">
+                    <A
+                      href=format!("/classes/{}", class.id.clone())
+                      class="text-blue-500 underline hover:text-blue-700"
+                    >
+                      {class.name.clone()}
+                    </A>
+                    <div>{class.instructor_name.clone()}</div>
+                    <button 
+                      class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+                      on:click=move |_| {
+                        set_display_class(class_clone.clone());
+                        set_display_class_options(!display_class_options());
+                      }>
+                      "Class Options"
+                    </button>
+                  </div>
+                }
+              }
+              // <div class="grid grid-cols-3 gap-4 p-2 border-b border-gray-200">
+              //   <A
+              //     href=format!("/classes/{}", class.id)
+              //     class="text-blue-500 underline hover:text-blue-700"
+              //   >
+              //     {class_clone.name.clone()}
+              //   </A>
+              //   <div>{class_clone.instructor_name.clone()}</div>
+              //   <button class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+              //   on:click=move |_| {
+              //     set_display_class(class);
+              //     set_display_class_options(!display_class_options());
+              //   }>
+
+              //     "Class Options"
+              //   </button>
+              // </div>
             </For>
           </div>
         </div>
@@ -520,7 +555,7 @@ fn AddClass() -> impl IntoView {
 }
 
 #[component]
-fn class_options(class: ClassInfo) -> impl IntoView {
+fn ClassOptions(class: ClassInfo) -> impl IntoView {
     let (class_name, set_class_name) = create_signal(class.name.clone());
     let (class_name_editable, set_class_name_editable) = create_signal(false);
     let (instructor_id, set_instructor_id) = create_signal(class.instructor_id.clone());
