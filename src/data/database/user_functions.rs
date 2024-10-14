@@ -105,6 +105,16 @@ pub async fn add_user(new_user: User) -> Result<User, ServerFnError> {
             .execute(&pool)
             .await
             .expect("no users found");
+        
+    }else if user.role == *"professor" {
+        let user = user.clone();
+        sqlx::query("insert into professors(id, name) values($1, $2)")
+            .bind(user.id)
+            .bind(user.username)
+            .execute(&pool)
+            .await
+            .expect("no users found");
+        
     }
 
     Ok(user)

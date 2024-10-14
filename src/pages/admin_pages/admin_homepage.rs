@@ -121,7 +121,7 @@ pub fn AdminHomePage() -> impl IntoView {
               </button>
             </div>
 
-            <div class="grid grid-cols-2 gap-4">
+            <div class="grid grid-cols-3 gap-4">
               <div class="font-semibold">"Course Name"</div>
               <div class="font-semibold">"Instructor"</div>
             </div>
@@ -150,23 +150,6 @@ pub fn AdminHomePage() -> impl IntoView {
                   </div>
                 }
               }
-              // <div class="grid grid-cols-3 gap-4 p-2 border-b border-gray-200">
-              //   <A
-              //     href=format!("/classes/{}", class.id)
-              //     class="text-blue-500 underline hover:text-blue-700"
-              //   >
-              //     {class_clone.name.clone()}
-              //   </A>
-              //   <div>{class_clone.instructor_name.clone()}</div>
-              //   <button class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
-              //   on:click=move |_| {
-              //     set_display_class(class);
-              //     set_display_class_options(!display_class_options());
-              //   }>
-
-              //     "Class Options"
-              //   </button>
-              // </div>
             </For>
           </div>
         </div>
@@ -604,9 +587,8 @@ fn ClassOptions(class: ClassInfo) -> impl IntoView {
             <select
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
               disabled=move || !instructor_name_editable()
-              on:change=move |ev| {
-                let new_value = event_target_value(&ev);
-                set_instructor_id(new_value.parse().unwrap());
+              on:input=move |ev| {
+                set_instructor_id(event_target_value(&ev).parse().unwrap());
               }
               prop:value=move || instructor_id.get()
             >
