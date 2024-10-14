@@ -603,6 +603,7 @@ fn ClassOptions(class: ClassInfo) -> impl IntoView {
             <label class="block text-sm font-medium text-gray-700">"Instructor"</label>
             <select
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              disabled=move || !instructor_name_editable()
               on:change=move |ev| {
                 let new_value = event_target_value(&ev);
                 set_instructor_id(new_value.parse().unwrap());
