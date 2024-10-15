@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::iter;
 
 use crate::data::database::class_functions::{
     add_class, add_student_to_class, get_class_list, get_students_classes,
@@ -9,7 +8,6 @@ use crate::data::database::user_functions::{
     add_user, get_users, get_users_by_role, update_user, User,
 };
 use crate::pages::global_components::header::Header;
-use leptos::ev::Event;
 use leptos::*;
 use leptos::{component, create_resource, view, For, IntoView, Signal};
 use leptos_router::A;
@@ -139,12 +137,13 @@ pub fn AdminHomePage() -> impl IntoView {
                       {class.name.clone()}
                     </A>
                     <div>{class.instructor_name.clone()}</div>
-                    <button 
+                    <button
                       class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
                       on:click=move |_| {
                         set_display_class(class_clone.clone());
                         set_display_class_options(!display_class_options());
-                      }>
+                      }
+                    >
                       "Class Options"
                     </button>
                   </div>
