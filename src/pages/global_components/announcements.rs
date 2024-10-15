@@ -1,6 +1,8 @@
-use crate::data::database::announcement_functions::{post_announcement, AddAnnouncementInfo, AnnouncementInfo};
-use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
+use crate::data::database::announcement_functions::{
+    post_announcement, AddAnnouncementInfo, AnnouncementInfo,
+};
 use crate::data::global_state::GlobalState;
+use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use leptos::*;
 use leptos_router::use_params;
 use leptos_router::A;
@@ -33,7 +35,9 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let add_announcement_action = create_action(move |announcementInfo: &AddAnnouncementInfo| {
         let announcementInfo = announcementInfo.clone();
         async move {
-            match post_announcement(announcementInfo, global_state.id.get_untracked().unwrap()).await {
+            match post_announcement(announcementInfo, global_state.id.get_untracked().unwrap())
+                .await
+            {
                 Ok(announcement) => {}
                 Err(_) => logging::error!("Attempt to post post failed. Please try again"),
             }
