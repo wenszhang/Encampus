@@ -11,6 +11,7 @@ use crate::pages::global_components::notification::{
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
+    let (password, set_password) = create_signal("".to_string());
     let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
 
     // Input event handler for controlled components
@@ -20,10 +21,13 @@ pub fn LoginPage() -> impl IntoView {
         }
     };
 
-    let login_action = create_action(|username: &String| {
-        let username = username.to_owned();
-        async {
-            let user = login(username.clone()).await.unwrap_or_default();
+    let login_action = create_action(move |_| {
+        let username = username.get().to_owned();
+        let password = password.get().to_owned();
+        async move {
+            let user = login(username.clone(), password.clone())
+                .await
+                .unwrap_or_default();
             (username, user.id, user.firstname, user.lastname, user.role)
         }
     });
@@ -99,6 +103,18 @@ pub fn LoginPage() -> impl IntoView {
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
                 on:input=on_input(set_username)
                 prop:value=username
+              />
+              <label for="password" class="block mt-2 font-bold text-gray-700">
+                Password:
+              </label>
+              <input
+                type="password"
+                id="password"
+                placeholder="Enter your Password"
+                required
+                class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
+                on:input=on_input(set_password)
+                prop:value=password
               />
             </div>
             <button
