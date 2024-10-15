@@ -1,10 +1,10 @@
-use std::string::ToString;
+use crate::pages::view_class_posts::create_post::AddPostInfo;
 /**
  * This file contains all the database functions that are used in the server
  */
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
-use crate::pages::view_class_posts::create_post::AddPostInfo;
+use std::string::ToString;
 
 /**
  * Struct to hold the class info
@@ -51,7 +51,10 @@ pub async fn get_announcement_list(class_id: i32) -> Result<Vec<AnnouncementInfo
 }
 
 #[server(PostAnnouncement)]
-pub async fn post_announcement(new_announcement_info: AddAnnouncementInfo, user_id: i32) -> Result<AnnouncementInfo, ServerFnError> {
+pub async fn post_announcement(
+    new_announcement_info: AddAnnouncementInfo,
+    user_id: i32,
+) -> Result<AnnouncementInfo, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -59,7 +62,7 @@ pub async fn post_announcement(new_announcement_info: AddAnnouncementInfo, user_
         "Unable to complete Request".to_string(),
     ))?;
 
-    let announcement:AnnouncementInfo = sqlx::query_as(
+    let announcement: AnnouncementInfo = sqlx::query_as(
         "INSERT INTO announcements (classid, authorid, title, contents, time)
          VALUES ($1, $2, $3, $4, CURRENT_TIMESTAMP)
             RETURNING
@@ -68,21 +71,23 @@ pub async fn post_announcement(new_announcement_info: AddAnnouncementInfo, user_
             title,
             contents,
             classid as class_id,
-            authorid as author_id")
-        .bind(new_announcement_info.class_id)
-        .bind(user_id)
-        .bind(new_announcement_info.title)
-        .bind(new_announcement_info.contents)
-        .fetch_one(&pool)
-        .await
-        .expect("failed adding announcement");
-
+            authorid as author_id",
+    )
+    .bind(new_announcement_info.class_id)
+    .bind(user_id)
+    .bind(new_announcement_info.title)
+    .bind(new_announcement_info.contents)
+    .fetch_one(&pool)
+    .await
+    .expect("failed adding announcement");
 
     Ok(announcement)
 }
 
 #[server(GetAnnouncementByID)]
-pub async fn get_announcement_by_id(announcement_id: i32) -> Result<AnnouncementInfo, ServerFnError> {
+pub async fn get_announcement_by_id(
+    announcement_id: i32,
+) -> Result<AnnouncementInfo, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 

@@ -1,8 +1,8 @@
+use crate::data::database::announcement_functions::get_announcement_by_id;
+use crate::data::global_state::GlobalState;
+use crate::pages::view_class_posts::class::ClassId;
 use leptos::*;
 use leptos_router::{use_params, Params};
-use crate::pages::view_class_posts::class::ClassId;
-use crate::data::database::announcement_functions::{get_announcement_by_id};
-use crate::data::global_state::GlobalState;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct AnnouncementId {
@@ -20,7 +20,12 @@ pub fn AnnouncementDetails() -> impl IntoView {
     let is_instructor = move || global_state.role.get() == Some("instructor".to_string());
 
     let announcement = create_resource(
-        move || announcement_id_result.get().ok().map(|id| id.announcement_id),
+        move || {
+            announcement_id_result
+                .get()
+                .ok()
+                .map(|id| id.announcement_id)
+        },
         |announcement_id| async move {
             if let Some(id) = announcement_id {
                 get_announcement_by_id(id).await.ok()
