@@ -540,7 +540,7 @@ fn AddClass() -> impl IntoView {
 fn ClassOptions(class: ClassInfo) -> impl IntoView {
     let (class_name, set_class_name) = create_signal(class.name.clone());
     let (class_name_editable, set_class_name_editable) = create_signal(false);
-    let (instructor_id, set_instructor_id) = create_signal(class.instructor_id.clone());
+    let (instructor_id, set_instructor_id) = create_signal(class.instructor_id);
     let (instructor_name_editable, set_instructor_name_editable) = create_signal(false);
 
     let update_class_action = create_action(move |class: &ClassInfo| {
