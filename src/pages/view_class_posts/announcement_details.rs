@@ -33,22 +33,24 @@ pub fn AnnouncementDetails() -> impl IntoView {
     view! {
         <div class="announcement-details">
             <div class=format!("bg-[#EEEEEE] rounded-xl")>
-            {move || match announcement.get() {
-                None => view! { <p>{"Loading announcement..."}</p> }.into_view(),
-                Some(None) => view! { <p>{"Announcement not found."}</p> }.into_view(),
-                Some(Some(announcement_details)) => view! {
-                    <div class="p-2 border-b border-gray-300">
-                        <h4 class="font-bold">{announcement_details.title.clone()}</h4>
-                        <p class="text-sm">{announcement_details.contents.clone()}</p>
-                        <p class="text-xs text-gray-500">
-                            {announcement_details.time.format("%Y-%m-%d %H:%M:%S").to_string()}
-                        </p>
-                        {is_instructor().then(|| view! {
-                            <p class="text-green-600">{"You are an instructor."}</p>
-                        })}
-                    </div>
-                }.into_view(),
-            }}
+            <Suspense fallback=|| view! { <p>{"Loading announcement..."}</p> }>
+                {move || match announcement.get() {
+                    None => view! {}.into_view(),
+                    Some(None) => view! { <p>{"Announcement not found."}</p> }.into_view(),
+                    Some(Some(announcement_details)) => view! {
+                        <div class="p-2 border-b border-gray-300">
+                            <h4 class="font-bold">{announcement_details.title.clone()}</h4>
+                            <p class="text-sm">{announcement_details.contents.clone()}</p>
+                            <p class="text-xs text-gray-500">
+                                {announcement_details.time.format("%Y-%m-%d %H:%M:%S").to_string()}
+                            </p>
+                            {is_instructor().then(|| view! {
+                                <p class="text-green-600">{"You are an instructor."}</p>
+                            })}
+                        </div>
+                    }.into_view(),
+                }}
+            </Suspense>
             </div>
         </div>
     }
