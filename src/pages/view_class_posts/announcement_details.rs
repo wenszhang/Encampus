@@ -1,7 +1,7 @@
 use leptos::*;
 use leptos_router::{use_params, Params};
 use crate::pages::view_class_posts::class::ClassId;
-use crate::data::database::announcement_functions::{get_announcement_by_id, AnnouncementInfo};
+use crate::data::database::announcement_functions::{get_announcement_by_id};
 use crate::data::global_state::GlobalState;
 
 #[derive(Params, PartialEq, Clone)]
@@ -30,11 +30,9 @@ pub fn AnnouncementDetails() -> impl IntoView {
         },
     );
 
-    // Create the view
     view! {
         <div class="announcement-details">
-            <h2>{"Announcement Details"}</h2>
-
+            <div class=format!("bg-[#EEEEEE] rounded-xl")>
             {move || match announcement.get() {
                 None => view! { <p>{"Loading announcement..."}</p> }.into_view(),
                 Some(None) => view! { <p>{"Announcement not found."}</p> }.into_view(),
@@ -51,6 +49,7 @@ pub fn AnnouncementDetails() -> impl IntoView {
                     </div>
                 }.into_view(),
             }}
+            </div>
         </div>
     }
 }
