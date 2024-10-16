@@ -58,7 +58,7 @@ pub async fn login(username: String, password: String) -> Result<User, ServerFnE
 }
 
 #[server(AddUser)]
-pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
+pub async fn add_user(user: User, password: String) -> Result<i32, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -67,11 +67,12 @@ pub async fn add_user(user: User) -> Result<i32, ServerFnError> {
     ))?;
 
     let UserId(user_id) = sqlx::query_as(
-        "insert into users(username, firstname, lastname, role) values($1, $2, $3, 'student') returning id",
+        "insert into users(username, firstname, lastname, role, password) values($1, $2, $3, 'student', $4) returning id",
     )
     .bind(user.username.clone())
     .bind(user.firstname.clone())
     .bind(user.lastname.clone())
+    .bind(password)
     .fetch_one(&pool)
     .await
     .map_err(|_| {

@@ -15,6 +15,8 @@ pub fn RegisterPage() -> impl IntoView {
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
     let (user_id, set_user_id) = create_signal(0);
+    let (password, set_password) = create_signal("".to_string());
+    let( confirm_password, set_confirm_password) = create_signal("".to_string());
     let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
 
     let on_input = |setter: WriteSignal<String>| {
@@ -32,13 +34,19 @@ pub fn RegisterPage() -> impl IntoView {
     };
 
     let new_user_action = create_action(move |_| async move {
+      if password.get() != confirm_password.get() {
+        set_login_error(Some(NotificationDetails {
+          message: "Passwords do not match.".to_string(),
+          notification_type: NotificationType::Error,
+        }));
+      } else {
         match add_user(User {
             username: username.get(),
             firstname: first_name.get(),
             lastname: last_name.get(),
             role: "student".to_string(),
             id: 0,
-        })
+        }, password.get())
         .await
         {
             Ok(id) => {
@@ -51,7 +59,9 @@ pub fn RegisterPage() -> impl IntoView {
                 }));
             }
         }
-    });
+
+    }
+});
 
     create_effect(move |_| {
         let global_state = expect_context::<GlobalState>();
@@ -118,9 +128,7 @@ pub fn RegisterPage() -> impl IntoView {
                 on:input=on_input(set_username)
                 prop:value=username
               />
-            </div>
-            <div class="mb-4">
-              <label for="username" class="flex row-auto mb-2 font-bold text-gray-700">
+              <label for="first_name" class="flex row-auto mb-2 font-bold text-gray-700">
                 First Name:
               </label>
               <input
@@ -132,9 +140,7 @@ pub fn RegisterPage() -> impl IntoView {
                 on:input=on_input(set_first_name)
                 prop:value=first_name
               />
-            </div>
-            <div class="mb-4">
-              <label for="username" class="flex row-auto mb-2 font-bold text-gray-700">
+              <label for="last_name" class="flex row-auto mb-2 font-bold text-gray-700">
                 Last Name:
               </label>
               <input
@@ -145,6 +151,30 @@ pub fn RegisterPage() -> impl IntoView {
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
                 on:input=on_input(set_last_name)
                 prop:value=last_name
+              />
+              <label for="password" class="flex row-auto mb-2 font-bold text-gray-700">
+                Password:
+              </label>
+              <input
+                type="password"
+                id="password"
+                placeholder="Enter your Password"
+                required
+                class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
+                on:input=on_input(set_password)
+                prop:value=password
+              />
+              <label for="confirm_password" class="flex row-auto mb-2 font-bold text-gray-700">
+                Confirm Password:
+              </label>
+              <input
+                type="password"
+                id="confirm_password"
+                placeholder="Confirm your Password"
+                required
+                class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
+                on:input=on_input(set_confirm_password)
+                prop:value=confirm_password
               />
             </div>
             <button
