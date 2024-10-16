@@ -54,7 +54,7 @@ pub fn LoginPage() -> impl IntoView {
                     // Change to instructor page when implemented
                     "instructor" => navigate("/classes", Default::default()),
                     // Change to admin page when implemented
-                    "admin" => navigate("/classes", Default::default()),
+                    "admin" => navigate("/AdminHomePage", Default::default()),
                     _ => navigate("/login", Default::default()),
                 }
             }
