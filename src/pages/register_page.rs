@@ -49,8 +49,8 @@ pub fn RegisterPage() -> impl IntoView {
         }, password.get())
         .await
         {
-            Ok(id) => {
-                set_user_id(id);
+            Ok(user) => {
+                set_user_id(user.id);
             }
             Err(_) => {
                 set_login_error(Some(NotificationDetails {

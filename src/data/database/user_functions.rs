@@ -58,7 +58,7 @@ pub async fn login(username: String, password: String) -> Result<User, ServerFnE
 }
 
 #[server(AddUser)]
-pub async fn add_user(user: User, password: String) -> Result<i32, ServerFnError> {
+pub async fn add_user(new_user: User, password: String) -> Result<User, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -66,18 +66,101 @@ pub async fn add_user(user: User, password: String) -> Result<i32, ServerFnError
         "Unable to complete Request".to_string(),
     ))?;
 
-    let UserId(user_id) = sqlx::query_as(
-        "insert into users(username, firstname, lastname, role, password) values($1, $2, $3, 'student', $4) returning id",
+    let user: User = sqlx::query_as(
+        "insert into users(username, firstname, lastname, role, password) values($1, $2, $3, $4) 
+        returning username,
+        firstname,
+        lastname,   
+        id,
+        role",
     )
-    .bind(user.username.clone())
-    .bind(user.firstname.clone())
-    .bind(user.lastname.clone())
+    .bind(new_user.username.clone())
+    .bind(new_user.firstname.clone())
+    .bind(new_user.lastname.clone())
+    .bind(new_user.role.clone())
     .bind(password)
     .fetch_one(&pool)
     .await
     .map_err(|_| {
-        ServerFnError::<NoCustomError>::ServerError("Unable to create user, username already exists".to_string())
+        ServerFnError::<NoCustomError>::ServerError(
+            "Unable to create user, username already exists".to_string(),
+        )
     })?;
 
-    Ok(user_id)
+    if user.role == *"student" {
+        let user = user.clone();
+        sqlx::query("insert into students(id, name) values($1, $2)")
+            .bind(user.id)
+            .bind(user.username)
+            .execute(&pool)
+            .await
+            .expect("no users found");
+    } else if user.role == *"professor" {
+        let user = user.clone();
+        sqlx::query("insert into professors(id, name) values($1, $2)")
+            .bind(user.id)
+            .bind(user.username)
+            .execute(&pool)
+            .await
+            .expect("no users found");
+    }
+    Ok(user)
+}
+
+#[server(UpdateUser)]
+pub async fn update_user(user: User) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("update users set username = $1, firstname = $2, lastname = $3 where id = $4")
+        .bind(user.username.clone())
+        .bind(user.firstname.clone())
+        .bind(user.lastname.clone())
+        .bind(user.id)
+        .execute(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Unable to update user".to_string())
+        })?;
+
+    Ok(())
+}
+
+#[server(GetUsers)]
+pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let users: Vec<User> =
+        sqlx::query_as("select username, firstname, lastname, id, role from users order by role")
+            .fetch_all(&pool)
+            .await
+            .expect("no users found");
+    Ok(users)
+}
+
+#[server(GetUsersByRole)]
+pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let users: Vec<User> =
+        sqlx::query_as("select username, firstname, lastname, id, role from users where role = $1")
+            .bind(role)
+            .fetch_all(&pool)
+            .await
+            .expect("no users found");
+    Ok(users)
 }

@@ -4,6 +4,7 @@
 use crate::{
     data::global_state::GlobalState,
     pages::{
+        admin_pages::admin_homepage::AdminHomePage,
         dev_pages::dev::Dev,
         global_components::{
             error_template::{AppError, ErrorTemplate},
@@ -49,6 +50,7 @@ pub fn App() -> impl IntoView {
             <Route path="/dev" view=Dev />
             <Route path="" view=Page>
               <Route path="" view=AuthenticatedRoutes>
+                <Route path="/AdminHomePage" view=AdminHomePage />
                 <Route path="/classes" view=ClassesPage />
                 <Route path="/classes/:class_id" view=ClassPage>
                   <Route path="" view=|| {} />
