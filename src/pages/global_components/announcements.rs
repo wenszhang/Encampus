@@ -2,10 +2,10 @@ use crate::data::database::announcement_functions::{
     post_announcement, AddAnnouncementInfo, AnnouncementInfo,
 };
 use crate::data::global_state::GlobalState;
+use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use leptos::*;
 use leptos_router::{use_params, A};
-use crate::pages::view_class_posts::class::ClassId;
 
 #[component]
 
@@ -20,8 +20,8 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let (title, set_title) = create_signal(String::new());
     let (contents, set_contents) = create_signal(String::new());
 
-  let mut sorted_announcements = announcements.clone();
-  sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
+    let mut sorted_announcements = announcements.clone();
+    sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
