@@ -13,6 +13,7 @@ use crate::{
         home::Home,
         login_page::LoginPage,
         register_page::RegisterPage,
+        user_profile::user_profile_page::UserProfile,
         user_settings::user_settings_page::UserSettings,
         view_class_posts::{
             announcement_details::AnnouncementDetails, class::ClassPage, focused_post::FocusedPost,
@@ -62,6 +63,7 @@ pub fn App() -> impl IntoView {
                   <Route path="/announcement/:announcement_id" view=AnnouncementDetails />
                 </Route>
                 <Route path="/settings" view=UserSettings />
+                <Route path="/profile" view=UserProfile />
               </Route>
               // Accessible when logged out
               <Route path="" view=UnauthenticatedRoutes>
