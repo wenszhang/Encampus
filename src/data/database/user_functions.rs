@@ -17,11 +17,15 @@ pub struct User {
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct UserId(pub i32);
 
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct UserPassword(pub String);
+
 /**
  * Login a user or sign them up if they don't exist
  */
 #[server(LoginSignUp)]
-pub async fn login(username: String) -> Result<User, ServerFnError> {
+pub async fn login(username: String, password: String) -> Result<User, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -29,47 +33,32 @@ pub async fn login(username: String) -> Result<User, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let user_result: Option<User> = sqlx::query_as(
+    let user_result: User = sqlx::query_as(
         "select username, firstname, lastname, id, role from users where username = $1",
     )
     .bind(username.clone())
-    .fetch_optional(&pool)
-    .await?;
+    .fetch_one(&pool)
+    .await
+    .expect("No user found");
 
-    // if user_result.is_none() {
-    //     sqlx::query(
-    //         "insert into users(username, firstname, lastname, role) values($1, $1, $1, 'student')",
-    //     )
-    //     .bind(username.clone())
-    //     .execute(&pool)
-    //     .await
-    //     .expect("Failed adding user");
+    let UserPassword(user_password) =
+        sqlx::query_as("select password from users where username = $1")
+            .bind(username.clone())
+            .fetch_one(&pool)
+            .await
+            .expect("No user found");
 
-    //     sqlx::query("insert into students(name) values($1)")
-    //         .bind(username.clone())
-    //         .execute(&pool)
-    //         .await
-    //         .expect("Failed adding student");
-
-    //     user_result = sqlx::query_as(
-    //         "select username, firstname, lastname, id, role from users where username = $1",
-    //     )
-    //     .bind(username.clone())
-    //     .fetch_optional(&pool)
-    //     .await?;
-    // }
-
-    Ok(user_result.unwrap_or_else(|| User {
-        username: "".to_string(),
-        firstname: "".to_string(),
-        lastname: "".to_string(),
-        id: 0,
-        role: "".to_string(),
-    }))
+    if user_password == password {
+        Ok(user_result)
+    } else {
+        Err(ServerFnError::<NoCustomError>::ServerError(
+            "Incorrect Password".to_string(),
+        ))
+    }
 }
 
 #[server(AddUser)]
-pub async fn add_user(new_user: User) -> Result<User, ServerFnError> {
+pub async fn add_user(new_user: User, password: String) -> Result<User, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -78,7 +67,7 @@ pub async fn add_user(new_user: User) -> Result<User, ServerFnError> {
     ))?;
 
     let user: User = sqlx::query_as(
-        "insert into users(username, firstname, lastname, role) values($1, $2, $3, $4) 
+        "insert into users(username, firstname, lastname, role, password) values($1, $2, $3, $4) 
         returning username,
         firstname,
         lastname,   
@@ -89,6 +78,7 @@ pub async fn add_user(new_user: User) -> Result<User, ServerFnError> {
     .bind(new_user.firstname.clone())
     .bind(new_user.lastname.clone())
     .bind(new_user.role.clone())
+    .bind(password)
     .fetch_one(&pool)
     .await
     .map_err(|_| {

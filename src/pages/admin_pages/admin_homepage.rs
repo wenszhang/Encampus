@@ -383,7 +383,7 @@ fn AddNewUser(
     let add_user_action = create_action(move |user: &User| {
         let user = user.clone();
         async move {
-            let user = add_user(user).await.unwrap();
+            let user = add_user(user, "password".to_string()).await.unwrap();
             display_user(user);
         }
     });
