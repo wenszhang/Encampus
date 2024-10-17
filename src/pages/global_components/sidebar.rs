@@ -1,4 +1,3 @@
-use crate::data::database::class_functions::get_class_list;
 use crate::data::database::class_functions::get_students_classes;
 use crate::data::database::class_functions::ClassInfo;
 use crate::data::global_state::GlobalState;
@@ -67,15 +66,11 @@ fn expanded_view(
           {move || {
             let first_name = global_state.first_name.get();
             let last_name = global_state.last_name.get();
-            format!(
-              "{} {}",
-              first_name.unwrap_or_else(|| "".to_string()),
-              last_name.unwrap_or_else(|| "".to_string()),
-            )
+            format!("{} {}", first_name.unwrap_or_default(), last_name.unwrap_or_default())
           }}
         </h1>
         <h2 class="text-lg font-semibold text-center text-gray-500">
-          {move || global_state.role.get().unwrap_or_else(|| "".to_string())}
+          {move || global_state.role.get().unwrap_or_default()}
         </h2>
 
         <div class="overflow-y-auto flex-grow px-4 mt-6 custom-scrollbar">
