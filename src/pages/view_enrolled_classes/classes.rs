@@ -1,11 +1,14 @@
 /**
 * Page getting and displaying all classes registered to the user
 */
-use leptos::{component, create_resource, view, For, IntoView, Signal, Suspense};
+use leptos::{
+    component, create_resource, expect_context, view, For, IntoView, Signal, SignalGet, Suspense,
+};
 use leptos::{create_effect, leptos_dom};
 
-use crate::data::database::class_functions::get_class_list;
+use crate::data::database::class_functions::get_students_classes;
 use crate::data::database::class_functions::ClassInfo;
+use crate::data::global_state::GlobalState;
 use crate::pages::global_components::header::Header;
 
 #[component]
@@ -27,13 +30,17 @@ pub fn ClassTile(class: ClassInfo) -> impl IntoView {
  */
 #[component]
 pub fn ClassesPage() -> impl IntoView {
+    let global_state = expect_context::<GlobalState>();
     create_effect(move |_| {
         leptos_dom::document().set_title("Encampus - Classes");
     });
 
     let classes = create_resource(
         || {},
-        |_| async { get_class_list().await.unwrap_or_default() },
+        move |_| {
+            let id = global_state.id.get().unwrap_or_default();
+            async move { get_students_classes(id).await.unwrap_or_default() }
+        },
     );
 
     view! {
