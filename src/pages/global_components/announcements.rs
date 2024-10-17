@@ -21,7 +21,6 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let (is_expanded, set_is_expanded) = create_signal(true);
     let (title, set_title) = create_signal(String::new());
     let (contents, set_contents) = create_signal(String::new());
-    let (error, set_error) = create_signal(None::<String>);
 
     let mut sorted_announcements = announcements.clone();
     sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
@@ -38,7 +37,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
             match post_announcement(announcementInfo, global_state.id.get_untracked().unwrap())
                 .await
             {
-                Ok(announcement) => {}
+                Ok(_announcement) => {}
                 Err(_) => logging::error!("Attempt to post post failed. Please try again"),
             }
         }

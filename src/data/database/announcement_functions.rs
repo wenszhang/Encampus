@@ -1,10 +1,8 @@
-use crate::pages::view_class_posts::create_post::AddPostInfo;
 /**
  * This file contains all the database functions that are used in the server
  */
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
-use std::string::ToString;
 
 /**
  * Struct to hold the class info

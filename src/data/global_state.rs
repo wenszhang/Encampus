@@ -1,8 +1,4 @@
-use leptos::{create_rw_signal, RwSignal, SignalGet, SignalGetUntracked, SignalSet};
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::prelude::*;
-#[cfg(target_arch = "wasm32")]
-use wasm_bindgen::JsCast;
+use leptos::{create_rw_signal, RwSignal, SignalGetUntracked, SignalSet};
 #[cfg(target_arch = "wasm32")]
 use web_sys::Storage;
 

@@ -1,4 +1,3 @@
-use crate::resources::images::svgs::error_icon::ErrorIcon;
 use crate::resources::images::svgs::warning_icon::WarningIcon;
 
 use leptos::*;
@@ -37,13 +36,6 @@ pub fn NotificationComponent(
         {move || match notification_details.notification_type {
           NotificationType::Warning => view! { <WarningIcon size="2px" /> }.into_view(),
           NotificationType::Error => view! {}.into_view(),
-          _ => {
-            view! {
-              // If no icon is needed for other types, render nothing
-              <></>
-            }
-              .into_view()
-          }
         }} <span>{&notification_details.message}</span>
         <button class="ml-4" on:click=move |_| on_close()>
           {"✖"}

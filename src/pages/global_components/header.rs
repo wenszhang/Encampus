@@ -45,7 +45,6 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
 
     // Clone global_state so it can be used in multiple closures
     let global_state_clone = global_state.clone();
-    let global_state_clone_for_first_name = global_state.clone();
 
     let header_text_href = move || {
         if let Some(id) = class_id() {

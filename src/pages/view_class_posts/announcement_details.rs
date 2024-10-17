@@ -1,6 +1,5 @@
 use crate::data::database::announcement_functions::get_announcement_by_id;
 use crate::data::global_state::GlobalState;
-use crate::pages::view_class_posts::class::ClassId;
 use leptos::*;
 use leptos_router::{use_params, Params};
 
@@ -13,8 +12,6 @@ pub struct AnnouncementId {
 pub fn AnnouncementDetails() -> impl IntoView {
     // Get URL parameters
     let announcement_id_result = use_params::<AnnouncementId>();
-    let class_id_result = use_params::<ClassId>();
-    let class_id_val = class_id_result.get_untracked().unwrap().class_id;
     let global_state = expect_context::<GlobalState>();
 
     let is_instructor = move || global_state.role.get() == Some("instructor".to_string());
