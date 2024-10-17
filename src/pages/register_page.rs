@@ -16,7 +16,7 @@ pub fn RegisterPage() -> impl IntoView {
     let (last_name, set_last_name) = create_signal("".to_string());
     let (user_id, set_user_id) = create_signal(0);
     let (password, set_password) = create_signal("".to_string());
-    let( confirm_password, set_confirm_password) = create_signal("".to_string());
+    let (confirm_password, set_confirm_password) = create_signal("".to_string());
     let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
 
     let on_input = |setter: WriteSignal<String>| {
@@ -34,34 +34,36 @@ pub fn RegisterPage() -> impl IntoView {
     };
 
     let new_user_action = create_action(move |_| async move {
-      if password.get() != confirm_password.get() {
-        set_login_error(Some(NotificationDetails {
-          message: "Passwords do not match.".to_string(),
-          notification_type: NotificationType::Error,
-        }));
-      } else {
-        match add_user(User {
-            username: username.get(),
-            firstname: first_name.get(),
-            lastname: last_name.get(),
-            role: "student".to_string(),
-            id: 0,
-        }, password.get())
-        .await
-        {
-            Ok(user) => {
-                set_user_id(user.id);
-            }
-            Err(_) => {
-                set_login_error(Some(NotificationDetails {
-                    message: "Failed adding user, username already exists.".to_string(),
-                    notification_type: NotificationType::Error,
-                }));
+        if password.get() != confirm_password.get() {
+            set_login_error(Some(NotificationDetails {
+                message: "Passwords do not match.".to_string(),
+                notification_type: NotificationType::Error,
+            }));
+        } else {
+            match add_user(
+                User {
+                    username: username.get(),
+                    firstname: first_name.get(),
+                    lastname: last_name.get(),
+                    role: "student".to_string(),
+                    id: 0,
+                },
+                password.get(),
+            )
+            .await
+            {
+                Ok(user) => {
+                    set_user_id(user.id);
+                }
+                Err(_) => {
+                    set_login_error(Some(NotificationDetails {
+                        message: "Failed adding user, username already exists.".to_string(),
+                        notification_type: NotificationType::Error,
+                    }));
+                }
             }
         }
-
-    }
-});
+    });
 
     create_effect(move |_| {
         let global_state = expect_context::<GlobalState>();
