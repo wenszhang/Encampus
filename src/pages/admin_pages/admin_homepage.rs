@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 
 use crate::data::database::class_functions::{
-    add_class, add_student_to_class, get_class_list, get_students_classes,
+    add_class, add_student_to_class, delete_class, get_class_list, get_students_classes,
     remove_student_from_class, update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
@@ -43,7 +43,7 @@ pub fn AdminHomePage() -> impl IntoView {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
       <div class="mx-6 mt-6 space-x-4">
         <Show when=move || display_class_options.get() fallback=|| ()>
-          <ClassOptions class=display_class() />
+          <ClassOptions class=display_class() set_display_class_options=set_display_class_options />
         </Show>
         <Show when=move || user_options_visible.get() fallback=|| ()>
           <UserOptions user=display_user() set_user_options_visible=set_user_options_visible />
@@ -168,11 +168,11 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
     let (username, set_username) = create_signal(user.username.clone());
     let (role_editable, set_role_editable) = create_signal(false);
     let (role, set_role) = create_signal(user.role.clone());
-    let (user, set_user) = create_signal(user.clone());
+    let (user, _set_user) = create_signal(user.clone());
 
-    let input_user = user.clone();
-    let user_delete = user.clone();
-    let user = Rc::new(user);
+    // let input_user = user.clone();
+    // let user_delete = user.clone();
+    // let user = Rc::new(user);
 
     let (update_info, set_update_info) = create_signal(false);
 
@@ -181,7 +181,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
         |_| async { get_class_list().await.unwrap_or_default() },
     );
     let students_classes = create_resource(|| {}, {
-        let user = Rc::clone(&user);
+        // let user = Rc::clone(&user);
         move |_| {
             let user = user.clone();
             async move {
@@ -208,7 +208,6 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
     });
 
     let delete_user_action = create_action({
-        let user = user.clone();
         move |user: &User| {
             let user = user.clone();
             async move {
@@ -251,8 +250,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
-              let user_delete = user_delete.clone();
-              delete_user_action.dispatch(user_delete.get());
+              delete_user_action.dispatch(user.get());
             }
           >
             "Delete User"
@@ -266,7 +264,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=input_user.get().firstname
+                value=user.get().firstname
                 readonly=move || !first_name_editable()
                 on:input=move |ev| {
                   set_first_name(event_target_value(&ev));
@@ -285,7 +283,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=input_user.get().lastname
+                value=user.get().lastname
                 readonly=move || !last_name_editable()
                 on:input=move |ev| {
                   set_last_name(event_target_value(&ev));
@@ -303,7 +301,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=input_user.get().username
+                value=user.get().username
                 readonly=move || !username_editable()
                 on:input=move |ev| {
                   set_username(event_target_value(&ev));
@@ -382,14 +380,14 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
                     firstname: first_name.get(),
                     lastname: last_name.get(),
                     role: role.get(),
-                    id: input_user.get().id,
+                    id: user.get().id,
                   });
               }
               for (class_id, selected) in class_selections.get().iter() {
                 if *selected {
                   add_user_classes_action.dispatch((*class_id, user.get()));
                 } else {
-                  remove_user_from_class_action.dispatch((*class_id, user_delete.get()));
+                  remove_user_from_class_action.dispatch((*class_id, user.get()));
                 }
               }
             }
@@ -576,11 +574,12 @@ fn AddClass() -> impl IntoView {
 }
 
 #[component]
-fn ClassOptions(class: ClassInfo) -> impl IntoView {
+fn ClassOptions(class: ClassInfo, set_display_class_options: WriteSignal<bool>) -> impl IntoView {
     let (class_name, set_class_name) = create_signal(class.name.clone());
     let (class_name_editable, set_class_name_editable) = create_signal(false);
     let (instructor_id, set_instructor_id) = create_signal(class.instructor_id);
     let (instructor_name_editable, set_instructor_name_editable) = create_signal(false);
+    let (class, _set_class) = create_signal(class.clone());
 
     let update_class_action = create_action(move |class: &ClassInfo| {
         let class = class.clone();
@@ -598,16 +597,36 @@ fn ClassOptions(class: ClassInfo) -> impl IntoView {
         },
     );
 
+    let delete_class_action = create_action(move |class: &ClassInfo| {
+        let class = class.clone();
+        async move {
+            delete_class(class.id).await.unwrap();
+            set_display_class_options(false);
+            let navigate = leptos_router::use_navigate();
+            navigate("/AdminHomePage", Default::default())
+        }
+    });
+
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">"Class Options"</h2>
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="mb-4 text-lg font-semibold">"Class Options"</h2>
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              delete_class_action.dispatch(class.get());
+            }
+          >
+            "Delete User"
+          </button>
+        </div>
         <div class="grid grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">"Class Name"</label>
             <input
               type="text"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              prop:value=class.name
+              prop:value=class.get().name
               readonly=move || !class_name_editable()
               on:input=move |ev| {
                 set_class_name(event_target_value(&ev));
@@ -657,7 +676,7 @@ fn ClassOptions(class: ClassInfo) -> impl IntoView {
             on:click=move |_| {
               update_class_action
                 .dispatch(ClassInfo {
-                  id: class.id,
+                  id: class.get().id,
                   name: class_name.get(),
                   instructor_id: instructor_id.get(),
                   instructor_name: instructors
