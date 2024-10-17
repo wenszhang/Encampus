@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::rc::Rc;
 
 use crate::data::database::class_functions::{
     add_class, add_student_to_class, get_class_list, get_students_classes,
@@ -167,6 +168,11 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
     let (username, set_username) = create_signal(user.username.clone());
     let (role_editable, set_role_editable) = create_signal(false);
     let (role, set_role) = create_signal(user.role.clone());
+    let (user, set_user) = create_signal(user.clone());
+
+    let input_user = user.clone();
+    let user_delete = user.clone();
+    let user = Rc::new(user);
 
     let (update_info, set_update_info) = create_signal(false);
 
@@ -174,10 +180,17 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
         || {},
         |_| async { get_class_list().await.unwrap_or_default() },
     );
-    let students_classes = create_resource(
-        move || user.id,
-        |user_id| async move { get_students_classes(user_id).await.unwrap_or_default() },
-    );
+    let students_classes = create_resource(|| {}, {
+        let user = Rc::clone(&user);
+        move |_| {
+            let user = user.clone();
+            async move {
+                get_students_classes(user.get().id)
+                    .await
+                    .unwrap_or_default()
+            }
+        }
+    });
 
     let update_user_action = create_action(move |user: &User| {
         let user = user.clone();
@@ -194,31 +207,40 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
         }
     });
 
-    let delete_user_action = create_action(move |_| {
+    let delete_user_action = create_action({
         let user = user.clone();
-        async move {
-            delete_user(user.clone()).await.unwrap_or_default();
-            set_user_options_visible(false);
-            let navigate = leptos_router::use_navigate();
-            navigate("/AdminHomePage", Default::default())
+        move |user: &User| {
+            let user = user.clone();
+            async move {
+                delete_user(user.clone()).await.unwrap_or_default();
+                set_user_options_visible(false);
+                let navigate = leptos_router::use_navigate();
+                navigate("/AdminHomePage", Default::default())
+            }
         }
     });
 
     let (class_selections, set_class_selections) = create_signal(HashMap::new());
 
-    let add_user_classes_action = create_action(move |class_id: &i32| {
-        let class_id = class_id.clone();
+    let add_user_classes_action = create_action({
         let user = user.clone();
-        async move {
-            add_student_to_class(class_id, user.id).await.unwrap();
+        move |(class_id, user): &(i32, User)| {
+            let class_id = class_id.clone();
+            let user = user.clone();
+            async move {
+                add_student_to_class(class_id, user.id).await.unwrap();
+            }
         }
     });
 
-    let remove_user_from_class_action = create_action(move |class_id: &i32| {
-        let class_id = *class_id;
+    let remove_user_from_class_action = create_action({
         let user = user.clone();
-        async move {
-            remove_student_from_class(class_id, user.id).await.unwrap();
+        move |(class_id, user): &(i32, User)| {
+            let class_id = *class_id;
+            let user = user.clone();
+            async move {
+                remove_student_from_class(class_id, user.id).await.unwrap();
+            }
         }
     });
 
@@ -229,7 +251,8 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
-              delete_user_action.dispatch(|| {});
+              let user_delete = user_delete.clone();
+              delete_user_action.dispatch(user_delete.get());
             }
           >
             "Delete User"
@@ -243,7 +266,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.firstname
+                value=input_user.get().firstname
                 readonly=move || !first_name_editable()
                 on:input=move |ev| {
                   set_first_name(event_target_value(&ev));
@@ -262,7 +285,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.clone().lastname
+                value=input_user.get().lastname
                 readonly=move || !last_name_editable()
                 on:input=move |ev| {
                   set_last_name(event_target_value(&ev));
@@ -280,7 +303,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.clone().username
+                value=input_user.get().username
                 readonly=move || !username_editable()
                 on:input=move |ev| {
                   set_username(event_target_value(&ev));
@@ -352,7 +375,6 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
-              let user = user.clone();
               if update_info() {
                 update_user_action
                   .dispatch(User {
@@ -360,14 +382,14 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
                     firstname: first_name.get(),
                     lastname: last_name.get(),
                     role: role.get(),
-                    id: user.id,
+                    id: input_user.get().id,
                   });
               }
               for (class_id, selected) in class_selections.get().iter() {
                 if *selected {
-                  add_user_classes_action.dispatch(*class_id);
+                  add_user_classes_action.dispatch((*class_id, user.get()));
                 } else {
-                  remove_user_from_class_action.dispatch(*class_id);
+                  remove_user_from_class_action.dispatch((*class_id, user_delete.get()));
                 }
               }
             }
