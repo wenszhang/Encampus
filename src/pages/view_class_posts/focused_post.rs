@@ -61,7 +61,6 @@ pub struct AddReplyInfo {
 
 #[component]
 pub fn FocusedPost() -> impl IntoView {
-    // Fetch post id from route in the format of "class/:class_id/:post_id"
     let post_id = use_params::<PostId>();
     let class_id = use_params::<ClassId>();
     let global_state = expect_context::<GlobalState>();
