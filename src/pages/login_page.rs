@@ -25,28 +25,50 @@ pub fn LoginPage() -> impl IntoView {
         let username = username.get().to_owned();
         let password = password.get().to_owned();
         async move {
-            match login(username.clone(), password.clone()).await{
-                Ok(user) => (Some(user.username), Some(user.id), Some(user.firstname), Some(user.lastname), Some(user.role), Some(None)),
-                Err(ServerFnError::ServerError(err_msg)) =>  (None, None, None, None, None, Some(Some(err_msg))),
-                Err(_) => (None, None, None, None, None, Some(Some("Unknown error".to_string()))),
+            match login(username.clone(), password.clone()).await {
+                Ok(user) => (
+                    Some(user.username),
+                    Some(user.id),
+                    Some(user.firstname),
+                    Some(user.lastname),
+                    Some(user.role),
+                    Some(None),
+                ),
+                Err(ServerFnError::ServerError(err_msg)) => {
+                    (None, None, None, None, None, Some(Some(err_msg)))
+                }
+                Err(_) => (
+                    None,
+                    None,
+                    None,
+                    None,
+                    None,
+                    Some(Some("Unknown error".to_string())),
+                ),
             }
-      }
+        }
     });
 
     create_effect(move |_| {
         let global_state = expect_context::<GlobalState>();
         if let Some(userInfo) = login_action.value()() {
             if let Some(Some(error_msg)) = userInfo.5 {
-              set_login_error.set(Some(NotificationDetails {
-                message: format!("Failed Signing In: {}", error_msg),
-                notification_type: NotificationType::Error,
-            }));
+                set_login_error.set(Some(NotificationDetails {
+                    message: format!("Failed Signing In: {}", error_msg),
+                    notification_type: NotificationType::Error,
+                }));
             } else {
                 global_state.authenticated.set(true);
-                global_state.user_name.set(Some(userInfo.0.unwrap_or_default()));
+                global_state
+                    .user_name
+                    .set(Some(userInfo.0.unwrap_or_default()));
                 global_state.id.set(Some(userInfo.1.unwrap_or_default()));
-                global_state.first_name.set(Some(userInfo.2.unwrap_or_default()));
-                global_state.last_name.set(Some(userInfo.3.unwrap_or_default()));
+                global_state
+                    .first_name
+                    .set(Some(userInfo.2.unwrap_or_default()));
+                global_state
+                    .last_name
+                    .set(Some(userInfo.3.unwrap_or_default()));
                 global_state.role.set(Some(userInfo.4.unwrap_or_default()));
 
                 // Save user info to local storage
