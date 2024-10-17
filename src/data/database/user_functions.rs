@@ -67,7 +67,7 @@ pub async fn add_user(new_user: User, password: String) -> Result<User, ServerFn
     ))?;
 
     let user: User = sqlx::query_as(
-        "insert into users(username, firstname, lastname, role, password) values($1, $2, $3, $4) 
+        "insert into users(username, firstname, lastname, role, password) values($1, $2, $3, $4, $5) 
         returning username,
         firstname,
         lastname,   
