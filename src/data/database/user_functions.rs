@@ -1,3 +1,4 @@
+use leptos::server_fn::error::NoCustomError;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 /**
@@ -163,4 +164,42 @@ pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError>
             .await
             .expect("no users found");
     Ok(users)
+}
+
+#[server(UpdateUserCredentials)]
+pub async fn update_user_credentials(
+    user_id: i32,
+    username: String,
+    password: String,
+) -> Result<(), ServerFnError<NoCustomError>> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("UPDATE users SET username = $1, password = $2 WHERE id = $3")
+        .bind(username)
+        .bind(password)
+        .bind(user_id)
+        .execute(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError(
+                "Unable to update user credentials".to_string(),
+            )
+        })?;
+
+    Ok(())
+}
+
+pub fn validate_password(password: &str) -> bool {
+    let min_length = 8;
+    let has_uppercase = password.chars().any(|c| c.is_uppercase());
+    let has_lowercase = password.chars().any(|c| c.is_lowercase());
+    let has_digit = password.chars().any(|c| c.is_digit(10));
+    let has_special_char = password.chars().any(|c| !c.is_alphanumeric());
+
+    password.len() >= min_length && has_uppercase && has_lowercase && has_digit && has_special_char
 }
