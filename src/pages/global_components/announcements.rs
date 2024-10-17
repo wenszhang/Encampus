@@ -4,7 +4,7 @@ use crate::data::database::announcement_functions::{
 use crate::data::global_state::GlobalState;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use leptos::*;
-use leptos_router::use_params;
+use leptos_router::{use_params, A};
 use crate::pages::view_class_posts::class::ClassId;
 
 #[component]
