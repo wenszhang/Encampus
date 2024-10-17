@@ -107,6 +107,44 @@ pub async fn add_user(new_user: User, password: String) -> Result<User, ServerFn
     Ok(user)
 }
 
+#[server(DeleteUser)]
+pub async fn delete_user(user: User) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    if user.role == *"student" {
+        sqlx::query("delete from students where id = $1")
+            .bind(user.id)
+            .execute(&pool)
+            .await
+            .map_err(|_| {
+                ServerFnError::<NoCustomError>::ServerError("Unable to delete user".to_string())
+            })?;
+    } else if user.role == *"professor" {
+        sqlx::query("delete from professors where id = $1")
+            .bind(user.id)
+            .execute(&pool)
+            .await
+            .map_err(|_| {
+                ServerFnError::<NoCustomError>::ServerError("Unable to delete user".to_string())
+            })?;
+    }
+
+    sqlx::query("delete from users where id = $1")
+        .bind(user.id)
+        .execute(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Unable to delete user".to_string())
+        })?;
+
+    Ok(())
+}
+
 #[server(UpdateUser)]
 pub async fn update_user(user: User) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};

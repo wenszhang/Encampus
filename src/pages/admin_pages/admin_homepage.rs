@@ -5,7 +5,7 @@ use crate::data::database::class_functions::{
     remove_student_from_class, update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
-    add_user, get_users, get_users_by_role, update_user, User,
+    add_user, delete_user, get_users, get_users_by_role, update_user, User,
 };
 use crate::pages::global_components::header::Header;
 use leptos::*;
@@ -45,7 +45,7 @@ pub fn AdminHomePage() -> impl IntoView {
           <ClassOptions class=display_class() />
         </Show>
         <Show when=move || user_options_visible.get() fallback=|| ()>
-          <UserOptions user=display_user() />
+          <UserOptions user=display_user() set_user_options_visible=set_user_options_visible />
         </Show>
         <Show when=move || new_user_visible.get() fallback=|| ()>
           <AddNewUser
@@ -158,7 +158,7 @@ pub fn AdminHomePage() -> impl IntoView {
 }
 
 #[component]
-fn UserOptions(user: User) -> impl IntoView {
+fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl IntoView {
     let (first_name_editable, set_first_name_editable) = create_signal(false);
     let (first_name, set_first_name) = create_signal(user.firstname.clone());
     let (last_name_editable, set_last_name_editable) = create_signal(false);
@@ -179,12 +179,6 @@ fn UserOptions(user: User) -> impl IntoView {
         |user_id| async move { get_students_classes(user_id).await.unwrap_or_default() },
     );
 
-    // let on_input = |setter: WriteSignal<String>| {
-    //     move |ev| {
-    //         setter(event_target_value(&ev));
-    //     }
-    // };
-
     let update_user_action = create_action(move |user: &User| {
         let user = user.clone();
         async move {
@@ -200,10 +194,21 @@ fn UserOptions(user: User) -> impl IntoView {
         }
     });
 
+    let delete_user_action = create_action(move |_| {
+        let user = user.clone();
+        async move {
+            delete_user(user.clone()).await.unwrap_or_default();
+            set_user_options_visible(false);
+            let navigate = leptos_router::use_navigate();
+            navigate("/AdminHomePage", Default::default())
+        }
+    });
+
     let (class_selections, set_class_selections) = create_signal(HashMap::new());
 
     let add_user_classes_action = create_action(move |class_id: &i32| {
-        let class_id = *class_id;
+        let class_id = class_id.clone();
+        let user = user.clone();
         async move {
             add_student_to_class(class_id, user.id).await.unwrap();
         }
@@ -211,6 +216,7 @@ fn UserOptions(user: User) -> impl IntoView {
 
     let remove_user_from_class_action = create_action(move |class_id: &i32| {
         let class_id = *class_id;
+        let user = user.clone();
         async move {
             remove_student_from_class(class_id, user.id).await.unwrap();
         }
@@ -218,7 +224,17 @@ fn UserOptions(user: User) -> impl IntoView {
 
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">"User Options"</h2>
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="mb-4 text-lg font-semibold">"User Options"</h2>
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              delete_user_action.dispatch(|| {});
+            }
+          >
+            "Delete User"
+          </button>
+        </div>
         <div class="grid grid-cols-2 gap-2">
 
           <div class="grid grid-cols-1 gap-2">
@@ -246,7 +262,7 @@ fn UserOptions(user: User) -> impl IntoView {
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.lastname
+                value=user.clone().lastname
                 readonly=move || !last_name_editable()
                 on:input=move |ev| {
                   set_last_name(event_target_value(&ev));
@@ -264,7 +280,7 @@ fn UserOptions(user: User) -> impl IntoView {
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.username
+                value=user.clone().username
                 readonly=move || !username_editable()
                 on:input=move |ev| {
                   set_username(event_target_value(&ev));
@@ -336,6 +352,7 @@ fn UserOptions(user: User) -> impl IntoView {
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
+              let user = user.clone();
               if update_info() {
                 update_user_action
                   .dispatch(User {
