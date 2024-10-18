@@ -148,6 +148,27 @@ pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
     Ok(users)
 }
 
+#[server(GetUserById)]
+pub async fn get_user_by_id(user_id: i32) -> Result<User, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let user: User =
+        sqlx::query_as("select username, firstname, lastname, id, role from users where id = $1")
+            .bind(user_id)
+            .fetch_one(&pool)
+            .await
+            .map_err(|_| {
+                ServerFnError::<NoCustomError>::ServerError("User not found".to_string())
+            })?;
+
+    Ok(user)
+}
+
 #[server(GetUsersByRole)]
 pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};

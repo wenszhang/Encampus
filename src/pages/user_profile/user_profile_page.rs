@@ -1,18 +1,48 @@
-use crate::data::database::user_functions::update_user;
+use crate::data::database::user_functions::{get_user_by_id, update_user, User};
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::{data::global_state::GlobalState, pages::global_components::header::Header};
 use leptos::ev::SubmitEvent;
-use leptos::{component, expect_context, view, IntoView, Signal, SignalGetUntracked, Suspense};
+use leptos::window;
+use leptos::{
+    component, create_signal, expect_context, view, IntoView, Signal, SignalGet,
+    SignalGetUntracked, Suspense,
+};
+use wasm_bindgen::JsCast;
 
 /// Renders the user settings page
 #[component]
 pub fn UserProfile() -> impl IntoView {
     let global_state = expect_context::<GlobalState>();
     let user_id = global_state.id.get_untracked().unwrap_or_default();
-    let first_name = global_state.first_name.get_untracked().unwrap_or_default();
-    let last_name = global_state.last_name.get_untracked().unwrap_or_default();
+    let (first_name, set_first_name) =
+        create_signal(global_state.first_name.get_untracked().unwrap_or_default());
+    let (last_name, set_last_name) =
+        create_signal(global_state.last_name.get_untracked().unwrap_or_default());
 
-    let on_submit = move |event: SubmitEvent| {};
+    let on_submit = move |event: SubmitEvent| {
+        event.prevent_default();
+        let first_name = first_name.get();
+        let last_name = last_name.get();
+
+        leptos::spawn_local(async move {
+            if let Ok(user) = get_user_by_id(user_id).await {
+                let updated_user = User {
+                    username: user.username,
+                    firstname: first_name,
+                    lastname: last_name,
+                    id: user.id,
+                    role: user.role,
+                };
+                if let Err(_err) = update_user(updated_user).await {
+                    // handle error
+                } else {
+                    // Reload the page on success by navigating to the current URL
+                    let current_url = window().location().href().unwrap();
+                    window().location().set_href(&current_url).unwrap();
+                }
+            }
+        });
+    };
 
     view! {
       <div class="flex">
@@ -38,7 +68,10 @@ pub fn UserProfile() -> impl IntoView {
                   id="first_name"
                   name="first_name"
                   class="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  value=first_name
+                  prop:value=first_name
+                  on:input=move |e| set_first_name(
+                    e.target().unwrap().dyn_into::<web_sys::HtmlInputElement>().unwrap().value(),
+                  )
                 />
               </div>
               <div class="flex flex-col">
@@ -50,7 +83,10 @@ pub fn UserProfile() -> impl IntoView {
                   id="last_name"
                   name="last_name"
                   class="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
-                  value=last_name
+                  prop:value=last_name
+                  on:input=move |e| set_last_name(
+                    e.target().unwrap().dyn_into::<web_sys::HtmlInputElement>().unwrap().value(),
+                  )
                 />
               </div>
               <div class="flex justify-end mt-6">
