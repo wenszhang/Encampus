@@ -187,12 +187,8 @@ pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError>
     Ok(users)
 }
 
-#[server(UpdateUserCredentials)]
-pub async fn update_user_credentials(
-    user_id: i32,
-    username: String,
-    password: String,
-) -> Result<(), ServerFnError<NoCustomError>> {
+#[server(UpdatePassword)]
+pub async fn update_user_password(user_id: i32, password: String) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -200,16 +196,13 @@ pub async fn update_user_credentials(
         "Unable to complete Request".to_string(),
     ))?;
 
-    sqlx::query("UPDATE users SET username = $1, password = $2 WHERE id = $3")
-        .bind(username)
+    sqlx::query("UPDATE users SET password = $1 WHERE id = $2")
         .bind(password)
         .bind(user_id)
         .execute(&pool)
         .await
         .map_err(|_| {
-            ServerFnError::<NoCustomError>::ServerError(
-                "Unable to update user credentials".to_string(),
-            )
+            ServerFnError::<NoCustomError>::ServerError("Unable to update password".to_string())
         })?;
 
     Ok(())

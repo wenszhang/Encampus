@@ -36,9 +36,11 @@ pub fn UserProfile() -> impl IntoView {
                 if let Err(_err) = update_user(updated_user).await {
                     // handle error
                 } else {
-                    // Reload the page on success by navigating to the current URL
-                    let current_url = window().location().href().unwrap();
-                    window().location().set_href(&current_url).unwrap();
+                    // Temp solution to handle global state issues
+                    window().location().set_href("/login").unwrap();
+                    // // Reload the page on success by navigating to the current URL
+                    // let current_url = window().location().href().unwrap();
+                    // window().location().set_href(&current_url).unwrap();
                 }
             }
         });
