@@ -6,7 +6,7 @@ use crate::data::global_state::GlobalState;
 use crate::resources::images::svgs::announcement_bell::AnnouncementBell;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
 use leptos::*;
-use leptos_router::{use_navigate, A};
+use leptos_router::use_navigate;
 
 #[component]
 pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
@@ -46,6 +46,10 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
     // Clone global_state so it can be used in multiple closures
     let global_state_clone = global_state.clone();
 
+    let (dropdown_visible, set_dropdown_visible) = create_signal(false);
+
+    let base_classes = "absolute right-0 top-full z-50 bg-white rounded-lg shadow-md transition-transform duration-200 ease-out";
+
     let header_text_href = move || {
         if let Some(id) = class_id() {
             format!("/classes/{}", id)
@@ -63,11 +67,15 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
 
     view! {
       <div class="flex justify-between items-center p-4 text-gray-600 bg-white">
-        <div class="flex items-center">
+        <div class="flex items-center" style="padding: 0;">
           <a href="/classes">
-            <img src=format!("/{}", logo_src) alt="Logo" class="mr-2 h-8" />
+            <img src=format!("/{}", logo_src) alt="Logo" class="h-8" style="padding: 0;" />
           </a>
-          <a href=header_text_href class="text-xl font-bold">
+          <a
+            href=header_text_href
+            class="flex items-center text-gray-600"
+            style="font-size: 2rem; height: 2rem; line-height: 2rem; padding: 0;"
+          >
             {text}
           </a>
         </div>
@@ -94,25 +102,41 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
           <span class="flex items-center mr-4 text-xl font-bold">
             {move || global_state.first_name.get()}
           </span> <div class="flex relative items-center group">
-            <button>
+            <button on:click=move |_| set_dropdown_visible(!dropdown_visible())>
               <DropDownBars size="1.3rem" />
             </button>
-            <div class="absolute right-0 top-full invisible z-50 bg-white rounded-lg shadow-md opacity-0 transition duration-200 ease-out scale-95 group-hover:visible group-hover:opacity-100 group-hover:scale-100 mt-[-0.1rem]">
-              <ul class="py-1 w-36 text-lg text-left text-gray-700">
+            <div class=move || {
+              let visibility_classes = if dropdown_visible.get() {
+                "visible opacity-100 scale-100"
+              } else {
+                "invisible opacity-0 scale-95"
+              };
+              format!("{} {}", base_classes, visibility_classes)
+            }>
+              <ul class="py-1 w-36 text-lg text-gray-700">
                 <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <div class="block">"Profile"</div>
+                  <a href="/profile" class="block w-full h-full">
+                    Profile
+                  </a>
                 </li>
                 <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <div class="block">"Settings"</div>
+                  <a href="/settings" class="block w-full h-full">
+                    Settings
+                  </a>
                 </li>
                 <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <div class="block">
-                    <A href="/classes">"Dashboard"</A>
-                  </div>
+                  <a
+                    href="/classes"
+                    class="block w-full h-full"
+                    aria-current="page"
+                    style="all: unset; display: block; text-align: left; color: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;"
+                  >
+                    Dashboard
+                  </a>
                 </li>
                 <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <div class="block" on:click=logout>
-                    "Logout"
+                  <div class="block w-full h-full" on:click=logout>
+                    Logout
                   </div>
                 </li>
               </ul>

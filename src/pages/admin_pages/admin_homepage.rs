@@ -181,6 +181,7 @@ fn UserOptions(
     let (role, set_role) = create_signal(user.role.clone());
     let (user, _set_user) = create_signal(user.clone());
     let (password, set_password) = create_signal("".to_string());
+    let (password_editable, set_password_editable) = create_signal(false);
 
     let (update_info, set_update_info) = create_signal(false);
 
@@ -354,11 +355,12 @@ fn UserOptions(
               </div>
             </div>
             <div class="flex items-center">
-              <label class="mr-4 font-semibold">"New Password"</label>
+              <label class="mr-4 font-semibold">"New Password:"</label>
               <input
                 class="p-2 rounded border"
                 type="text"
                 value=user_password.get()
+                readonly=move || !password_editable()
                 on:input=move |ev| {
                   set_password(event_target_value(&ev));
                   set_update_info(true);
@@ -366,9 +368,9 @@ fn UserOptions(
               />
               <div
                 class="ml-2 text-sm text-gray-500 cursor-pointer"
-                on:click=move |_| set_role_editable.update(|editable| *editable = !*editable)
+                on:click=move |_| set_password_editable.update(|editable| *editable = !*editable)
               >
-                {if role_editable.get() { "Save" } else { "Edit" }}
+                {if password_editable.get() { "Save" } else { "Edit" }}
               </div>
             </div>
           </div>
