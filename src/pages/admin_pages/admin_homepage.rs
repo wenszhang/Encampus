@@ -5,7 +5,7 @@ use crate::data::database::class_functions::{
     remove_student_from_class, update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
-    add_user, delete_user, get_users, get_users_by_role, update_user, User,
+    add_user, delete_user, get_user_password, get_users, get_users_by_role, update_user, User,
 };
 use crate::pages::global_components::header::Header;
 use leptos::*;
@@ -180,6 +180,7 @@ fn UserOptions(
     let (role_editable, set_role_editable) = create_signal(false);
     let (role, set_role) = create_signal(user.role.clone());
     let (user, _set_user) = create_signal(user.clone());
+    let (password, set_password) = create_signal("".to_string());
 
     let (update_info, set_update_info) = create_signal(false);
 
@@ -202,13 +203,16 @@ fn UserOptions(
     let update_user_action = create_action(move |user: &User| {
         let user = user.clone();
         async move {
-            update_user(User {
-                username: username.get(),
-                firstname: first_name.get(),
-                lastname: last_name.get(),
-                id: user.id,
-                role: role.get(),
-            })
+            update_user(
+                User {
+                    username: username.get(),
+                    firstname: first_name.get(),
+                    lastname: last_name.get(),
+                    id: user.id,
+                    role: role.get(),
+                },
+                password.get(),
+            )
             .await
             .unwrap();
         }
@@ -249,6 +253,11 @@ fn UserOptions(
             }
         }
     });
+
+    let user_password = create_resource(
+        || {},
+        move |_| async move { get_user_password(user.get().id).await.unwrap_or_default() },
+    );
 
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
@@ -337,6 +346,24 @@ fn UserOptions(
                 <option value="Instructor">"Instructor"</option>
                 <option value="Admin">"Admin"</option>
               </select>
+              <div
+                class="ml-2 text-sm text-gray-500 cursor-pointer"
+                on:click=move |_| set_role_editable.update(|editable| *editable = !*editable)
+              >
+                {if role_editable.get() { "Save" } else { "Edit" }}
+              </div>
+            </div>
+            <div class="flex items-center">
+              <label class="mr-4 font-semibold">"New Password"</label>
+              <input
+                class="p-2 rounded border"
+                type="text"
+                value=user_password.get()
+                on:input=move |ev| {
+                  set_password(event_target_value(&ev));
+                  set_update_info(true);
+                }
+              />
               <div
                 class="ml-2 text-sm text-gray-500 cursor-pointer"
                 on:click=move |_| set_role_editable.update(|editable| *editable = !*editable)

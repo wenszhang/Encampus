@@ -19,7 +19,7 @@ pub struct UserId(pub i32);
 
 #[derive(Clone, Serialize, Deserialize, Default, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct UserPassword(pub String);
+pub struct UserPassword(String);
 
 /**
  * Login a user or sign them up if they don't exist
@@ -146,7 +146,7 @@ pub async fn delete_user(user: User) -> Result<(), ServerFnError> {
 }
 
 #[server(UpdateUser)]
-pub async fn update_user(user: User) -> Result<(), ServerFnError> {
+pub async fn update_user(user: User, password: String) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -155,12 +155,13 @@ pub async fn update_user(user: User) -> Result<(), ServerFnError> {
     ))?;
 
     sqlx::query(
-        "update users set username = $1, firstname = $2, lastname = $3, role = $4 where id = $5",
+        "update users set username = $1, firstname = $2, lastname = $3, role = $4, password = $5 where id = $6",
     )
     .bind(user.username.clone())
     .bind(user.firstname.clone())
     .bind(user.lastname.clone())
     .bind(user.role.clone())
+    .bind(password)
     .bind(user.id)
     .execute(&pool)
     .await
@@ -204,4 +205,22 @@ pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError>
             .await
             .expect("no users found");
     Ok(users)
+}
+
+#[server(GetUserPassword)]
+pub async fn get_user_password(id: i32) -> Result<String, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let UserPassword(password) = sqlx::query_as("select password from users where id = $1")
+        .bind(id)
+        .fetch_one(&pool)
+        .await
+        .expect("No user found");
+
+    Ok(password)
 }
