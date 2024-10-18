@@ -1,11 +1,11 @@
 use std::collections::HashMap;
 
 use crate::data::database::class_functions::{
-    add_class, add_student_to_class, get_class_list, get_students_classes,
+    add_class, add_student_to_class, delete_class, get_class_list, get_students_classes,
     remove_student_from_class, update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
-    add_user, get_users, get_users_by_role, update_user, User,
+    add_user, delete_user, get_user_password, get_users, get_users_by_role, update_user, User,
 };
 use crate::pages::global_components::header::Header;
 use leptos::*;
@@ -42,10 +42,18 @@ pub fn AdminHomePage() -> impl IntoView {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
       <div class="mx-6 mt-6 space-x-4">
         <Show when=move || display_class_options.get() fallback=|| ()>
-          <ClassOptions class=display_class() />
+          <ClassOptions
+            class=display_class()
+            set_display_class_options=set_display_class_options
+            display_class_options=set_display_class_options
+          />
         </Show>
         <Show when=move || user_options_visible.get() fallback=|| ()>
-          <UserOptions user=display_user() />
+          <UserOptions
+            user=display_user()
+            set_user_options_visible=set_user_options_visible
+            display_user_options=set_user_options_visible
+          />
         </Show>
         <Show when=move || new_user_visible.get() fallback=|| ()>
           <AddNewUser
@@ -158,7 +166,11 @@ pub fn AdminHomePage() -> impl IntoView {
 }
 
 #[component]
-fn UserOptions(user: User) -> impl IntoView {
+fn UserOptions(
+    user: User,
+    set_user_options_visible: WriteSignal<bool>,
+    display_user_options: WriteSignal<bool>,
+) -> impl IntoView {
     let (first_name_editable, set_first_name_editable) = create_signal(false);
     let (first_name, set_first_name) = create_signal(user.firstname.clone());
     let (last_name_editable, set_last_name_editable) = create_signal(false);
@@ -167,6 +179,9 @@ fn UserOptions(user: User) -> impl IntoView {
     let (username, set_username) = create_signal(user.username.clone());
     let (role_editable, set_role_editable) = create_signal(false);
     let (role, set_role) = create_signal(user.role.clone());
+    let (user, _set_user) = create_signal(user.clone());
+    let (password, set_password) = create_signal("".to_string());
+    let (password_editable, set_password_editable) = create_signal(false);
 
     let (update_info, set_update_info) = create_signal(false);
 
@@ -174,51 +189,90 @@ fn UserOptions(user: User) -> impl IntoView {
         || {},
         |_| async { get_class_list().await.unwrap_or_default() },
     );
-    let students_classes = create_resource(
-        move || user.id,
-        |user_id| async move { get_students_classes(user_id).await.unwrap_or_default() },
-    );
-
-    // let on_input = |setter: WriteSignal<String>| {
-    //     move |ev| {
-    //         setter(event_target_value(&ev));
-    //     }
-    // };
+    let students_classes = create_resource(|| {}, {
+        // let user = Rc::clone(&user);
+        move |_| {
+            // let user = user.clone();
+            async move {
+                get_students_classes(user.get().id)
+                    .await
+                    .unwrap_or_default()
+            }
+        }
+    });
 
     let update_user_action = create_action(move |user: &User| {
         let user = user.clone();
         async move {
-            update_user(User {
-                username: username.get(),
-                firstname: first_name.get(),
-                lastname: last_name.get(),
-                id: user.id,
-                role: role.get(),
-            })
+            update_user(
+                User {
+                    username: username.get(),
+                    firstname: first_name.get(),
+                    lastname: last_name.get(),
+                    id: user.id,
+                    role: role.get(),
+                },
+                password.get(),
+            )
             .await
             .unwrap();
         }
     });
 
+    let delete_user_action = create_action({
+        move |user: &User| {
+            let user = user.clone();
+            async move {
+                delete_user(user.clone()).await.unwrap_or_default();
+                set_user_options_visible(false);
+                let navigate = leptos_router::use_navigate();
+                navigate("/AdminHomePage", Default::default())
+            }
+        }
+    });
+
     let (class_selections, set_class_selections) = create_signal(HashMap::new());
 
-    let add_user_classes_action = create_action(move |class_id: &i32| {
-        let class_id = *class_id;
-        async move {
-            add_student_to_class(class_id, user.id).await.unwrap();
+    let add_user_classes_action = create_action({
+        // let user = user.clone();
+        move |(class_id, user): &(i32, User)| {
+            let class_id = *class_id;
+            let user = user.clone();
+            async move {
+                add_student_to_class(class_id, user.id).await.unwrap();
+            }
         }
     });
 
-    let remove_user_from_class_action = create_action(move |class_id: &i32| {
-        let class_id = *class_id;
-        async move {
-            remove_student_from_class(class_id, user.id).await.unwrap();
+    let remove_user_from_class_action = create_action({
+        // let user = user.clone();
+        move |(class_id, user): &(i32, User)| {
+            let class_id = *class_id;
+            let user = user.clone();
+            async move {
+                remove_student_from_class(class_id, user.id).await.unwrap();
+            }
         }
     });
+
+    let user_password = create_resource(
+        || {},
+        move |_| async move { get_user_password(user.get().id).await.unwrap_or_default() },
+    );
 
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">"User Options"</h2>
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="mb-4 text-lg font-semibold">"User Options"</h2>
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              display_user_options.update(|value| *value = !*value);
+            }
+          >
+            "Close"
+          </button>
+        </div>
         <div class="grid grid-cols-2 gap-2">
 
           <div class="grid grid-cols-1 gap-2">
@@ -227,7 +281,7 @@ fn UserOptions(user: User) -> impl IntoView {
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.firstname
+                value=user.get().firstname
                 readonly=move || !first_name_editable()
                 on:input=move |ev| {
                   set_first_name(event_target_value(&ev));
@@ -246,7 +300,7 @@ fn UserOptions(user: User) -> impl IntoView {
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.lastname
+                value=user.get().lastname
                 readonly=move || !last_name_editable()
                 on:input=move |ev| {
                   set_last_name(event_target_value(&ev));
@@ -264,7 +318,7 @@ fn UserOptions(user: User) -> impl IntoView {
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.username
+                value=user.get().username
                 readonly=move || !username_editable()
                 on:input=move |ev| {
                   set_username(event_target_value(&ev));
@@ -281,9 +335,10 @@ fn UserOptions(user: User) -> impl IntoView {
             <div class="flex items-center">
               <select
                 class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-                on:change=move |ev| {
-                  let new_value = event_target_value(&ev);
-                  set_role(new_value);
+                disabled=move || !role_editable()
+                on:input=move |ev| {
+                  set_update_info(true);
+                  set_role(event_target_value(&ev));
                 }
                 prop:value=move || role.get()
                 readonly=move || !role_editable()
@@ -296,7 +351,26 @@ fn UserOptions(user: User) -> impl IntoView {
                 class="ml-2 text-sm text-gray-500 cursor-pointer"
                 on:click=move |_| set_role_editable.update(|editable| *editable = !*editable)
               >
-                {if role_editable() { "Save" } else { "Edit" }}
+                {if role_editable.get() { "Save" } else { "Edit" }}
+              </div>
+            </div>
+            <div class="flex items-center">
+              <label class="mr-4 font-semibold">"New Password:"</label>
+              <input
+                class="p-2 rounded border"
+                type="text"
+                value=user_password.get()
+                readonly=move || !password_editable()
+                on:input=move |ev| {
+                  set_password(event_target_value(&ev));
+                  set_update_info(true);
+                }
+              />
+              <div
+                class="ml-2 text-sm text-gray-500 cursor-pointer"
+                on:click=move |_| set_password_editable.update(|editable| *editable = !*editable)
+              >
+                {if password_editable.get() { "Save" } else { "Edit" }}
               </div>
             </div>
           </div>
@@ -331,8 +405,17 @@ fn UserOptions(user: User) -> impl IntoView {
             </ul>
 
           </div>
+
         </div>
-        <div class="mt-4 text-right">
+        <div class="flex justify-between items-center mt-4">
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              delete_user_action.dispatch(user.get());
+            }
+          >
+            "Delete User"
+          </button>
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
@@ -343,14 +426,14 @@ fn UserOptions(user: User) -> impl IntoView {
                     firstname: first_name.get(),
                     lastname: last_name.get(),
                     role: role.get(),
-                    id: user.id,
+                    id: user.get().id,
                   });
               }
               for (class_id, selected) in class_selections.get().iter() {
                 if *selected {
-                  add_user_classes_action.dispatch(*class_id);
+                  add_user_classes_action.dispatch((*class_id, user.get()));
                 } else {
-                  remove_user_from_class_action.dispatch(*class_id);
+                  remove_user_from_class_action.dispatch((*class_id, user.get()));
                 }
               }
             }
@@ -372,7 +455,7 @@ fn AddNewUser(
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
-    let (role, set_role) = create_signal("".to_string());
+    let (role, set_role) = create_signal("student".to_string()); // Set to student by default
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
@@ -537,11 +620,16 @@ fn AddClass() -> impl IntoView {
 }
 
 #[component]
-fn ClassOptions(class: ClassInfo) -> impl IntoView {
+fn ClassOptions(
+    class: ClassInfo,
+    set_display_class_options: WriteSignal<bool>,
+    display_class_options: WriteSignal<bool>,
+) -> impl IntoView {
     let (class_name, set_class_name) = create_signal(class.name.clone());
     let (class_name_editable, set_class_name_editable) = create_signal(false);
     let (instructor_id, set_instructor_id) = create_signal(class.instructor_id);
     let (instructor_name_editable, set_instructor_name_editable) = create_signal(false);
+    let (class, _set_class) = create_signal(class.clone());
 
     let update_class_action = create_action(move |class: &ClassInfo| {
         let class = class.clone();
@@ -553,22 +641,42 @@ fn ClassOptions(class: ClassInfo) -> impl IntoView {
     let instructors = create_resource(
         || {},
         |_| async {
-            get_users_by_role("instructor".to_string())
+            get_users_by_role("Instructor".to_string())
                 .await
                 .unwrap_or_default()
         },
     );
 
+    let delete_class_action = create_action(move |class: &ClassInfo| {
+        let class = class.clone();
+        async move {
+            delete_class(class.id).await.unwrap();
+            set_display_class_options(false);
+            let navigate = leptos_router::use_navigate();
+            navigate("/AdminHomePage", Default::default())
+        }
+    });
+
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">"Class Options"</h2>
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="mb-4 text-lg font-semibold">"Class Options"</h2>
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              display_class_options.update(|value| *value = !*value);
+            }
+          >
+            "Close"
+          </button>
+        </div>
         <div class="grid grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">"Class Name"</label>
             <input
               type="text"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              prop:value=class.name
+              prop:value=class.get().name
               readonly=move || !class_name_editable()
               on:input=move |ev| {
                 set_class_name(event_target_value(&ev));
@@ -612,13 +720,21 @@ fn ClassOptions(class: ClassInfo) -> impl IntoView {
 
         </div>
 
-        <div class="mt-4 text-right">
+        <div class="flex justify-between items-center mt-4">
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              delete_class_action.dispatch(class.get());
+            }
+          >
+            "Delete Class"
+          </button>
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
               update_class_action
                 .dispatch(ClassInfo {
-                  id: class.id,
+                  id: class.get().id,
                   name: class_name.get(),
                   instructor_id: instructor_id.get(),
                   instructor_name: instructors

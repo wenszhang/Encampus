@@ -1,4 +1,4 @@
-use crate::data::database::user_functions::{get_user_by_id, update_user, User};
+use crate::data::database::user_functions::{get_user_by_id, update_user_without_password};
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::{data::global_state::GlobalState, pages::global_components::header::Header};
 use leptos::ev::SubmitEvent;
@@ -35,7 +35,7 @@ pub fn UserSettings() -> impl IntoView {
                     Ok(mut user) => {
                         user.username = user_name.clone();
 
-                        match update_user(user).await {
+                        match update_user_without_password(user).await {
                             Ok(_) => {
                                 global_state.user_name.set(Some(user_name));
                                 window().unwrap().location().set_href("/login").unwrap();
@@ -60,7 +60,7 @@ pub fn UserSettings() -> impl IntoView {
       <div class="flex">
         <Sidebar />
         <div class="flex-1">
-          <Suspense fallback=move || view! { }>
+          <Suspense fallback=move || view! {}>
             <Header text="User Settings".to_string() logo=None class_id=Signal::derive(|| None) />
           </Suspense>
           <div class="p-6 mx-auto mt-8 max-w-2xl bg-white rounded-lg shadow-md user-settings">
@@ -76,7 +76,9 @@ pub fn UserSettings() -> impl IntoView {
                   name="name"
                   class="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   prop:value=user_name
-                  on:input=move |e| set_user_name(e.target().unwrap().dyn_into::<HtmlInputElement>().unwrap().value())
+                  on:input=move |e| set_user_name(
+                    e.target().unwrap().dyn_into::<HtmlInputElement>().unwrap().value(),
+                  )
                 />
               </div>
               <div class="flex flex-col">
@@ -89,7 +91,9 @@ pub fn UserSettings() -> impl IntoView {
                   name="password"
                   class="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   prop:value=password
-                  on:input=move |e| set_password(e.target().unwrap().dyn_into::<HtmlInputElement>().unwrap().value())
+                  on:input=move |e| set_password(
+                    e.target().unwrap().dyn_into::<HtmlInputElement>().unwrap().value(),
+                  )
                   placeholder="Enter your new password"
                 />
               </div>
@@ -103,7 +107,9 @@ pub fn UserSettings() -> impl IntoView {
                   name="confirm-password"
                   class="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   prop:value=confirm_password
-                  on:input=move |e| set_confirm_password(e.target().unwrap().dyn_into::<HtmlInputElement>().unwrap().value())
+                  on:input=move |e| set_confirm_password(
+                    e.target().unwrap().dyn_into::<HtmlInputElement>().unwrap().value(),
+                  )
                   placeholder="Confirm your new password"
                 />
               </div>

@@ -6,8 +6,7 @@ use leptos::{
 };
 use leptos::{create_effect, leptos_dom};
 
-use crate::data::database::class_functions::get_students_classes;
-use crate::data::database::class_functions::ClassInfo;
+use crate::data::database::class_functions::{get_users_classes, ClassInfo};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::header::Header;
 
@@ -39,7 +38,8 @@ pub fn ClassesPage() -> impl IntoView {
         || {},
         move |_| {
             let id = global_state.id.get().unwrap_or_default();
-            async move { get_students_classes(id).await.unwrap_or_default() }
+            let role = global_state.role.get().unwrap_or_default();
+            async move { get_users_classes(id, role).await.unwrap_or_default() }
         },
     );
 

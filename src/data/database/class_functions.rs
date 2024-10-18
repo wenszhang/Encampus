@@ -95,6 +95,30 @@ pub async fn add_class(name: String, instructor_username: i32) -> Result<ClassIn
     })
 }
 
+#[server(DeleteClass)]
+pub async fn delete_class(class_id: i32) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("delete from instructing where courseid = $1")
+        .bind(class_id)
+        .execute(&pool)
+        .await
+        .expect("Failed deleting instructor from class");
+
+    sqlx::query("delete from classes where courseid = $1")
+        .bind(class_id)
+        .execute(&pool)
+        .await
+        .expect("Failed deleting class");
+
+    Ok(())
+}
+
 /**
  * Get the class name given the class id
  */
@@ -185,6 +209,62 @@ pub async fn get_students_classes(user_id: i32) -> Result<Vec<ClassInfo>, Server
         .expect("select should work");
 
     Ok(classes)
+}
+
+#[server(GetInstructorsClasses)]
+pub async fn get_instructors_classes(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+    from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id where instructing.professorid = $1")
+        .bind(user_id)
+        .fetch_all(&pool)
+        .await
+        .expect("select should work");
+
+    Ok(classes)
+}
+
+#[server(GetUsersClasses)]
+pub async fn get_users_classes(
+    user_id: i32,
+    role: String,
+) -> Result<Vec<ClassInfo>, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    if role == "Student" {
+        let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+        from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id join enrolled on classes.courseid = enrolled.courseid where enrolled.studentid = $1")
+            .bind(user_id)
+            .fetch_all(&pool)
+            .await
+            .expect("select should work");
+
+        Ok(classes)
+    } else if role == "Instructor" {
+        let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+        from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id where instructing.professorid = $1")
+            .bind(user_id)
+            .fetch_all(&pool)
+            .await
+            .expect("select should work");
+
+        Ok(classes)
+    } else {
+        return Err(ServerFnError::<NoCustomError>::ServerError(
+            "Invalid role".to_string(),
+        ));
+    }
 }
 
 #[server(UpdateClassInfo)]

@@ -440,7 +440,7 @@ pub fn FocusedDropdown(
         async move {
             match get_post_details(post_id).await {
                 Ok(current_post) => {
-                    if let Ok(_) =
+                    if let Ok(()) =
                         remove_post(post_id, global_state.id.get_untracked().unwrap()).await
                     {
                         posts.update(|posts| {

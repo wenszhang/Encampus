@@ -1,4 +1,4 @@
-use crate::data::database::user_functions::{get_user_by_id, update_user, User};
+use crate::data::database::user_functions::{get_user_by_id, update_user_without_password, User};
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::{data::global_state::GlobalState, pages::global_components::header::Header};
 use leptos::ev::SubmitEvent;
@@ -33,7 +33,7 @@ pub fn UserProfile() -> impl IntoView {
                     id: user.id,
                     role: user.role,
                 };
-                if let Err(_err) = update_user(updated_user).await {
+                if let Err(_err) = update_user_without_password(updated_user).await {
                     // handle error
                 } else {
                     // Temp solution to handle global state issues
@@ -56,8 +56,12 @@ pub fn UserProfile() -> impl IntoView {
           <div class="p-6 mx-auto mt-8 max-w-2xl bg-white rounded-lg shadow-md user-settings">
             <h2 class="mb-6 text-2xl font-bold text-gray-800">Profile Settings</h2>
             <div class="flex justify-center items-center mb-6">
-              <div class="flex justify-center items-center w-24 h-24 rounded-full overflow-hidden">
-                <img src="https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg" alt="Profile Image" class="w-full h-full object-cover" />
+              <div class="flex overflow-hidden justify-center items-center w-24 h-24 rounded-full">
+                <img
+                  src="https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
+                  alt="Profile Image"
+                  class="object-cover w-full h-full"
+                />
               </div>
             </div>
             <form class="space-y-6" on:submit=on_submit>
