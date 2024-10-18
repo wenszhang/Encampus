@@ -8,7 +8,7 @@ use leptos::{
 };
 use wasm_bindgen::JsCast;
 use web_sys::window;
-use web_sys::{HtmlFormElement, HtmlInputElement};
+use web_sys::HtmlInputElement;
 
 /// Renders the user settings page
 #[component]
@@ -24,7 +24,7 @@ pub fn UserSettings() -> impl IntoView {
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
 
-        let user_id = user_id.clone();
+        let user_id = user_id;
         let user_name = user_name.get();
         let password = password.get();
         let confirm_password = confirm_password.get();

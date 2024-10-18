@@ -1,4 +1,3 @@
-use leptos::server_fn::error::NoCustomError;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 /**
@@ -208,6 +207,7 @@ pub async fn update_user_password(user_id: i32, password: String) -> Result<(), 
     Ok(())
 }
 
+// Unused
 pub fn validate_password(password: &str) -> bool {
     let min_length = 8;
     let has_uppercase = password.chars().any(|c| c.is_uppercase());
