@@ -1,5 +1,4 @@
 use std::collections::HashMap;
-use std::rc::Rc;
 
 use crate::data::database::class_functions::{
     add_class, add_student_to_class, delete_class, get_class_list, get_students_classes,
@@ -43,10 +42,18 @@ pub fn AdminHomePage() -> impl IntoView {
       <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
       <div class="mx-6 mt-6 space-x-4">
         <Show when=move || display_class_options.get() fallback=|| ()>
-          <ClassOptions class=display_class() set_display_class_options=set_display_class_options />
+          <ClassOptions
+            class=display_class()
+            set_display_class_options=set_display_class_options
+            display_class_options=set_display_class_options
+          />
         </Show>
         <Show when=move || user_options_visible.get() fallback=|| ()>
-          <UserOptions user=display_user() set_user_options_visible=set_user_options_visible />
+          <UserOptions
+            user=display_user()
+            set_user_options_visible=set_user_options_visible
+            display_user_options=set_user_options_visible
+          />
         </Show>
         <Show when=move || new_user_visible.get() fallback=|| ()>
           <AddNewUser
@@ -159,7 +166,11 @@ pub fn AdminHomePage() -> impl IntoView {
 }
 
 #[component]
-fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl IntoView {
+fn UserOptions(
+    user: User,
+    set_user_options_visible: WriteSignal<bool>,
+    display_user_options: WriteSignal<bool>,
+) -> impl IntoView {
     let (first_name_editable, set_first_name_editable) = create_signal(false);
     let (first_name, set_first_name) = create_signal(user.firstname.clone());
     let (last_name_editable, set_last_name_editable) = create_signal(false);
@@ -170,10 +181,6 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
     let (role, set_role) = create_signal(user.role.clone());
     let (user, _set_user) = create_signal(user.clone());
 
-    // let input_user = user.clone();
-    // let user_delete = user.clone();
-    // let user = Rc::new(user);
-
     let (update_info, set_update_info) = create_signal(false);
 
     let all_classes = create_resource(
@@ -183,7 +190,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
     let students_classes = create_resource(|| {}, {
         // let user = Rc::clone(&user);
         move |_| {
-            let user = user.clone();
+            // let user = user.clone();
             async move {
                 get_students_classes(user.get().id)
                     .await
@@ -222,9 +229,9 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
     let (class_selections, set_class_selections) = create_signal(HashMap::new());
 
     let add_user_classes_action = create_action({
-        let user = user.clone();
+        // let user = user.clone();
         move |(class_id, user): &(i32, User)| {
-            let class_id = class_id.clone();
+            let class_id = *class_id;
             let user = user.clone();
             async move {
                 add_student_to_class(class_id, user.id).await.unwrap();
@@ -233,7 +240,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
     });
 
     let remove_user_from_class_action = create_action({
-        let user = user.clone();
+        // let user = user.clone();
         move |(class_id, user): &(i32, User)| {
             let class_id = *class_id;
             let user = user.clone();
@@ -250,10 +257,10 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
-              delete_user_action.dispatch(user.get());
+              display_user_options.update(|value| *value = !*value);
             }
           >
-            "Delete User"
+            "Close"
           </button>
         </div>
         <div class="grid grid-cols-2 gap-2">
@@ -318,9 +325,10 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
             <div class="flex items-center">
               <select
                 class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-                on:change=move |ev| {
-                  let new_value = event_target_value(&ev);
-                  set_role(new_value);
+                disabled=move || !role_editable()
+                on:input=move |ev| {
+                  set_update_info(true);
+                  set_role(event_target_value(&ev));
                 }
                 prop:value=move || role.get()
                 readonly=move || !role_editable()
@@ -333,7 +341,7 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
                 class="ml-2 text-sm text-gray-500 cursor-pointer"
                 on:click=move |_| set_role_editable.update(|editable| *editable = !*editable)
               >
-                {if role_editable() { "Save" } else { "Edit" }}
+                {if role_editable.get() { "Save" } else { "Edit" }}
               </div>
             </div>
           </div>
@@ -368,8 +376,17 @@ fn UserOptions(user: User, set_user_options_visible: WriteSignal<bool>) -> impl 
             </ul>
 
           </div>
+
         </div>
-        <div class="mt-4 text-right">
+        <div class="flex justify-between items-center mt-4">
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              delete_user_action.dispatch(user.get());
+            }
+          >
+            "Delete User"
+          </button>
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
@@ -409,7 +426,7 @@ fn AddNewUser(
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
-    let (role, set_role) = create_signal("".to_string());
+    let (role, set_role) = create_signal("student".to_string()); // Set to student by default
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
@@ -574,7 +591,11 @@ fn AddClass() -> impl IntoView {
 }
 
 #[component]
-fn ClassOptions(class: ClassInfo, set_display_class_options: WriteSignal<bool>) -> impl IntoView {
+fn ClassOptions(
+    class: ClassInfo,
+    set_display_class_options: WriteSignal<bool>,
+    display_class_options: WriteSignal<bool>,
+) -> impl IntoView {
     let (class_name, set_class_name) = create_signal(class.name.clone());
     let (class_name_editable, set_class_name_editable) = create_signal(false);
     let (instructor_id, set_instructor_id) = create_signal(class.instructor_id);
@@ -591,7 +612,7 @@ fn ClassOptions(class: ClassInfo, set_display_class_options: WriteSignal<bool>) 
     let instructors = create_resource(
         || {},
         |_| async {
-            get_users_by_role("instructor".to_string())
+            get_users_by_role("Instructor".to_string())
                 .await
                 .unwrap_or_default()
         },
@@ -614,10 +635,10 @@ fn ClassOptions(class: ClassInfo, set_display_class_options: WriteSignal<bool>) 
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
-              delete_class_action.dispatch(class.get());
+              display_class_options.update(|value| *value = !*value);
             }
           >
-            "Delete User"
+            "Close"
           </button>
         </div>
         <div class="grid grid-cols-1 gap-4">
@@ -670,7 +691,15 @@ fn ClassOptions(class: ClassInfo, set_display_class_options: WriteSignal<bool>) 
 
         </div>
 
-        <div class="mt-4 text-right">
+        <div class="flex justify-between items-center mt-4">
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              delete_class_action.dispatch(class.get());
+            }
+          >
+            "Delete Class"
+          </button>
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {

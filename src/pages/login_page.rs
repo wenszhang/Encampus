@@ -77,11 +77,11 @@ pub fn LoginPage() -> impl IntoView {
                 // Navigate based on the user's role
                 let navigate = leptos_router::use_navigate();
                 match global_state.role.get().unwrap_or_default().as_str() {
-                    "student" => navigate("/classes", Default::default()),
+                    "Student" => navigate("/classes", Default::default()),
                     // Change to instructor page when implemented
-                    "instructor" => navigate("/classes", Default::default()),
+                    "Instructor" => navigate("/classes", Default::default()),
                     // Change to admin page when implemented
-                    "admin" => navigate("/AdminHomePage", Default::default()),
+                    "Admin" => navigate("/AdminHomePage", Default::default()),
                     _ => navigate("/login", Default::default()),
                 }
             }

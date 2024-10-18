@@ -45,7 +45,7 @@ pub fn RegisterPage() -> impl IntoView {
                     username: username.get(),
                     firstname: first_name.get(),
                     lastname: last_name.get(),
-                    role: "student".to_string(),
+                    role: "Student".to_string(),
                     id: 0,
                 },
                 password.get(),

@@ -154,16 +154,19 @@ pub async fn update_user(user: User) -> Result<(), ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    sqlx::query("update users set username = $1, firstname = $2, lastname = $3 where id = $4")
-        .bind(user.username.clone())
-        .bind(user.firstname.clone())
-        .bind(user.lastname.clone())
-        .bind(user.id)
-        .execute(&pool)
-        .await
-        .map_err(|_| {
-            ServerFnError::<NoCustomError>::ServerError("Unable to update user".to_string())
-        })?;
+    sqlx::query(
+        "update users set username = $1, firstname = $2, lastname = $3, role = $4 where id = $5",
+    )
+    .bind(user.username.clone())
+    .bind(user.firstname.clone())
+    .bind(user.lastname.clone())
+    .bind(user.role.clone())
+    .bind(user.id)
+    .execute(&pool)
+    .await
+    .map_err(|_| {
+        ServerFnError::<NoCustomError>::ServerError("Unable to update user".to_string())
+    })?;
 
     Ok(())
 }
