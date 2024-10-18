@@ -153,3 +153,20 @@ pub async fn get_search_posts(
 
     Ok(posts)
 }
+#[server(EndorsePost)]
+pub async fn endorse_post(post_id: i32, status: bool) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("update posts set endorsed = true where postid = $1")
+        .bind(post_id)
+        .execute(&pool)
+        .await
+        .expect("Cannot resolve post");
+
+    Ok(())
+}

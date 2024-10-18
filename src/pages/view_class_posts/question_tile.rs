@@ -1,3 +1,4 @@
+use crate::data::database::post_functions::endorse_post;
 /**
  * QuestionTile component, displaying a tile for one post
  */
@@ -23,19 +24,36 @@ enum TagPillProperties {
 }
 
 #[component]
-pub fn DropDownMenu(post_author_id: i32) -> impl IntoView {
+pub fn DropDownMenu(
+    post_id: i32,
+    post_author_id: i32,
+    set_endorsed: WriteSignal<bool>,
+    //remove_action: Action<PostId, ()>,
+) -> impl IntoView {
     let global_state: GlobalState = expect_context::<GlobalState>();
-    // let user_role = global_state.role.get();
-    // let is_authenticated = global_state.authenticated.get();
-    let is_on_my_post = move || global_state.id.get() == Some(post_author_id);
-    let is_professor = move || global_state.role.get() == Some("instructor".to_string());
+    let is_on_my_post = move || (global_state.id)() == Some(post_author_id);
+    let is_professor = move || (global_state.role)() == Some("instructor".to_string());
+
+    // let endorse_post = move |_: MouseEvent| {
+    //     set_endorsed(true);
+    // };
+
+    let endorsed_action = create_action(move |post_id: &i32| {
+        let post_id = post_id.to_owned();
+        async move {
+            if (endorse_post(post_id, true).await).is_ok() {
+                set_endorsed(true)
+            }
+        }
+    });
+
     view! {
       <div class="pr-2 text-right">
         {move || {
           if is_professor() {
             view! {
-              <button>Endorse</button>
-              <button>remove</button>
+              <button on:click=move |_| endorsed_action.dispatch(post_id)>Endorse</button>
+              // <button on:click=remove_post>Remove</button>
               <button>pin</button>
             }
               .into_view()
@@ -74,6 +92,7 @@ pub fn QuestionTile(
     is_private: Signal<bool>,
 ) -> impl IntoView {
     let (menu_invisible, set_menu_invisible) = create_signal(true);
+    let (is_endorsed, set_endorsed) = create_signal(false);
 
     let toggle_menu = move |e: MouseEvent| {
         e.stop_propagation();
@@ -90,9 +109,9 @@ pub fn QuestionTile(
             class=("hover:bg-gray-100", move || !is_resolved())
             class:border-purple-500=is_private()
             class:border-4=is_private()
-            class=("border-4 border-purple-500", is_private())
+            class=is_private()
+            class=("border-4 border-yellow-500", is_endorsed())
           >
-
             // Card header
             <div class="flex absolute top-0 left-0 z-10 gap-2 items-center pl-6 w-full h-12 text-xs rounded-t-lg shadow-md bg-card-header">
               {move || {
@@ -132,7 +151,12 @@ pub fn QuestionTile(
               "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
             }
           }>
-            <DropDownMenu post_author_id=post.author_id />
+            <DropDownMenu
+              post_id=post.post_id
+              post_author_id=post.author_id
+              set_endorsed=set_endorsed
+            />
+          // remove_action=Action<PostId, ()>
           </div>
         </div>
       </div>
