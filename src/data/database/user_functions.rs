@@ -147,6 +147,27 @@ pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
     Ok(users)
 }
 
+#[server(GetUserById)]
+pub async fn get_user_by_id(user_id: i32) -> Result<User, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let user: User =
+        sqlx::query_as("select username, firstname, lastname, id, role from users where id = $1")
+            .bind(user_id)
+            .fetch_one(&pool)
+            .await
+            .map_err(|_| {
+                ServerFnError::<NoCustomError>::ServerError("User not found".to_string())
+            })?;
+
+    Ok(user)
+}
+
 #[server(GetUsersByRole)]
 pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
@@ -163,4 +184,36 @@ pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError>
             .await
             .expect("no users found");
     Ok(users)
+}
+
+#[server(UpdatePassword)]
+pub async fn update_user_password(user_id: i32, password: String) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("UPDATE users SET password = $1 WHERE id = $2")
+        .bind(password)
+        .bind(user_id)
+        .execute(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Unable to update password".to_string())
+        })?;
+
+    Ok(())
+}
+
+// Unused
+pub fn validate_password(password: &str) -> bool {
+    let min_length = 8;
+    let has_uppercase = password.chars().any(|c| c.is_uppercase());
+    let has_lowercase = password.chars().any(|c| c.is_lowercase());
+    let has_digit = password.chars().any(|c| c.is_digit(10));
+    let has_special_char = password.chars().any(|c| !c.is_alphanumeric());
+
+    password.len() >= min_length && has_uppercase && has_lowercase && has_digit && has_special_char
 }

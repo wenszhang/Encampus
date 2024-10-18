@@ -13,6 +13,8 @@ use crate::{
         home::Home,
         login_page::LoginPage,
         register_page::RegisterPage,
+        user_profile::user_profile_page::UserProfile,
+        user_settings::user_settings_page::UserSettings,
         view_class_posts::{
             announcement_details::AnnouncementDetails, class::ClassPage, focused_post::FocusedPost,
         },
@@ -51,6 +53,7 @@ pub fn App() -> impl IntoView {
           <Routes>
             <Route path="/dev" view=Dev />
             <Route path="" view=Page>
+              // Only accessible when logged in
               <Route path="" view=AuthenticatedRoutes>
                 <Route path="/AdminHomePage" view=AdminHomePage />
                 <Route path="/classes" view=ClassesPage />
@@ -59,7 +62,10 @@ pub fn App() -> impl IntoView {
                   <Route path="/:post_id" view=FocusedPost />
                   <Route path="/announcement/:announcement_id" view=AnnouncementDetails />
                 </Route>
+                <Route path="/settings" view=UserSettings />
+                <Route path="/profile" view=UserProfile />
               </Route>
+              // Accessible when logged out
               <Route path="" view=UnauthenticatedRoutes>
                 <Route path="" view=Home />
                 <Route path="/login" view=LoginPage />
