@@ -98,7 +98,7 @@ pub fn AdminHomePage() -> impl IntoView {
                         class="text-blue-600 underline"
                         on:click=move |_| {
                           set_display_user(cloned_user.clone());
-                          set_user_options_visible(!user_options_visible());
+                          set_user_options_visible(true);
                           set_new_user_visible(false);
                         }
                       >
@@ -150,7 +150,7 @@ pub fn AdminHomePage() -> impl IntoView {
                       class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
                       on:click=move |_| {
                         set_display_class(class_clone.clone());
-                        set_display_class_options(!display_class_options());
+                        set_display_class_options(true);
                       }
                     >
                       "Class Options"
