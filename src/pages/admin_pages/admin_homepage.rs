@@ -60,10 +60,11 @@ pub fn AdminHomePage() -> impl IntoView {
             this_window_open=set_new_user_visible
             show_user_options=set_user_options_visible
             display_user=set_display_user
+            display_add_user=set_new_user_visible
           />
         </Show>
         <Show when=move || display_add_class.get() fallback=|| ()>
-          <AddClass />
+          <AddClass display_add_class=set_display_add_class />
         </Show>
       </div>
 
@@ -404,6 +405,7 @@ fn AddNewUser(
     this_window_open: WriteSignal<bool>,
     show_user_options: WriteSignal<bool>,
     display_user: WriteSignal<User>,
+    display_add_user: WriteSignal<bool>,
 ) -> impl IntoView {
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
@@ -425,7 +427,17 @@ fn AddNewUser(
     });
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">"New User"</h2>
+        <div class="flex justify-between items-start mb-4"> 
+          <h2 class="mb-4 text-lg font-semibold">"New User"</h2>
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              display_add_user.update(|value| *value = !*value);
+            }
+          >
+            "Close"
+          </button>
+        </div>
         <div class="grid grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">"First Name"</label>
@@ -498,7 +510,7 @@ fn AddNewUser(
 }
 
 #[component]
-fn AddClass() -> impl IntoView {
+fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
     let (class_name, set_class_name) = create_signal("".to_string());
     let (instructor_id, set_instructor_id) = create_signal(0);
 
@@ -512,7 +524,6 @@ fn AddClass() -> impl IntoView {
     );
 
     let add_class_action = create_action(move |_| {
-        // let class = class.clone();
         async move {
             add_class(class_name(), instructor_id()).await.unwrap();
         }
@@ -526,7 +537,17 @@ fn AddClass() -> impl IntoView {
 
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">"New Class"</h2>
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="mb-4 text-lg font-semibold">"New Class"</h2>
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              display_add_class.update(|value| *value = !*value);
+            }
+            >
+              "Close"
+            </button>
+        </div>
         <div class="grid grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">"Class Name"</label>
