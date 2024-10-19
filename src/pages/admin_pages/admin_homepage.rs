@@ -303,11 +303,11 @@ fn UserOptions(
                 on:input=move |ev| {
                   set_role(event_target_value(&ev));
                 }
-                prop:value=move || role.get()
+                value=move || role.get().to_string()
               >
-                <option value="Student">"Student"</option>
-                <option value="Instructor">"Instructor"</option>
-                <option value="Admin">"Admin"</option>
+                <option role="Student">"Student"</option>
+                <option role="Instructor">"Instructor"</option>
+                <option role="Admin">"Admin"</option>
               </select>
             </div>
             <div class="flex items-center">
