@@ -182,12 +182,10 @@ fn UserOptions(
         |_| async { get_class_list().await.unwrap_or_default() },
     );
     let students_classes = create_resource(|| {}, {
-        move |_| {
-            async move {
-                get_students_classes(user.get().id)
-                    .await
-                    .unwrap_or_default()
-            }
+        move |_| async move {
+            get_students_classes(user.get().id)
+                .await
+                .unwrap_or_default()
         }
     });
 
