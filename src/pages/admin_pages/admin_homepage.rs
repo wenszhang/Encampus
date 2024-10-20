@@ -423,7 +423,7 @@ fn AddNewUser(
     });
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <div class="flex justify-between items-start mb-4"> 
+        <div class="flex justify-between items-start mb-4">
           <h2 class="mb-4 text-lg font-semibold">"New User"</h2>
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
