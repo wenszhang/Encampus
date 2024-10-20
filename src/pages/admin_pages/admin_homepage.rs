@@ -520,7 +520,7 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
     );
 
     let add_class_action = create_action(move |_| async move {
-      add_class(class_name(), instructor_id()).await.unwrap();
+        add_class(class_name(), instructor_id()).await.unwrap();
     });
 
     let on_input = |setter: WriteSignal<String>| {
