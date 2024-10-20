@@ -298,7 +298,7 @@ fn UserOptions(
                 on:input=move |ev| {
                   set_role(event_target_value(&ev));
                 }
-                value=move || role.get().to_string()
+                prop:value=move || role.get().to_string()
               >
                 <option role="Student">"Student"</option>
                 <option role="Instructor">"Instructor"</option>
