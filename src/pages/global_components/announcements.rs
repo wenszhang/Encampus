@@ -160,7 +160,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
             view! { <p>{"Loading ..."}</p> }
           }>
             {move || {
-              if is_instructor().unwrap_or_default() {
+              if is_instructor() {
                 view! {
                   <div class="flex flex-col p-4">
                     <button
