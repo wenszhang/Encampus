@@ -176,6 +176,7 @@ fn UserOptions(
     let (role, set_role) = create_signal(user.role.clone());
     let (user, _set_user) = create_signal(user.clone());
     let (password, set_password) = create_signal("".to_string());
+    let (edit_password, set_edit_password) = create_signal(false);
 
     let all_classes = create_resource(
         || {},
