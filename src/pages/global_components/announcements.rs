@@ -14,8 +14,9 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
     let class_id = use_params::<ClassId>();
     let class_id_val = class_id.get_untracked().unwrap().class_id;
-    let is_instructor = move || global_state.role.get() == Some("instructor".to_string());
+    let is_instructor = move || global_state.role.get() == Some("Instructor".to_string());
 
+    let (is_adding_post, set_is_adding_post) = create_signal(false);
     let (is_expanded, set_is_expanded) = create_signal(true);
     let (title, set_title) = create_signal(String::new());
     let (contents, set_contents) = create_signal(String::new());
@@ -59,43 +60,6 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
           </div>
         </div>
 
-      {move || {
-                if is_instructor() {
-                    view! {
-                        <div class="flex flex-col p-4">
-                            <input
-                                class="mb-2 p-2 border border-gray-300 rounded"
-                                type="text"
-                                placeholder="Announcement Title"
-                                prop:value=title
-                                on:input=on_input(set_title)
-                            />
-                            <textarea
-                                class="mb-2 p-2 border border-gray-300 rounded"
-                                placeholder="Announcement Contents"
-                                prop:value=contents
-                                on:input=on_input(set_contents)
-                            />
-                            <button
-                                class="bg-customBlue hover:bg-customBlue-HOVER text-white py-1 px-3 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2"
-                                on:click=move |_| {
-                                    let new_announcement = AddAnnouncementInfo {
-                                        title: title.get(),
-                                        contents: contents.get(),
-                                        class_id: class_id_val,
-                                    };
-                                    add_announcement_action.dispatch(new_announcement);
-                                }
-                            >
-                                "Post Announcement"
-                            </button>
-                        </div>
-                    }
-                } else {
-                    view! { <div></div> }
-                }
-            }}
-
         // Announcement info
         <div class=format!(
           "bg-[#EEEEEE]{}",
@@ -128,6 +92,58 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                 view! { <ul></ul> }
             }
           }}
+
+        <Suspense fallback=|| view! { <p>{"Loading ..."}</p>}>
+            {move || {
+                if is_instructor() {
+                    view! {
+                        <div class="flex flex-col p-4">
+                            <button class="bg-customBlue hover:bg-customBlue-HOVER text-white my-1 px-3 rounded-full ml-auto"
+                                on:click=move |_| set_is_adding_post.update(|v| *v = !*v)>
+                                {move || if is_adding_post.get() { "Cancel" } else { "Add New Announcement" }}
+                            </button>
+                            {move || if is_adding_post.get() {
+                                view! {
+                                    <div class="flex flex-col">
+                                    <input
+                                        class="mb-2 p-2 border border-gray-300 rounded"
+                                        type="text"
+                                        placeholder="Announcement Title"
+                                        prop:value=title
+                                        on:input=on_input(set_title)
+                                    />
+                                    <textarea
+                                        class="mb-2 p-2 border border-gray-300 rounded"
+                                        placeholder="Announcement Contents"
+                                        prop:value=contents
+                                        on:input=on_input(set_contents)
+                                    />
+                                    <button
+                                        class="bg-customBlue hover:bg-customBlue-HOVER text-white py-1 px-3 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2"
+                                        on:click=move |_| {
+                                            let new_announcement = AddAnnouncementInfo {
+                                                title: title.get(),
+                                                contents: contents.get(),
+                                                class_id: class_id_val,
+                                            };
+                                            add_announcement_action.dispatch(new_announcement);
+                                        }
+                                    >
+                                        "Post Announcement"
+                                    </button>
+                                    </div>
+                                }
+                            } else {
+                                view! { <div></div> }
+                            }}
+                        </div>
+                    }
+                } else {
+                    view! { <div></div> }
+                }
+            }}
+        </Suspense>
+
         </div>
       </div>
     }
