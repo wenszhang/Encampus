@@ -112,7 +112,6 @@ pub fn AdminHomePage() -> impl IntoView {
                   }
                 }
               </For>
-
             </div>
           </div>
         </div>
@@ -161,7 +160,6 @@ pub fn AdminHomePage() -> impl IntoView {
             </For>
           </div>
         </div>
-
       </div>
     }
 }
@@ -264,7 +262,6 @@ fn UserOptions(
           </button>
         </div>
         <div class="grid grid-cols-2 gap-2">
-
           <div class="grid grid-cols-1 gap-2">
             <div class="font-semibold">"First Name"</div>
             <div class="flex items-center">
@@ -395,7 +392,6 @@ fn UserOptions(
             "Submit"
           </button>
         </div>
-
       </div>
     }
 }
@@ -672,9 +668,7 @@ fn ClassOptions(
                   .id>{current_instructor.firstname} " " {current_instructor.lastname}</option>
               </For>
             </select>
-           
           </div>
-
         </div>
 
         <div class="flex justify-between items-center mt-4">
