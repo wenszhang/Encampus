@@ -114,7 +114,8 @@ pub async fn delete_class(class_id: i32) -> Result<(), ServerFnError> {
         .bind(class_id)
         .execute(&pool)
         .await
-        .expect("Failed deleting enrolled students from class"); 
+        .expect("Failed deleting enrolled students from class");
+    
     sqlx::query("delete from classes where courseid = $1")
         .bind(class_id)
         .execute(&pool)
