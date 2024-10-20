@@ -60,10 +60,11 @@ pub fn AdminHomePage() -> impl IntoView {
             this_window_open=set_new_user_visible
             show_user_options=set_user_options_visible
             display_user=set_display_user
+            display_add_user=set_new_user_visible
           />
         </Show>
         <Show when=move || display_add_class.get() fallback=|| ()>
-          <AddClass />
+          <AddClass display_add_class=set_display_add_class />
         </Show>
       </div>
 
@@ -97,7 +98,7 @@ pub fn AdminHomePage() -> impl IntoView {
                         class="text-blue-600 underline"
                         on:click=move |_| {
                           set_display_user(cloned_user.clone());
-                          set_user_options_visible(!user_options_visible());
+                          set_user_options_visible(true);
                           set_new_user_visible(false);
                         }
                       >
@@ -111,7 +112,6 @@ pub fn AdminHomePage() -> impl IntoView {
                   }
                 }
               </For>
-
             </div>
           </div>
         </div>
@@ -149,7 +149,7 @@ pub fn AdminHomePage() -> impl IntoView {
                       class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
                       on:click=move |_| {
                         set_display_class(class_clone.clone());
-                        set_display_class_options(!display_class_options());
+                        set_display_class_options(true);
                       }
                     >
                       "Class Options"
@@ -160,7 +160,6 @@ pub fn AdminHomePage() -> impl IntoView {
             </For>
           </div>
         </div>
-
       </div>
     }
 }
@@ -171,33 +170,22 @@ fn UserOptions(
     set_user_options_visible: WriteSignal<bool>,
     display_user_options: WriteSignal<bool>,
 ) -> impl IntoView {
-    let (first_name_editable, set_first_name_editable) = create_signal(false);
     let (first_name, set_first_name) = create_signal(user.firstname.clone());
-    let (last_name_editable, set_last_name_editable) = create_signal(false);
     let (last_name, set_last_name) = create_signal(user.lastname.clone());
-    let (username_editable, set_username_editable) = create_signal(false);
     let (username, set_username) = create_signal(user.username.clone());
-    let (role_editable, set_role_editable) = create_signal(false);
     let (role, set_role) = create_signal(user.role.clone());
     let (user, _set_user) = create_signal(user.clone());
     let (password, set_password) = create_signal("".to_string());
-    let (password_editable, set_password_editable) = create_signal(false);
-
-    let (update_info, set_update_info) = create_signal(false);
 
     let all_classes = create_resource(
         || {},
         |_| async { get_class_list().await.unwrap_or_default() },
     );
     let students_classes = create_resource(|| {}, {
-        // let user = Rc::clone(&user);
-        move |_| {
-            // let user = user.clone();
-            async move {
-                get_students_classes(user.get().id)
-                    .await
-                    .unwrap_or_default()
-            }
+        move |_| async move {
+            get_students_classes(user.get().id)
+                .await
+                .unwrap_or_default()
         }
     });
 
@@ -234,7 +222,6 @@ fn UserOptions(
     let (class_selections, set_class_selections) = create_signal(HashMap::new());
 
     let add_user_classes_action = create_action({
-        // let user = user.clone();
         move |(class_id, user): &(i32, User)| {
             let class_id = *class_id;
             let user = user.clone();
@@ -245,7 +232,6 @@ fn UserOptions(
     });
 
     let remove_user_from_class_action = create_action({
-        // let user = user.clone();
         move |(class_id, user): &(i32, User)| {
             let class_id = *class_id;
             let user = user.clone();
@@ -274,7 +260,6 @@ fn UserOptions(
           </button>
         </div>
         <div class="grid grid-cols-2 gap-2">
-
           <div class="grid grid-cols-1 gap-2">
             <div class="font-semibold">"First Name"</div>
             <div class="flex items-center">
@@ -282,77 +267,43 @@ fn UserOptions(
                 class="p-2 rounded border"
                 type="text"
                 value=user.get().firstname
-                readonly=move || !first_name_editable()
                 on:input=move |ev| {
                   set_first_name(event_target_value(&ev));
-                  set_update_info(true);
                 }
               />
-
-              <div
-                class="ml-2 text-sm text-gray-500 cursor-pointer"
-                on:click=move |_| set_first_name_editable.update(|editable| *editable = !*editable)
-              >
-                {if first_name_editable() { "Save" } else { "Edit" }}
-              </div>
             </div>
             <div class="flex items-center">
               <input
                 class="p-2 rounded border"
                 type="text"
                 value=user.get().lastname
-                readonly=move || !last_name_editable()
                 on:input=move |ev| {
                   set_last_name(event_target_value(&ev));
-                  set_update_info(true);
                 }
               />
-              <div
-                class="ml-2 text-sm text-gray-500 cursor-pointer"
-                on:click=move |_| set_last_name_editable.update(|editable| *editable = !*editable)
-              >
-                {if last_name_editable() { "Save" } else { "Edit" }}
-              </div>
             </div>
             <div class="flex items-center">
               <input
                 class="p-2 rounded border"
                 type="text"
                 value=user.get().username
-                readonly=move || !username_editable()
                 on:input=move |ev| {
                   set_username(event_target_value(&ev));
-                  set_update_info(true)
                 }
               />
-              <div
-                class="ml-2 text-sm text-gray-500 cursor-pointer"
-                on:click=move |_| set_username_editable.update(|editable| *editable = !*editable)
-              >
-                {if username_editable() { "Save" } else { "Edit" }}
-              </div>
             </div>
             <div class="flex items-center">
               <select
                 class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-                disabled=move || !role_editable()
                 on:input=move |ev| {
-                  set_update_info(true);
                   set_role(event_target_value(&ev));
                 }
-                prop:value=move || role.get()
-                readonly=move || !role_editable()
+                prop:value=move || role.get().to_string()
               >
-                <option value="Student">"Student"</option>
-                <option value="Instructor">"Instructor"</option>
-                <option value="Admin">"Admin"</option>
+                <option role="Student">"Student"</option>
+                <option role="Instructor">"Instructor"</option>
+                <option role="Admin">"Admin"</option>
               </select>
-              <div
-                class="ml-2 text-sm text-gray-500 cursor-pointer"
-                on:click=move |_| set_role_editable.update(|editable| *editable = !*editable)
-              >
-                {if role_editable.get() { "Save" } else { "Edit" }}
-              </div>
             </div>
             <div class="flex items-center">
               <label class="mr-4 font-semibold">"New Password:"</label>
@@ -360,51 +311,51 @@ fn UserOptions(
                 class="p-2 rounded border"
                 type="text"
                 value=user_password.get()
-                readonly=move || !password_editable()
                 on:input=move |ev| {
                   set_password(event_target_value(&ev));
-                  set_update_info(true);
                 }
               />
-              <div
-                class="ml-2 text-sm text-gray-500 cursor-pointer"
-                on:click=move |_| set_password_editable.update(|editable| *editable = !*editable)
-              >
-                {if password_editable.get() { "Save" } else { "Edit" }}
-              </div>
             </div>
           </div>
-
-          <div class="grid grid-cols-1 gap-2">
-            <h2 class="font-semibold">"Classes"</h2>
-            <ul>
-              <For each=move || all_classes().unwrap_or_default() key=|class| class.id let:class>
-                <li class="flex items-center">
-                  <span>{class.name.clone()}</span>
-                  <input
-                    type="checkbox"
-                    class="ml-2"
-                    checked=move || {
-                      if let Some(classes) = students_classes.get() {
-                        classes.iter().any(|c| c.id == class.id)
-                      } else {
-                        false
-                      }
-                    }
-                    on:change=move |event| {
-                      let checked = event_target_checked(&event);
-                      let class = class.clone();
-                      set_class_selections
-                        .update(move |selections| {
-                          selections.insert(class.id, checked);
-                        });
-                    }
-                  />
-                </li>
-              </For>
-            </ul>
-
-          </div>
+          {if role.get() == "Student" {
+            view!{
+              <div>
+              <h2 class="font-semibold">"Classes"</h2>
+              <div class="grid grid-cols-1 gap-2">
+                <ul>
+                  <For each=move || all_classes().unwrap_or_default() key=|class| class.id let:class>
+                    <li class="flex items-center">
+                      <span>{class.name.clone()}</span>
+                      <input
+                        type="checkbox"
+                        class="ml-2"
+                        checked=move || {
+                          if let Some(classes) = students_classes.get() {
+                            classes.iter().any(|c| c.id == class.id)
+                          } else {
+                            false
+                          }
+                        }
+                        on:change=move |event| {
+                          let checked = event_target_checked(&event);
+                          let class = class.clone();
+                          set_class_selections
+                            .update(move |selections| {
+                              selections.insert(class.id, checked);
+                            });
+                        }
+                      />
+                    </li>
+                  </For>
+                </ul>
+              </div>
+              </div>
+            }
+          }else{
+            view!{
+              <div></div>
+            }
+          }}
 
         </div>
         <div class="flex justify-between items-center mt-4">
@@ -419,16 +370,14 @@ fn UserOptions(
           <button
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
-              if update_info() {
-                update_user_action
-                  .dispatch(User {
-                    username: username.get(),
-                    firstname: first_name.get(),
-                    lastname: last_name.get(),
-                    role: role.get(),
-                    id: user.get().id,
-                  });
-              }
+              update_user_action
+                .dispatch(User {
+                  username: username.get(),
+                  firstname: first_name.get(),
+                  lastname: last_name.get(),
+                  role: role.get(),
+                  id: user.get().id,
+                });
               for (class_id, selected) in class_selections.get().iter() {
                 if *selected {
                   add_user_classes_action.dispatch((*class_id, user.get()));
@@ -441,7 +390,6 @@ fn UserOptions(
             "Submit"
           </button>
         </div>
-
       </div>
     }
 }
@@ -451,6 +399,7 @@ fn AddNewUser(
     this_window_open: WriteSignal<bool>,
     show_user_options: WriteSignal<bool>,
     display_user: WriteSignal<User>,
+    display_add_user: WriteSignal<bool>,
 ) -> impl IntoView {
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
@@ -472,7 +421,17 @@ fn AddNewUser(
     });
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">"New User"</h2>
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="mb-4 text-lg font-semibold">"New User"</h2>
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              display_add_user.update(|value| *value = !*value);
+            }
+          >
+            "Close"
+          </button>
+        </div>
         <div class="grid grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">"First Name"</label>
@@ -545,7 +504,7 @@ fn AddNewUser(
 }
 
 #[component]
-fn AddClass() -> impl IntoView {
+fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
     let (class_name, set_class_name) = create_signal("".to_string());
     let (instructor_id, set_instructor_id) = create_signal(0);
 
@@ -558,11 +517,8 @@ fn AddClass() -> impl IntoView {
         },
     );
 
-    let add_class_action = create_action(move |_| {
-        // let class = class.clone();
-        async move {
-            add_class(class_name(), instructor_id()).await.unwrap();
-        }
+    let add_class_action = create_action(move |_| async move {
+        add_class(class_name(), instructor_id()).await.unwrap();
     });
 
     let on_input = |setter: WriteSignal<String>| {
@@ -573,7 +529,17 @@ fn AddClass() -> impl IntoView {
 
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
-        <h2 class="mb-4 text-lg font-semibold">"New Class"</h2>
+        <div class="flex justify-between items-start mb-4">
+          <h2 class="mb-4 text-lg font-semibold">"New Class"</h2>
+          <button
+            class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| {
+              display_add_class.update(|value| *value = !*value);
+            }
+            >
+              "Close"
+            </button>
+        </div>
         <div class="grid grid-cols-1 gap-4">
           <div>
             <label class="block text-sm font-medium text-gray-700">"Class Name"</label>
@@ -626,9 +592,7 @@ fn ClassOptions(
     display_class_options: WriteSignal<bool>,
 ) -> impl IntoView {
     let (class_name, set_class_name) = create_signal(class.name.clone());
-    let (class_name_editable, set_class_name_editable) = create_signal(false);
     let (instructor_id, set_instructor_id) = create_signal(class.instructor_id);
-    let (instructor_name_editable, set_instructor_name_editable) = create_signal(false);
     let (class, _set_class) = create_signal(class.clone());
 
     let update_class_action = create_action(move |class: &ClassInfo| {
@@ -677,23 +641,15 @@ fn ClassOptions(
               type="text"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
               prop:value=class.get().name
-              readonly=move || !class_name_editable()
               on:input=move |ev| {
                 set_class_name(event_target_value(&ev));
               }
             />
-            <div
-              class="ml-2 text-sm text-gray-500 cursor-pointer"
-              on:click=move |_| set_class_name_editable.update(|editable| *editable = !*editable)
-            >
-              {if class_name_editable() { "Save" } else { "Edit" }}
-            </div>
           </div>
           <div>
             <label class="block text-sm font-medium text-gray-700">"Instructor"</label>
             <select
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              disabled=move || !instructor_name_editable()
               on:input=move |ev| {
                 set_instructor_id(event_target_value(&ev).parse().unwrap());
               }
@@ -708,16 +664,7 @@ fn ClassOptions(
                   .id>{current_instructor.firstname} " " {current_instructor.lastname}</option>
               </For>
             </select>
-            <div
-              class="ml-2 text-sm text-gray-500 cursor-pointer"
-              on:click=move |_| {
-                set_instructor_name_editable.update(|editable| *editable = !*editable)
-              }
-            >
-              {if instructor_name_editable() { "Save" } else { "Edit" }}
-            </div>
           </div>
-
         </div>
 
         <div class="flex justify-between items-center mt-4">

@@ -2,6 +2,8 @@
     "cSpell.words": [
         "bindgen",
         "encampus",
+        "firstname",
+        "lastname",
         "leptos",
         "sqlx"
     ],
