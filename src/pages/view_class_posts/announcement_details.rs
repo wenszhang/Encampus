@@ -14,7 +14,7 @@ pub fn AnnouncementDetails() -> impl IntoView {
     let announcement_id_result = use_params::<AnnouncementId>();
     let global_state = expect_context::<GlobalState>();
 
-    let is_instructor = move || global_state.role.get() == Some("instructor".to_string());
+    let is_instructor = move || global_state.role.get() == Some("Instructor".to_string());
 
     let announcement = create_resource(
         move || {
@@ -47,7 +47,8 @@ pub fn AnnouncementDetails() -> impl IntoView {
                                 {announcement_details.time.format("%Y-%m-%d %H:%M:%S").to_string()}
                             </p>
                             {is_instructor().then(|| view! {
-                                <p class="text-green-600">{"You are an instructor."}</p>
+                                // TODO instructor edit post
+                                // <p class="text-green-600">{"You are an instructor."}</p>
                             })}
                         </div>
                     }.into_view(),
