@@ -445,6 +445,7 @@ fn AddNewUser(
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
+    let (password, set_password) = create_signal("".to_string());
     let (role, set_role) = create_signal("student".to_string()); // Set to student by default
 
     let on_input = |setter: WriteSignal<String>| {
@@ -499,6 +500,15 @@ fn AddNewUser(
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
               on:input=on_input(set_username)
               prop:value=username
+            />
+          </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Password"</label>
+            <input
+              type="password"
+              class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              on:input=on_input(set_password)
+              prop:value=password
             />
           </div>
           <div>
