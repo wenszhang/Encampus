@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
 use crate::data::database::class_functions::{
-    add_class, add_student_to_class, delete_class, get_class_list, get_students_classes,
-    remove_student_from_class, update_class_info, ClassInfo,
+    add_class, add_student_to_class, delete_class, get_class_list, get_instructors_classes,
+    get_students_classes, remove_student_from_class, update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
-    add_user, delete_user, get_user_password, get_users, get_users_by_role, update_user, User,
+    add_user, delete_user, get_user_password, get_users, get_users_by_role, update_user,
+    update_user_without_password, User,
 };
 use crate::pages::global_components::header::Header;
 use leptos::*;
@@ -132,32 +133,33 @@ pub fn AdminHomePage() -> impl IntoView {
               <div class="font-semibold">"Instructor"</div>
             </div>
 
-            <div class="mt-4 space-y-2"></div>
-            <For each=move || classes().unwrap_or_default() key=|class| class.id let:class>
-              {
-                let class_clone = class.clone();
-                view! {
-                  <div class="grid grid-cols-3 gap-4 p-2 border-b border-gray-200">
-                    <A
-                      href=format!("/classes/{}", class.id.clone())
-                      class="text-blue-500 underline hover:text-blue-700"
-                    >
-                      {class.name.clone()}
-                    </A>
-                    <div>{class.instructor_name.clone()}</div>
-                    <button
-                      class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
-                      on:click=move |_| {
-                        set_display_class(class_clone.clone());
-                        set_display_class_options(true);
-                      }
-                    >
-                      "Class Options"
-                    </button>
-                  </div>
+            <div class="mt-4 space-y-2">
+              <For each=move || classes().unwrap_or_default() key=|class| class.id let:class>
+                {
+                  let class_clone = class.clone();
+                  view! {
+                    <div class="grid grid-cols-3 gap-4 p-2 border-b border-gray-200">
+                      <A
+                        href=format!("/classes/{}", class.id.clone())
+                        class="text-blue-500 underline hover:text-blue-700"
+                      >
+                        {class.name.clone()}
+                      </A>
+                      <div>{class.instructor_name.clone()}</div>
+                      <button
+                        class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+                        on:click=move |_| {
+                          set_display_class(class_clone.clone());
+                          set_display_class_options(true);
+                        }
+                      >
+                        "Class Options"
+                      </button>
+                    </div>
+                  }
                 }
-              }
-            </For>
+              </For>
+            </div>
           </div>
         </div>
       </div>
@@ -182,29 +184,47 @@ fn UserOptions(
         || {},
         |_| async { get_class_list().await.unwrap_or_default() },
     );
-    let students_classes = create_resource(|| {}, {
+    let users_classes = create_resource(|| {}, {
         move |_| async move {
-            get_students_classes(user.get().id)
-                .await
-                .unwrap_or_default()
+            if user.get().role == "Instructor" {
+                get_instructors_classes(user.get().id)
+                    .await
+                    .unwrap_or_default()
+            } else {
+                get_students_classes(user.get().id)
+                    .await
+                    .unwrap_or_default()
+            }
         }
     });
 
     let update_user_action = create_action(move |user: &User| {
         let user = user.clone();
         async move {
-            update_user(
-                User {
+            if edit_password.get() {
+                update_user(
+                    User {
+                        username: username.get(),
+                        firstname: first_name.get(),
+                        lastname: last_name.get(),
+                        id: user.id,
+                        role: role.get(),
+                    },
+                    password.get(),
+                )
+                .await
+                .unwrap();
+            } else {
+                update_user_without_password(User {
                     username: username.get(),
                     firstname: first_name.get(),
                     lastname: last_name.get(),
                     id: user.id,
                     role: role.get(),
-                },
-                password.get(),
-            )
-            .await
-            .unwrap();
+                })
+                .await
+                .unwrap();
+            }
         }
     });
 
@@ -260,7 +280,7 @@ fn UserOptions(
             "Close"
           </button>
         </div>
-        <div class="grid grid-cols-2 gap-2">
+        <div class="grid grid-cols-2 gap-4">
           <div class="grid grid-cols-1 gap-2">
             <div class="font-semibold">"First Name"</div>
             <div class="flex items-center">
@@ -298,6 +318,7 @@ fn UserOptions(
                 class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
                 on:input=move |ev| {
                   set_role(event_target_value(&ev));
+                  set_edit_password(true);
                 }
                 prop:value=move || role.get().to_string()
               >
@@ -319,43 +340,62 @@ fn UserOptions(
             </div>
           </div>
           {if role.get() == "Student" {
-            view!{
+            view! {
               <div>
-              <h2 class="font-semibold">"Classes"</h2>
-              <div class="grid grid-cols-1 gap-2">
-                <ul>
-                  <For each=move || all_classes().unwrap_or_default() key=|class| class.id let:class>
-                    <li class="flex items-center">
-                      <span>{class.name.clone()}</span>
-                      <input
-                        type="checkbox"
-                        class="ml-2"
-                        checked=move || {
-                          if let Some(classes) = students_classes.get() {
-                            classes.iter().any(|c| c.id == class.id)
-                          } else {
-                            false
+                <h2 class="font-semibold">"Classes"</h2>
+                <div class="grid grid-cols-1 gap-2">
+                  <ul>
+                    <For
+                      each=move || all_classes().unwrap_or_default()
+                      key=|class| class.id
+                      let:class
+                    >
+                      <li class="flex items-center">
+                        <span>{class.name.clone()}</span>
+                        <input
+                          type="checkbox"
+                          class="ml-2"
+                          checked=move || {
+                            if let Some(classes) = users_classes.get() {
+                              classes.iter().any(|c| c.id == class.id)
+                            } else {
+                              false
+                            }
                           }
-                        }
-                        on:change=move |event| {
-                          let checked = event_target_checked(&event);
-                          let class = class.clone();
-                          set_class_selections
-                            .update(move |selections| {
-                              selections.insert(class.id, checked);
-                            });
-                        }
-                      />
-                    </li>
-                  </For>
-                </ul>
-              </div>
+                          on:change=move |event| {
+                            let checked = event_target_checked(&event);
+                            let class = class.clone();
+                            set_class_selections
+                              .update(move |selections| {
+                                selections.insert(class.id, checked);
+                              });
+                          }
+                        />
+                      </li>
+                    </For>
+                  </ul>
+                </div>
               </div>
             }
-          }else{
-            view!{
-              <div></div>
+          } else if role.get() == "Instructor" {
+            view! {
+              <div>
+                <h2 class="mb-2 font-semibold">"Classes Teaching"</h2>
+                <div class="grid grid-cols-1 gap-2">
+                  <ul>
+                    <For
+                      each=move || users_classes().unwrap_or_default()
+                      key=|class| class.id
+                      let:class
+                    >
+                      <li class="flex items-center">{class.name.clone()}</li>
+                    </For>
+                  </ul>
+                </div>
+              </div>
             }
+          } else {
+            view! { <div></div> }
           }}
 
         </div>
@@ -537,9 +577,9 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
             on:click=move |_| {
               display_add_class.update(|value| *value = !*value);
             }
-            >
-              "Close"
-            </button>
+          >
+            "Close"
+          </button>
         </div>
         <div class="grid grid-cols-1 gap-4">
           <div>
