@@ -335,6 +335,7 @@ fn UserOptions(
                 value=user_password.get()
                 on:input=move |ev| {
                   set_password(event_target_value(&ev));
+                  set_edit_password(true);
                 }
               />
             </div>
