@@ -29,7 +29,7 @@ pub fn RegisterPage() -> impl IntoView {
         username: username.get(),
         firstname: first_name.get(),
         lastname: last_name.get(),
-        role: "student".to_string(),
+        role: "Student".to_string(),
         id: 0,
     };
 
@@ -74,15 +74,15 @@ pub fn RegisterPage() -> impl IntoView {
                 global_state.id.set(Some(user_id.get()));
                 global_state.first_name.set(Some(first_name.get()));
                 global_state.last_name.set(Some(last_name.get()));
-                global_state.role.set(Some("student".to_string()));
+                global_state.role.set(Some("Student".to_string()));
 
                 let navigate = leptos_router::use_navigate();
                 match global_state.role.get().unwrap_or_default().as_str() {
-                    "student" => navigate("/classes", Default::default()),
+                    "Student" => navigate("/classes", Default::default()),
                     // Change to instructor page when implemented
-                    "teacher" => navigate("/classes", Default::default()),
+                    "Instructor" => navigate("/classes", Default::default()),
                     // Change to admin page when implemented
-                    "admin" => navigate("/classes", Default::default()),
+                    "Admin" => navigate("/classes", Default::default()),
                     _ => navigate("/login", Default::default()),
                 }
             }
