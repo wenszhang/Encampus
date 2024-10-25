@@ -1,5 +1,6 @@
 use super::question_tile::QuestionTile;
 use crate::data::database::announcement_functions::get_announcement_list;
+use crate::data::database::class_functions::check_user_is_ta;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::data::database::post_functions::get_search_posts;
@@ -37,6 +38,20 @@ pub fn ClassPage() -> impl IntoView {
     let class_id = use_params::<ClassId>();
     let (post_list, set_posts) = create_signal::<Vec<Post>>(vec![]);
     let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
+
+    create_effect(move |_| async move {
+        if check_user_is_ta(
+            global_state.id.get_untracked().unwrap_or_default(),
+            class_id.get().unwrap().class_id,
+        )
+        .await
+        .unwrap_or_default()
+        {
+            global_state.role.set(Some("Instructor".to_string()));
+        } else {
+            global_state.role.set(Some("Student".to_string())); // Need to set to student to ensure role doesn't stay as instructor
+        }
+    });
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {

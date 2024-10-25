@@ -300,3 +300,30 @@ pub async fn update_class_info(class: ClassInfo, instructor_id: i32) -> Result<(
         })?;
     Ok(())
 }
+
+#[cfg(feature = "ssr")]
+#[derive(sqlx::FromRow)]
+pub struct IsTa(i32);
+
+#[server(CheckUserIsTa)]
+pub async fn check_user_is_ta(user_id: i32, class_id: i32) -> Result<bool, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let IsTa(ta) = sqlx::query_as("select count(*) from ta where id = $1 and classid = $2")
+        .bind(user_id)
+        .bind(class_id)
+        .fetch_one(&pool)
+        .await
+        .expect("select should work");
+
+    if ta > 0 {
+        Ok(true)
+    } else {
+        Ok(false)
+    }
+}
