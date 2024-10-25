@@ -38,18 +38,28 @@ pub fn ClassPage() -> impl IntoView {
     let class_id = use_params::<ClassId>();
     let (post_list, set_posts) = create_signal::<Vec<Post>>(vec![]);
     let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
+    let (user_role, set_user_role) =
+        create_signal(global_state.id.get_untracked().unwrap_or_default());
+
+    let is_ta_action = create_action(move |_: &bool| {
+        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        let class_id = class_id.get().unwrap().class_id;
+        async move {
+            check_user_is_ta(user_id, class_id)
+                .await
+                .unwrap_or_default()
+        }
+    });
+
+    is_ta_action.dispatch(false);
 
     create_effect(move |_| async move {
-        if check_user_is_ta(
-            global_state.id.get_untracked().unwrap_or_default(),
-            class_id.get().unwrap().class_id,
-        )
-        .await
-        .unwrap_or_default()
-        {
-            global_state.role.set(Some("Instructor".to_string()));
-        } else {
-            global_state.role.set(Some("Student".to_string())); // Need to set to student to ensure role doesn't stay as instructor
+        if let Some(is_ta) = is_ta_action.value()() {
+            if is_ta {
+                global_state.role.set(Some("Instructor".to_string()));
+            } else {
+                global_state.role.set(Some("Student".to_string())); // Need to set to student to ensure role doesn't stay as instructor
+            }
         }
     });
 
