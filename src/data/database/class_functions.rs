@@ -303,7 +303,7 @@ pub async fn update_class_info(class: ClassInfo, instructor_id: i32) -> Result<(
 
 #[cfg(feature = "ssr")]
 #[derive(sqlx::FromRow)]
-pub struct IsTa(i32);
+pub struct IsTa(i64);
 
 #[server(CheckUserIsTa)]
 pub async fn check_user_is_ta(user_id: i32, class_id: i32) -> Result<bool, ServerFnError> {

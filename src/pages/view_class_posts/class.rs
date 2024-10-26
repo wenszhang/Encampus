@@ -41,21 +41,26 @@ pub fn ClassPage() -> impl IntoView {
     let (user_role, set_user_role) =
         create_signal(global_state.id.get_untracked().unwrap_or_default());
 
-    let is_ta_action = create_action(move |_: &bool| {
+    let is_ta_action = create_action(move |_| {
         let user_id = global_state.id.get_untracked().unwrap_or_default();
         let class_id = class_id.get().unwrap().class_id;
         async move {
-            check_user_is_ta(user_id, class_id)
-                .await
-                .unwrap_or_default()
+            if global_state.role.get() == Some("Student".to_string()) {
+                match check_user_is_ta(user_id, class_id).await {
+                    Ok(is_ta) => Some(is_ta),
+                    Err(_) => None,
+                }
+            } else {
+                Some(false)
+            }
         }
     });
 
     is_ta_action.dispatch(false);
 
-    create_effect(move |_| async move {
+    create_effect(move |_| {
         if let Some(is_ta) = is_ta_action.value()() {
-            if is_ta {
+            if is_ta.unwrap_or_default() {
                 global_state.role.set(Some("Instructor".to_string()));
             } else {
                 global_state.role.set(Some("Student".to_string())); // Need to set to student to ensure role doesn't stay as instructor
