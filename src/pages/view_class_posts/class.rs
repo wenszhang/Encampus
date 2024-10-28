@@ -1,6 +1,6 @@
 use super::question_tile::QuestionTile;
 use crate::data::database::announcement_functions::get_announcement_list;
-use crate::data::database::class_functions::check_user_is_ta;
+use crate::data::database::class_functions::check_user_is_instructor;
 use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::data::database::post_functions::get_search_posts;
@@ -46,7 +46,7 @@ pub fn ClassPage() -> impl IntoView {
         let class_id = class_id.get().unwrap().class_id;
         async move {
             if global_state.role.get() == Some("Student".to_string()) {
-                match check_user_is_ta(user_id, class_id).await {
+                match check_user_is_instructor(user_id, class_id).await {
                     Ok(is_ta) => Some(is_ta),
                     Err(_) => None,
                 }
