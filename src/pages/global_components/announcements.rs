@@ -1,6 +1,7 @@
 use crate::data::database::announcement_functions::{
     post_announcement, AddAnnouncementInfo, AnnouncementInfo,
 };
+use crate::data::database::class_functions::check_user_is_instructor;
 use crate::data::global_state::GlobalState;
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
@@ -14,7 +15,15 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
     let class_id = use_params::<ClassId>();
     let class_id_val = class_id.get_untracked().unwrap().class_id;
-    let is_instructor = move || global_state.role.get() == Some("Instructor".to_string());
+
+    let is_instructor = create_resource(class_id, move |class_id| {
+        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        async move {
+            check_user_is_instructor(user_id, class_id.unwrap().class_id)
+                .await
+                .unwrap_or(false)
+        }
+    });
 
     let (is_adding_post, set_is_adding_post) = create_signal(false);
     let (is_expanded, set_is_expanded) = create_signal(true);
@@ -75,11 +84,18 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                     .map(|announcement| {
                       view! {
                         <li class="p-2 border-b border-gray-300 hover:bg-gray-100">
-                          <A href={format!("/classes/{}/announcement/{}", class_id_val, announcement.announcement_id)} class="block">
-                          <h4 class="font-bold">{announcement.title.clone()}</h4>
-                          <p class="text-sm">{announcement.contents.clone()}</p>
+                          <A
+                            href=format!(
+                              "/classes/{}/announcement/{}",
+                              class_id_val,
+                              announcement.announcement_id,
+                            )
+                            class="block"
+                          >
+                            <h4 class="font-bold">{announcement.title.clone()}</h4>
+                            <p class="text-sm">{announcement.contents.clone()}</p>
                             <p class="text-xs text-gray-500">
-                                {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
+                              {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
                             </p>
                           </A>
                         </li>
@@ -89,60 +105,65 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                 </ul>
               }
             } else {
-                view! { <ul></ul> }
+              view! { <ul></ul> }
             }
           }}
-
-        <Suspense fallback=|| view! { <p>{"Loading ..."}</p>}>
+          <Suspense fallback=|| {
+            view! { <p>{"Loading ..."}</p> }
+          }>
             {move || {
-                if is_instructor() {
-                    view! {
-                        <div class="flex flex-col p-4">
-                            <button class="bg-customBlue hover:bg-customBlue-HOVER text-white my-1 px-3 rounded-full ml-auto"
-                                on:click=move |_| set_is_adding_post.update(|v| *v = !*v)>
-                                {move || if is_adding_post.get() { "Cancel" } else { "Add New Announcement" }}
+              if is_instructor().unwrap_or_default() {
+                view! {
+                  <div class="flex flex-col p-4">
+                    <button
+                      class="px-3 my-1 ml-auto text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
+                      on:click=move |_| set_is_adding_post.update(|v| *v = !*v)
+                    >
+                      {move || if is_adding_post.get() { "Cancel" } else { "Add New Announcement" }}
+                    </button>
+                    {move || {
+                      if is_adding_post.get() {
+                        view! {
+                          <div class="flex flex-col">
+                            <input
+                              class="p-2 mb-2 rounded border border-gray-300"
+                              type="text"
+                              placeholder="Announcement Title"
+                              prop:value=title
+                              on:input=on_input(set_title)
+                            />
+                            <textarea
+                              class="p-2 mb-2 rounded border border-gray-300"
+                              placeholder="Announcement Contents"
+                              prop:value=contents
+                              on:input=on_input(set_contents)
+                            />
+                            <button
+                              class="py-1 px-3 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+                              on:click=move |_| {
+                                let new_announcement = AddAnnouncementInfo {
+                                  title: title.get(),
+                                  contents: contents.get(),
+                                  class_id: class_id_val,
+                                };
+                                add_announcement_action.dispatch(new_announcement);
+                              }
+                            >
+                              "Post Announcement"
                             </button>
-                            {move || if is_adding_post.get() {
-                                view! {
-                                    <div class="flex flex-col">
-                                    <input
-                                        class="mb-2 p-2 border border-gray-300 rounded"
-                                        type="text"
-                                        placeholder="Announcement Title"
-                                        prop:value=title
-                                        on:input=on_input(set_title)
-                                    />
-                                    <textarea
-                                        class="mb-2 p-2 border border-gray-300 rounded"
-                                        placeholder="Announcement Contents"
-                                        prop:value=contents
-                                        on:input=on_input(set_contents)
-                                    />
-                                    <button
-                                        class="bg-customBlue hover:bg-customBlue-HOVER text-white py-1 px-3 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-customBlue focus:ring-offset-2"
-                                        on:click=move |_| {
-                                            let new_announcement = AddAnnouncementInfo {
-                                                title: title.get(),
-                                                contents: contents.get(),
-                                                class_id: class_id_val,
-                                            };
-                                            add_announcement_action.dispatch(new_announcement);
-                                        }
-                                    >
-                                        "Post Announcement"
-                                    </button>
-                                    </div>
-                                }
-                            } else {
-                                view! { <div></div> }
-                            }}
-                        </div>
-                    }
-                } else {
-                    view! { <div></div> }
+                          </div>
+                        }
+                      } else {
+                        view! { <div></div> }
+                      }
+                    }}
+                  </div>
                 }
+              } else {
+                view! { <div></div> }
+              }
             }}
-        </Suspense>
+          </Suspense>
 
         </div>
       </div>
