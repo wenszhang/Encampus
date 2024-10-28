@@ -1,3 +1,4 @@
+use crate::data::database::class_functions::check_user_is_instructor;
 /**
  * This file contains the FocusedPost component which is used to display a single post and its replies.
  */
@@ -136,6 +137,15 @@ pub fn FocusedPost() -> impl IntoView {
             .unwrap_or_else(|_| "Failed".to_string())
     });
 
+    let is_instructor = create_resource(class_id, move |class_id| {
+        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        async move {
+            check_user_is_instructor(user_id, class_id.unwrap().class_id)
+                .await
+                .unwrap_or(false)
+        }
+    });
+
     let notification_view = move || {
         notification_details.get().map(|details| {
             view! {
@@ -160,7 +170,7 @@ pub fn FocusedPost() -> impl IntoView {
                   .map(|post| post.author_id)
                   .filter(|&author_id| author_id == global_state.id.get().unwrap_or_default())
                   .or_else(|| {
-                    if instructor() == Some(global_state.user_name.get().unwrap_or_default()) {
+                    if is_instructor().unwrap_or_default() {
                       Some(class_id.get().unwrap().class_id)
                     } else {
                       None
