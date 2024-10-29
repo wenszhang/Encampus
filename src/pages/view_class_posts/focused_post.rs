@@ -563,3 +563,49 @@ pub fn FocusedDropdown(
       </div>
     }
 }
+
+#[component]
+pub fn ReplyDropdown(class_id: i32, replies: Vec<Reply>, reply_id: i32) -> impl IntoView {
+    let global_state: GlobalState = expect_context::<GlobalState>();
+    let (_notification_details, set_notification_details) =
+        create_signal(None::<NotificationDetails>);
+
+    let remove_action = create_action(move |reply: &Reply| {
+        let reply_id = reply.replyid;
+        async move {}
+    });
+
+    let (menu_visible, set_menu_visible) = create_signal(false);
+    let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
+
+    view! {
+      <div class="flex absolute top-0 right-2 z-20 items-center">
+        <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+          <DotsIcon size="36px" />
+        </button>
+        <div class=move || {
+          if menu_visible.get() {
+            "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+          } else {
+            "hidden"
+          }
+        }>
+
+          <div class="pr-2 text-right">
+            {move || {
+              view! {
+                <div class="p-3 rounded-md w-30">
+
+                  <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100">
+                    // on:click=move |_| { remove_action.dispatch(PostId { post_id: post.post_id }) }
+                    <span class="ml-2">Remove</span>
+                  </button>
+                </div>
+              }
+                .into_view()
+            }}
+          </div>
+        </div>
+      </div>
+    }
+}
