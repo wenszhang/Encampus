@@ -249,6 +249,14 @@ pub fn FocusedPost() -> impl IntoView {
                     .format(" at %l %p on %b %-d"),
                 )} ":"
               </p>
+              <div class="flex gap-5 justify-end">
+              <div class="flex items-center cursor-pointer select-none">
+                <ReplyDropdown
+                  class_id=class_id.get().unwrap().class_id
+                  replies=replies()
+                  reply_id=reply.replyid />
+                </div>
+              </div>
               <br />
               <p>{reply.contents}</p>
             // TODO use the reply's timestamp, author's name and anonymous info
@@ -579,7 +587,7 @@ pub fn ReplyDropdown(class_id: i32, replies: Vec<Reply>, reply_id: i32) -> impl 
     let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
 
     view! {
-      <div class="flex absolute top-0 right-2 z-20 items-center">
+      <div>
         <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
           <DotsIcon size="36px" />
         </button>
