@@ -243,7 +243,7 @@ pub fn QuestionTile(
             if menu_invisible() {
               "hidden"
             } else {
-              "absolute right-0 top-8 mt-2 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 p-1"
+              "absolute right-0 top-4 mt-2 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 p-1"
             }
           }>
             <DropDownMenu
