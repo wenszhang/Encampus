@@ -14,7 +14,7 @@ use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
 use crate::data::database::post_functions::{remove_post, resolve_post, Post, PostFetcher};
-use crate::data::database::reply_functions::remove_reply;
+use crate::data::database::reply_functions::{approve_reply, remove_reply};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -25,6 +25,11 @@ use crate::resources::images::svgs::dots_icon::DotsIcon;
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
     pub post_id: i32,
+}
+
+#[derive(Params, PartialEq, Clone)]
+pub struct ReplyId {
+    pub reply_id: i32,
 }
 
 /**
@@ -53,8 +58,9 @@ pub struct Reply {
     author_name: String,
     author_id: i32,
     anonymous: bool,
-    replyid: i32,
+    reply_id: i32,
     removed: bool,
+    approved: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -240,7 +246,7 @@ pub fn FocusedPost() -> impl IntoView {
               }
             }}
           </div>
-          <For each=sorted_replies key=|reply| reply.replyid let:reply>
+          <For each=sorted_replies key=|reply| reply.reply_id let:reply>
             {if !reply.removed {
               view! {
                 <div>
@@ -397,7 +403,7 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
                 'You' as author_name, 
                 authorid as author_id,
                 anonymous,
-                replyid;",
+                replyid as reply_id;",
     )
     .bind(user_id.0)
     .bind(reply_info.post_id)
@@ -459,8 +465,9 @@ pub async fn get_post_details(post_id: i32) -> Result<(PostDetails, Vec<Reply>),
                 END as author_name, 
                 authorid as author_id,
                 anonymous,
-                replyid,
-                removed
+                replyid as reply_id,
+                removed,
+                approved
             FROM replies JOIN users ON replies.authorid = users.id WHERE replies.postid = $1
             ORDER BY time;"
         )
@@ -609,9 +616,8 @@ pub fn ReplyDropdown(
     let (_notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
 
-    let remove_action = create_action(move |reply: &Reply| {
-        let reply_id = reply.replyid;
-        let reply = reply.clone();
+    let remove_action = create_action(move |reply_id: &ReplyId| {
+        let reply_id = reply_id.reply_id;
         async move {
             match remove_reply(reply_id, global_state.id.get_untracked().unwrap()).await {
                 Ok(_) => {
@@ -621,7 +627,7 @@ pub fn ReplyDropdown(
                                 if let Some(index) = post_and_replies
                                     .1
                                     .iter()
-                                    .position(|r| r.replyid == reply.replyid)
+                                    .position(|r| r.reply_id == reply.reply_id)
                                 {
                                     post_and_replies.1.remove(index);
                                 }
@@ -637,6 +643,13 @@ pub fn ReplyDropdown(
                     }));
                 }
             }
+        }
+    });
+
+    let approve_action = create_action(move |reply_id: &ReplyId| {
+        let reply_id = reply_id.reply_id;
+        async move {
+            approve_reply(reply_id, global_state.id.get_untracked().unwrap()).await;
         }
     });
 
@@ -662,7 +675,23 @@ pub fn ReplyDropdown(
             <div class="p-3 rounded-md w-30">
               <button
                 class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                on:click=move |_| { remove_action.dispatch(reply.clone()) }
+                on:click=move |_| {
+                  approve_action
+                    .dispatch(ReplyId {
+                      reply_id: reply.reply_id,
+                    })
+                }
+              >
+                <span class="ml-2">Approve</span>
+              </button>
+              <button
+                class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                on:click=move |_| {
+                  remove_action
+                    .dispatch(ReplyId {
+                      reply_id: reply.reply_id,
+                    })
+                }
               >
                 <span class="ml-2">Remove</span>
               </button>
