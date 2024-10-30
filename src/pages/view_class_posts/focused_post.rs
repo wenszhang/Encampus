@@ -670,8 +670,6 @@ pub fn ReplyDropdown(
         }>
 
           <div class="pr-2 text-right">
-            // {move || {
-            // view! {
             <div class="p-3 rounded-md w-30">
               <button
                 class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
@@ -698,9 +696,6 @@ pub fn ReplyDropdown(
                 <span class="ml-2">Remove</span>
               </button>
             </div>
-          // }
-          // .into_view()
-          // }}
           </div>
         </div>
       </div>
