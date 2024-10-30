@@ -238,7 +238,7 @@ pub fn FocusedPost() -> impl IntoView {
             }}
           </div>
           <For each=sorted_replies key=|reply| reply.replyid let:reply>
-            <DarkenedCard class="p-5">
+            <DarkenedCard class="relative p-5">
               <p class="font-bold">
                 "Answered by " {reply.author_name}
                 {format!(
@@ -601,7 +601,7 @@ pub fn ReplyDropdown(class_id: i32, replies: Vec<Reply>, reply_id: i32) -> impl 
     let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
 
     view! {
-      <div>
+      <div class="flex absolute top-0 right-2 z-20 items-center">
         <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
           <DotsIcon size="36px" />
         </button>
@@ -617,7 +617,29 @@ pub fn ReplyDropdown(class_id: i32, replies: Vec<Reply>, reply_id: i32) -> impl 
             {move || {
               view! {
                 <div class="p-3 rounded-md w-30">
-
+                  // {if post.resolved {
+                  // view! {
+                  // <button
+                  // class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                  // on:click=move |_| {
+                  // resolve_action.dispatch(PostId { post_id: post.post_id })
+                  // }
+                  // >
+                  // <span class="ml-2">Unresolve</span>
+                  // </button>
+                  // }
+                  // } else {
+                  // view! {
+                  // <button
+                  // class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                  // on:click=move |_| {
+                  // resolve_action.dispatch(PostId { post_id: post.post_id })
+                  // }
+                  // >
+                  // <span class="ml-2">Resolve</span>
+                  // </button>
+                  // }
+                  // }}
                   <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100">
                     // on:click=move |_| { remove_action.dispatch(PostId { post_id: post.post_id }) }
                     <span class="ml-2">Remove</span>
