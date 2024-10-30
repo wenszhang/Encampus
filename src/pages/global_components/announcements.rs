@@ -52,7 +52,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     });
 
     view! {
-      <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg bg-card-bg">
+      <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg">
         // Announcement header
         <div class="flex justify-between items-center px-3 w-full h-7 rounded-t-lg bg-customBlue">
           <div class="flex items-center text-white">
@@ -60,7 +60,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
             <h3 class="px-2">"RECENT ANNOUNCEMENTS"</h3>
           </div>
 
-          <div class="flex items-center text-white hover:bg-gray-300 hover:text-customBlue-HOVER">
+          <div class="flex items-center text-white hover:text-gray-400">
             <button on:click=move |_| set_is_expanded.update(|v| *v = !*v)>
               <details open=is_expanded.get()>
                 <summary>{move || if is_expanded.get() { "COLLAPSE" } else { "EXPAND" }}</summary>
@@ -68,6 +68,43 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
             </button>
           </div>
         </div>
+
+        {move || {
+          if is_instructor() {
+            view! {
+              <div class="flex flex-col p-4">
+                <input
+                  class="p-2 mb-2 rounded border border-gray-300"
+                  type="text"
+                  placeholder="Announcement Title"
+                  prop:value=title
+                  on:input=on_input(set_title)
+                />
+                <textarea
+                  class="p-2 mb-2 rounded border border-gray-300"
+                  placeholder="Announcement Contents"
+                  prop:value=contents
+                  on:input=on_input(set_contents)
+                />
+                <button
+                  class="py-1 px-3 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+                  on:click=move |_| {
+                    let new_announcement = AddAnnouncementInfo {
+                      title: title.get(),
+                      contents: contents.get(),
+                      class_id: class_id_val,
+                    };
+                    add_announcement_action.dispatch(new_announcement);
+                  }
+                >
+                  "Post Announcement"
+                </button>
+              </div>
+            }
+          } else {
+            view! { <div></div> }
+          }
+        }}
 
         // Announcement info
         <div class=format!(
@@ -94,7 +131,18 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                           >
                             <h4 class="font-bold">{announcement.title.clone()}</h4>
                             <p class="text-sm">{announcement.contents.clone()}</p>
+                          <A
+                            href=format!(
+                              "/classes/{}/announcement/{}",
+                              class_id_val,
+                              announcement.announcement_id,
+                            )
+                            class="block"
+                          >
+                            <h4 class="font-bold">{announcement.title.clone()}</h4>
+                            <p class="text-sm">{announcement.contents.clone()}</p>
                             <p class="text-xs text-gray-500">
+                              {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
                               {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
                             </p>
                           </A>
