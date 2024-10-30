@@ -49,6 +49,7 @@ pub struct Reply {
     time: NaiveDateTime,
     contents: String,
     author_name: String,
+    author_id: i32,
     anonymous: bool,
     replyid: i32,
 }
@@ -250,11 +251,22 @@ pub fn FocusedPost() -> impl IntoView {
                 )} ":"
               </p>
               <div class="flex gap-5 justify-end">
-              <div class="flex items-center cursor-pointer select-none">
-                <ReplyDropdown
-                  class_id=class_id.get().unwrap().class_id
-                  replies=replies()
-                  reply_id=reply.replyid />
+                <div class="flex items-center cursor-pointer select-none">
+                  {if reply.author_id == global_state.id.get().unwrap_or_default()
+                    || is_instructor().unwrap_or_default()
+                  {
+                    view! {
+                      <div>
+                        <ReplyDropdown
+                          class_id=class_id.get().unwrap().class_id
+                          replies=replies()
+                          reply_id=reply.replyid
+                        />
+                      </div>
+                    }
+                  } else {
+                    view! { <div></div> }
+                  }}
                 </div>
               </div>
               <br />
@@ -371,6 +383,7 @@ pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, 
                 time, 
                 contents,
                 'You' as author_name, 
+                authorid as author_id,
                 anonymous,
                 replyid;",
     )
@@ -432,6 +445,7 @@ pub async fn get_post_details(post_id: i32) -> Result<(PostDetails, Vec<Reply>),
                 CASE WHEN anonymous THEN 'Anonymous Author'
                     ELSE users.firstname 
                 END as author_name, 
+                authorid as author_id,
                 anonymous,
                 replyid
             FROM replies JOIN users ON replies.authorid = users.id WHERE replies.postid = $1
