@@ -219,6 +219,7 @@ pub fn DropDownMenu(
             }
               .into_view()
           } else {
+            // <button>pin</button>
             view! {
               <div class="p-1">
                 <button
