@@ -679,7 +679,8 @@ pub fn ReplyDropdown(
                   approve_action
                     .dispatch(ReplyId {
                       reply_id: reply.reply_id,
-                    })
+                    });
+                  set_menu_visible(false);
                 }
               >
                 <span class="ml-2">Approve</span>
@@ -690,7 +691,8 @@ pub fn ReplyDropdown(
                   remove_action
                     .dispatch(ReplyId {
                       reply_id: reply.reply_id,
-                    })
+                    });
+                  set_menu_visible(false);
                 }
               >
                 <span class="ml-2">Remove</span>
