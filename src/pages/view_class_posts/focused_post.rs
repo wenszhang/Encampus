@@ -8,11 +8,13 @@ use chrono::NaiveDateTime;
 use leptos::*;
 use leptos_router::use_params;
 use leptos_router::Params;
+use leptos_router::ParamsError;
 use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
 use crate::data::database::post_functions::{remove_post, resolve_post, Post, PostFetcher};
+use crate::data::database::reply_functions::remove_reply;
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -259,8 +261,8 @@ pub fn FocusedPost() -> impl IntoView {
                       <div>
                         <ReplyDropdown
                           class_id=class_id.get().unwrap().class_id
-                          replies=replies()
-                          reply_id=reply.replyid
+                          post_and_replies=post_and_replies
+                          reply=reply
                         />
                       </div>
                     }
@@ -587,15 +589,70 @@ pub fn FocusedDropdown(
 }
 
 #[component]
-pub fn ReplyDropdown(class_id: i32, replies: Vec<Reply>, reply_id: i32) -> impl IntoView {
+pub fn ReplyDropdown(
+    class_id: i32,
+    post_and_replies: Resource<Result<PostId, ParamsError>, Option<(PostDetails, Vec<Reply>)>>,
+    reply: Reply,
+) -> impl IntoView {
     let global_state: GlobalState = expect_context::<GlobalState>();
     let (_notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
 
     let remove_action = create_action(move |reply: &Reply| {
         let reply_id = reply.replyid;
-        async move {}
+        let reply = reply.clone();
+        async move {
+            match remove_reply(reply_id, global_state.id.get_untracked().unwrap()).await {
+                Ok(_) => {
+                    post_and_replies.update(|post_and_replies| {
+                        if let Some(outer_option) = post_and_replies.as_mut() {
+                            if let Some(post_and_replies) = outer_option.as_mut() {
+                                if let Some(index) = post_and_replies
+                                    .1
+                                    .iter()
+                                    .position(|r| r.replyid == reply.replyid)
+                                {
+                                    post_and_replies.1.remove(index);
+                                }
+                            }
+                        }
+                    });
+                }
+                Err(_) => {
+                    logging::error!("Attempt to remove reply failed. Please try again");
+                    set_notification_details(Some(NotificationDetails {
+                        message: "Failed to remove reply. Please try again.".to_string(),
+                        notification_type: NotificationType::Error,
+                    }));
+                }
+            }
+        }
     });
+
+    //   let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
+    //     let reply_info = reply_info.clone();
+    //     async move {
+    //         match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
+    //             Ok(reply) => {
+    //                 post_and_replies.update(|post_and_replies| {
+    //                     if let Some(outer_option) = post_and_replies.as_mut() {
+    //                         if let Some(post_and_replies) = outer_option.as_mut() {
+    //                             post_and_replies.1.push(reply.clone())
+    //                         }
+    //                     }
+    //                 });
+    //                 set_reply_contents(String::default());
+    //             }
+    //             Err(_) => {
+    //                 logging::error!("Attempt to post reply failed. Please try again");
+    //                 set_notification_details(Some(NotificationDetails {
+    //                     message: "Failed to add reply. Please try again.".to_string(),
+    //                     notification_type: NotificationType::Error,
+    //                 }));
+    //             }
+    //         };
+    //     }
+    // });
 
     let (menu_visible, set_menu_visible) = create_signal(false);
     let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
@@ -614,40 +671,19 @@ pub fn ReplyDropdown(class_id: i32, replies: Vec<Reply>, reply_id: i32) -> impl 
         }>
 
           <div class="pr-2 text-right">
-            {move || {
-              view! {
-                <div class="p-3 rounded-md w-30">
-                  // {if post.resolved {
-                  // view! {
-                  // <button
-                  // class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                  // on:click=move |_| {
-                  // resolve_action.dispatch(PostId { post_id: post.post_id })
-                  // }
-                  // >
-                  // <span class="ml-2">Unresolve</span>
-                  // </button>
-                  // }
-                  // } else {
-                  // view! {
-                  // <button
-                  // class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                  // on:click=move |_| {
-                  // resolve_action.dispatch(PostId { post_id: post.post_id })
-                  // }
-                  // >
-                  // <span class="ml-2">Resolve</span>
-                  // </button>
-                  // }
-                  // }}
-                  <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100">
-                    // on:click=move |_| { remove_action.dispatch(PostId { post_id: post.post_id }) }
-                    <span class="ml-2">Remove</span>
-                  </button>
-                </div>
-              }
-                .into_view()
-            }}
+            // {move || {
+            // view! {
+            <div class="p-3 rounded-md w-30">
+              <button
+                class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                on:click=move |_| { remove_action.dispatch(reply) }
+              >
+                <span class="ml-2">Remove</span>
+              </button>
+            </div>
+          // }
+          // .into_view()
+          // }}
           </div>
         </div>
       </div>
