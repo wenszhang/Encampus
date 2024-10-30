@@ -54,6 +54,7 @@ pub struct Reply {
     author_id: i32,
     anonymous: bool,
     replyid: i32,
+    removed: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -240,42 +241,50 @@ pub fn FocusedPost() -> impl IntoView {
             }}
           </div>
           <For each=sorted_replies key=|reply| reply.replyid let:reply>
-            <DarkenedCard class="relative p-5">
-              <p class="font-bold">
-                "Answered by " {reply.clone().author_name}
-                {format!(
-                  "{}",
-                  reply
-                    .time
-                    .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
-                    .unwrap()
-                    .format(" at %l %p on %b %-d"),
-                )} ":"
-              </p>
-              <div class="flex gap-5 justify-end">
-                <div class="flex items-center cursor-pointer select-none">
-                  {if reply.author_id == global_state.id.get().unwrap_or_default()
-                    || is_instructor().unwrap_or_default()
-                  {
-                    let reply = reply.clone();
-                    view! {
-                      <div>
-                        <ReplyDropdown
-                          class_id=class_id.get().unwrap().class_id
-                          post_and_replies=post_and_replies
-                          reply=reply.clone()
-                        />
+            {if !reply.removed {
+              view! {
+                <div>
+                  <DarkenedCard class="relative p-5">
+                    <p class="font-bold">
+                      "Answered by " {reply.clone().author_name}
+                      {format!(
+                        "{}",
+                        reply
+                          .time
+                          .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
+                          .unwrap()
+                          .format(" at %l %p on %b %-d"),
+                      )} ":"
+                    </p>
+                    <div class="flex gap-5 justify-end">
+                      <div class="flex items-center cursor-pointer select-none">
+                        {if reply.author_id == global_state.id.get().unwrap_or_default()
+                          || is_instructor().unwrap_or_default()
+                        {
+                          let reply = reply.clone();
+                          view! {
+                            <div>
+                              <ReplyDropdown
+                                class_id=class_id.get().unwrap().class_id
+                                post_and_replies=post_and_replies
+                                reply=reply.clone()
+                              />
+                            </div>
+                          }
+                        } else {
+                          view! { <div></div> }
+                        }}
                       </div>
-                    }
-                  } else {
-                    view! { <div></div> }
-                  }}
+                    </div>
+                    <br />
+                    <p>{reply.contents}</p>
+                  // TODO use the reply's timestamp, author's name and anonymous info
+                  </DarkenedCard>
                 </div>
-              </div>
-              <br />
-              <p>{reply.contents}</p>
-            // TODO use the reply's timestamp, author's name and anonymous info
-            </DarkenedCard>
+              }
+            } else {
+              view! { <div></div> }
+            }}
           </For>
           <DarkenedCard class="flex flex-col gap-2 p-5">
             <p>"Answer this post:"</p>
@@ -450,7 +459,8 @@ pub async fn get_post_details(post_id: i32) -> Result<(PostDetails, Vec<Reply>),
                 END as author_name, 
                 authorid as author_id,
                 anonymous,
-                replyid
+                replyid,
+                removed
             FROM replies JOIN users ON replies.authorid = users.id WHERE replies.postid = $1
             ORDER BY time;"
         )
@@ -629,31 +639,6 @@ pub fn ReplyDropdown(
             }
         }
     });
-
-    //   let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
-    //     let reply_info = reply_info.clone();
-    //     async move {
-    //         match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
-    //             Ok(reply) => {
-    //                 post_and_replies.update(|post_and_replies| {
-    //                     if let Some(outer_option) = post_and_replies.as_mut() {
-    //                         if let Some(post_and_replies) = outer_option.as_mut() {
-    //                             post_and_replies.1.push(reply.clone())
-    //                         }
-    //                     }
-    //                 });
-    //                 set_reply_contents(String::default());
-    //             }
-    //             Err(_) => {
-    //                 logging::error!("Attempt to post reply failed. Please try again");
-    //                 set_notification_details(Some(NotificationDetails {
-    //                     message: "Failed to add reply. Please try again.".to_string(),
-    //                     notification_type: NotificationType::Error,
-    //                 }));
-    //             }
-    //         };
-    //     }
-    // });
 
     let (menu_visible, set_menu_visible) = create_signal(false);
     let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
