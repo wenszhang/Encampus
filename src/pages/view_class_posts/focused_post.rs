@@ -242,7 +242,7 @@ pub fn FocusedPost() -> impl IntoView {
           <For each=sorted_replies key=|reply| reply.replyid let:reply>
             <DarkenedCard class="relative p-5">
               <p class="font-bold">
-                "Answered by " {reply.author_name}
+                "Answered by " {reply.clone().author_name}
                 {format!(
                   "{}",
                   reply
@@ -257,12 +257,13 @@ pub fn FocusedPost() -> impl IntoView {
                   {if reply.author_id == global_state.id.get().unwrap_or_default()
                     || is_instructor().unwrap_or_default()
                   {
+                    let reply = reply.clone();
                     view! {
                       <div>
                         <ReplyDropdown
                           class_id=class_id.get().unwrap().class_id
                           post_and_replies=post_and_replies
-                          reply=reply
+                          reply=reply.clone()
                         />
                       </div>
                     }
@@ -676,7 +677,7 @@ pub fn ReplyDropdown(
             <div class="p-3 rounded-md w-30">
               <button
                 class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                on:click=move |_| { remove_action.dispatch(reply) }
+                on:click=move |_| { remove_action.dispatch(reply.clone()) }
               >
                 <span class="ml-2">Remove</span>
               </button>
