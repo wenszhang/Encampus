@@ -14,7 +14,7 @@ use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
 use crate::data::database::post_functions::{remove_post, resolve_post, Post, PostFetcher};
-use crate::data::database::reply_functions::{approve_reply, remove_reply};
+use crate::data::database::reply_functions::{add_reply, approve_reply, remove_reply};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -53,21 +53,21 @@ pub struct PostDetails {
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Reply {
-    time: NaiveDateTime,
-    contents: String,
-    author_name: String,
-    author_id: i32,
-    anonymous: bool,
-    reply_id: i32,
-    removed: bool,
-    approved: bool,
+    pub time: NaiveDateTime,
+    pub contents: String,
+    pub author_name: String,
+    pub author_id: i32,
+    pub anonymous: bool,
+    pub reply_id: i32,
+    pub removed: bool,
+    pub approved: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AddReplyInfo {
-    post_id: i32,
-    contents: String,
-    anonymous: bool,
+    pub post_id: i32,
+    pub contents: String,
+    pub anonymous: bool,
 }
 
 #[component]
@@ -273,6 +273,7 @@ pub fn FocusedPost() -> impl IntoView {
                               <ReplyDropdown
                                 post_and_replies=post_and_replies
                                 reply=reply.clone()
+                                is_instructor=is_instructor().unwrap_or_default()
                               />
                             </div>
                           }
@@ -380,50 +381,6 @@ pub fn SelectOrderOption(is: &'static str, order_option: ReadSignal<String>) -> 
         {is}
       </option>
     }
-}
-
-#[server(AddReply)]
-pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
-    use crate::data::database::user_functions::UserId;
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to add Reply".to_string(),
-    ))?;
-
-    let user_id: UserId = sqlx::query_as("select id from users where username = $1")
-        .bind(user)
-        .fetch_one(&pool)
-        .await
-        .expect("select should work");
-
-    let newreply: Reply = sqlx::query_as(
-        "INSERT INTO replies (time, authorid, postid, anonymous, contents) 
-                        VALUES (CURRENT_TIMESTAMP, $1, $2, $3, $4)
-                RETURNING                 
-                time, 
-                contents,
-                'You' as author_name, 
-                authorid as author_id,
-                anonymous,
-                replyid as reply_id;",
-    )
-    .bind(user_id.0)
-    .bind(reply_info.post_id)
-    .bind(reply_info.anonymous)
-    .bind(reply_info.contents)
-    .fetch_one(&pool)
-    .await
-    .map_err(|db_error| {
-        logging::error!(
-            "\nAdd Reply Server Function Failed. Database returned error {:?}\n",
-            db_error
-        );
-        ServerFnError::<NoCustomError>::ServerError("Unable to add Reply".to_string())
-    })?;
-
-    Ok(newreply)
 }
 
 /**
@@ -618,7 +575,11 @@ pub fn FocusedDropdown(
 type PostAndReplies = Resource<Result<PostId, ParamsError>, Option<(PostDetails, Vec<Reply>)>>;
 
 #[component]
-pub fn ReplyDropdown(post_and_replies: PostAndReplies, reply: Reply) -> impl IntoView {
+pub fn ReplyDropdown(
+    post_and_replies: PostAndReplies,
+    reply: Reply,
+    is_instructor: bool,
+) -> impl IntoView {
     let global_state: GlobalState = expect_context::<GlobalState>();
     let (_notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
@@ -687,36 +648,45 @@ pub fn ReplyDropdown(post_and_replies: PostAndReplies, reply: Reply) -> impl Int
             {move || {
               view! {
                 <div class="p-3 rounded-md w-30">
-                  {if reply.approved {
-                    view! {
-                      <button
-                        class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                        on:click=move |_| {
-                          unapprove_action
-                            .dispatch(ReplyId {
-                              reply_id: reply.reply_id,
-                            });
-                          set_menu_visible(false);
-                        }
-                      >
-                        <span class="ml-2">Unapprove</span>
-                      </button>
+                  {if is_instructor {
+                    if reply.approved {
+
+                      view! {
+                        <div>
+                          <button
+                            class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                            on:click=move |_| {
+                              unapprove_action
+                                .dispatch(ReplyId {
+                                  reply_id: reply.reply_id,
+                                });
+                              set_menu_visible(false);
+                            }
+                          >
+                            <span class="ml-2">Unapprove</span>
+                          </button>
+                        </div>
+                      }
+                    } else {
+                      view! {
+                        <div>
+                          <button
+                            class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                            on:click=move |_| {
+                              approve_action
+                                .dispatch(ReplyId {
+                                  reply_id: reply.reply_id,
+                                });
+                              set_menu_visible(false);
+                            }
+                          >
+                            <span class="ml-2">Approve</span>
+                          </button>
+                        </div>
+                      }
                     }
                   } else {
-                    view! {
-                      <button
-                        class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                        on:click=move |_| {
-                          approve_action
-                            .dispatch(ReplyId {
-                              reply_id: reply.reply_id,
-                            });
-                          set_menu_visible(false);
-                        }
-                      >
-                        <span class="ml-2">Approve</span>
-                      </button>
-                    }
+                    view! { <div></div> }
                   }}
                   <button
                     class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
