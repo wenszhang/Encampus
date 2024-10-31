@@ -1,5 +1,4 @@
 use leptos::{server, ServerFnError};
-use serde::{Deserialize, Serialize};
 
 use crate::data::database::class_functions::{check_user_is_instructor, ClassId};
 use crate::data::database::user_functions::UserId;
@@ -36,7 +35,7 @@ pub async fn remove_reply(reply_id: i32, user_id: i32) -> Result<(), ServerFnErr
 }
 
 #[server(ApproveReply)]
-pub async fn approve_reply(reply_id: i32, user_id: i32) -> Result<(), ServerFnError> {
+pub async fn approve_reply(reply_id: i32, user_id: i32, status: bool) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -53,8 +52,9 @@ pub async fn approve_reply(reply_id: i32, user_id: i32) -> Result<(), ServerFnEr
     .expect("Cannot get class id");
 
     if check_user_is_instructor(user_id, class_id).await.unwrap() {
-        sqlx::query("update replies set approved = true where replyid = $1")
+        sqlx::query("update replies set approved = $2 where replyid = $1")
             .bind(reply_id)
+            .bind(status)
             .execute(&pool)
             .await
             .expect("Cannot approve reply");

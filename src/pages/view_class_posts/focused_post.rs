@@ -271,7 +271,6 @@ pub fn FocusedPost() -> impl IntoView {
                           view! {
                             <div>
                               <ReplyDropdown
-                                class_id=class_id.get().unwrap().class_id
                                 post_and_replies=post_and_replies
                                 reply=reply.clone()
                               />
@@ -284,6 +283,11 @@ pub fn FocusedPost() -> impl IntoView {
                     </div>
                     <br />
                     <p>{reply.contents}</p>
+                    {if reply.approved {
+                      view! { <p class="text-sm font-light">"Instructor Approved Response"</p> }
+                    } else {
+                      view! { <p class="text-sm font-light"></p> }
+                    }}
                   // TODO use the reply's timestamp, author's name and anonymous info
                   </DarkenedCard>
                 </div>
@@ -572,7 +576,8 @@ pub fn FocusedDropdown(
                       <button
                         class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
                         on:click=move |_| {
-                          resolve_action.dispatch(PostId { post_id: post.post_id })
+                          resolve_action.dispatch(PostId { post_id: post.post_id });
+                          set_menu_visible(false);
                         }
                       >
                         <span class="ml-2">Unresolve</span>
@@ -583,7 +588,8 @@ pub fn FocusedDropdown(
                       <button
                         class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
                         on:click=move |_| {
-                          resolve_action.dispatch(PostId { post_id: post.post_id })
+                          resolve_action.dispatch(PostId { post_id: post.post_id });
+                          set_menu_visible(false);
                         }
                       >
                         <span class="ml-2">Resolve</span>
@@ -592,7 +598,10 @@ pub fn FocusedDropdown(
                   }}
                   <button
                     class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                    on:click=move |_| { remove_action.dispatch(PostId { post_id: post.post_id }) }
+                    on:click=move |_| {
+                      remove_action.dispatch(PostId { post_id: post.post_id });
+                      set_menu_visible(false);
+                    }
                   >
                     <span class="ml-2">Remove</span>
                   </button>
@@ -606,12 +615,10 @@ pub fn FocusedDropdown(
     }
 }
 
+type PostAndReplies = Resource<Result<PostId, ParamsError>, Option<(PostDetails, Vec<Reply>)>>;
+
 #[component]
-pub fn ReplyDropdown(
-    class_id: i32,
-    post_and_replies: Resource<Result<PostId, ParamsError>, Option<(PostDetails, Vec<Reply>)>>,
-    reply: Reply,
-) -> impl IntoView {
+pub fn ReplyDropdown(post_and_replies: PostAndReplies, reply: Reply) -> impl IntoView {
     let global_state: GlobalState = expect_context::<GlobalState>();
     let (_notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
@@ -649,7 +656,14 @@ pub fn ReplyDropdown(
     let approve_action = create_action(move |reply_id: &ReplyId| {
         let reply_id = reply_id.reply_id;
         async move {
-            approve_reply(reply_id, global_state.id.get_untracked().unwrap()).await;
+            let _ = approve_reply(reply_id, global_state.id.get_untracked().unwrap(), true).await;
+        }
+    });
+
+    let unapprove_action = create_action(move |reply_id: &ReplyId| {
+        let reply_id = reply_id.reply_id;
+        async move {
+            let _ = approve_reply(reply_id, global_state.id.get_untracked().unwrap(), false).await;
         }
     });
 
@@ -670,32 +684,56 @@ pub fn ReplyDropdown(
         }>
 
           <div class="pr-2 text-right">
-            <div class="p-3 rounded-md w-30">
-              <button
-                class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                on:click=move |_| {
-                  approve_action
-                    .dispatch(ReplyId {
-                      reply_id: reply.reply_id,
-                    });
-                  set_menu_visible(false);
-                }
-              >
-                <span class="ml-2">Approve</span>
-              </button>
-              <button
-                class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                on:click=move |_| {
-                  remove_action
-                    .dispatch(ReplyId {
-                      reply_id: reply.reply_id,
-                    });
-                  set_menu_visible(false);
-                }
-              >
-                <span class="ml-2">Remove</span>
-              </button>
-            </div>
+            {move || {
+              view! {
+                <div class="p-3 rounded-md w-30">
+                  {if reply.approved {
+                    view! {
+                      <button
+                        class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                        on:click=move |_| {
+                          unapprove_action
+                            .dispatch(ReplyId {
+                              reply_id: reply.reply_id,
+                            });
+                          set_menu_visible(false);
+                        }
+                      >
+                        <span class="ml-2">Unapprove</span>
+                      </button>
+                    }
+                  } else {
+                    view! {
+                      <button
+                        class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                        on:click=move |_| {
+                          approve_action
+                            .dispatch(ReplyId {
+                              reply_id: reply.reply_id,
+                            });
+                          set_menu_visible(false);
+                        }
+                      >
+                        <span class="ml-2">Approve</span>
+                      </button>
+                    }
+                  }}
+                  <button
+                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| {
+                      remove_action
+                        .dispatch(ReplyId {
+                          reply_id: reply.reply_id,
+                        });
+                      set_menu_visible(false);
+                    }
+                  >
+                    <span class="ml-2">Remove</span>
+                  </button>
+                </div>
+              }
+                .into_view()
+            }}
           </div>
         </div>
       </div>
