@@ -8,11 +8,13 @@ use chrono::NaiveDateTime;
 use leptos::*;
 use leptos_router::use_params;
 use leptos_router::Params;
+use leptos_router::ParamsError;
 use serde::Deserialize;
 use serde::Serialize;
 
 use crate::data::database::class_functions::get_instructor;
 use crate::data::database::post_functions::{remove_post, resolve_post, Post, PostFetcher};
+use crate::data::database::reply_functions::{add_reply, approve_reply, remove_reply};
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -23,6 +25,11 @@ use crate::resources::images::svgs::dots_icon::DotsIcon;
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
     pub post_id: i32,
+}
+
+#[derive(Params, PartialEq, Clone)]
+pub struct ReplyId {
+    pub reply_id: i32,
 }
 
 /**
@@ -46,18 +53,21 @@ pub struct PostDetails {
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Reply {
-    time: NaiveDateTime,
-    contents: String,
-    author_name: String,
-    anonymous: bool,
-    replyid: i32,
+    pub time: NaiveDateTime,
+    pub contents: String,
+    pub author_name: String,
+    pub author_id: i32,
+    pub anonymous: bool,
+    pub reply_id: i32,
+    pub removed: bool,
+    pub approved: bool,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AddReplyInfo {
-    post_id: i32,
-    contents: String,
-    anonymous: bool,
+    pub post_id: i32,
+    pub contents: String,
+    pub anonymous: bool,
 }
 
 #[component]
@@ -236,23 +246,56 @@ pub fn FocusedPost() -> impl IntoView {
               }
             }}
           </div>
-          <For each=sorted_replies key=|reply| reply.replyid let:reply>
-            <DarkenedCard class="p-5">
-              <p class="font-bold">
-                "Answered by " {reply.author_name}
-                {format!(
-                  "{}",
-                  reply
-                    .time
-                    .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
-                    .unwrap()
-                    .format(" at %l %p on %b %-d"),
-                )} ":"
-              </p>
-              <br />
-              <p>{reply.contents}</p>
-            // TODO use the reply's timestamp, author's name and anonymous info
-            </DarkenedCard>
+          <For each=sorted_replies key=|reply| reply.reply_id let:reply>
+            {if !reply.removed {
+              view! {
+                <div>
+                  <DarkenedCard class="relative p-5">
+                    <p class="font-bold">
+                      "Answered by " {reply.clone().author_name}
+                      {format!(
+                        "{}",
+                        reply
+                          .time
+                          .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
+                          .unwrap()
+                          .format(" at %l %p on %b %-d"),
+                      )} ":"
+                    </p>
+                    <div class="flex gap-5 justify-end">
+                      <div class="flex items-center cursor-pointer select-none">
+                        {if reply.author_id == global_state.id.get().unwrap_or_default()
+                          || is_instructor().unwrap_or_default()
+                        {
+                          let reply = reply.clone();
+                          view! {
+                            <div>
+                              <ReplyDropdown
+                                post_and_replies=post_and_replies
+                                reply=reply.clone()
+                                is_instructor=is_instructor().unwrap_or_default()
+                              />
+                            </div>
+                          }
+                        } else {
+                          view! { <div></div> }
+                        }}
+                      </div>
+                    </div>
+                    <br />
+                    <p>{reply.contents}</p>
+                    {if reply.approved {
+                      view! { <p class="text-sm font-light">"Instructor Approved Response"</p> }
+                    } else {
+                      view! { <p class="text-sm font-light"></p> }
+                    }}
+                  // TODO use the reply's timestamp, author's name and anonymous info
+                  </DarkenedCard>
+                </div>
+              }
+            } else {
+              view! { <div></div> }
+            }}
           </For>
           <DarkenedCard class="flex flex-col gap-2 p-5">
             <p>"Answer this post:"</p>
@@ -340,49 +383,6 @@ pub fn SelectOrderOption(is: &'static str, order_option: ReadSignal<String>) -> 
     }
 }
 
-#[server(AddReply)]
-pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
-    use crate::data::database::user_functions::UserId;
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to add Reply".to_string(),
-    ))?;
-
-    let user_id: UserId = sqlx::query_as("select id from users where username = $1")
-        .bind(user)
-        .fetch_one(&pool)
-        .await
-        .expect("select should work");
-
-    let newreply: Reply = sqlx::query_as(
-        "INSERT INTO replies (time, authorid, postid, anonymous, contents) 
-                        VALUES (CURRENT_TIMESTAMP, $1, $2, $3, $4)
-                RETURNING                 
-                time, 
-                contents,
-                'You' as author_name, 
-                anonymous,
-                replyid;",
-    )
-    .bind(user_id.0)
-    .bind(reply_info.post_id)
-    .bind(reply_info.anonymous)
-    .bind(reply_info.contents)
-    .fetch_one(&pool)
-    .await
-    .map_err(|db_error| {
-        logging::error!(
-            "\nAdd Reply Server Function Failed. Database returned error {:?}\n",
-            db_error
-        );
-        ServerFnError::<NoCustomError>::ServerError("Unable to add Reply".to_string())
-    })?;
-
-    Ok(newreply)
-}
-
 /**
  * Get all post information for a given the post id
  */
@@ -424,8 +424,11 @@ pub async fn get_post_details(post_id: i32) -> Result<(PostDetails, Vec<Reply>),
                 CASE WHEN anonymous THEN 'Anonymous Author'
                     ELSE users.firstname 
                 END as author_name, 
+                authorid as author_id,
                 anonymous,
-                replyid
+                replyid as reply_id,
+                removed,
+                approved
             FROM replies JOIN users ON replies.authorid = users.id WHERE replies.postid = $1
             ORDER BY time;"
         )
@@ -530,7 +533,8 @@ pub fn FocusedDropdown(
                       <button
                         class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
                         on:click=move |_| {
-                          resolve_action.dispatch(PostId { post_id: post.post_id })
+                          resolve_action.dispatch(PostId { post_id: post.post_id });
+                          set_menu_visible(false);
                         }
                       >
                         <span class="ml-2">Unresolve</span>
@@ -541,7 +545,8 @@ pub fn FocusedDropdown(
                       <button
                         class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
                         on:click=move |_| {
-                          resolve_action.dispatch(PostId { post_id: post.post_id })
+                          resolve_action.dispatch(PostId { post_id: post.post_id });
+                          set_menu_visible(false);
                         }
                       >
                         <span class="ml-2">Resolve</span>
@@ -550,7 +555,148 @@ pub fn FocusedDropdown(
                   }}
                   <button
                     class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                    on:click=move |_| { remove_action.dispatch(PostId { post_id: post.post_id }) }
+                    on:click=move |_| {
+                      remove_action.dispatch(PostId { post_id: post.post_id });
+                      set_menu_visible(false);
+                    }
+                  >
+                    <span class="ml-2">Remove</span>
+                  </button>
+                </div>
+              }
+                .into_view()
+            }}
+          </div>
+        </div>
+      </div>
+    }
+}
+
+type PostAndReplies = Resource<Result<PostId, ParamsError>, Option<(PostDetails, Vec<Reply>)>>;
+
+#[component]
+pub fn ReplyDropdown(
+    post_and_replies: PostAndReplies,
+    reply: Reply,
+    is_instructor: bool,
+) -> impl IntoView {
+    let global_state: GlobalState = expect_context::<GlobalState>();
+    let (_notification_details, set_notification_details) =
+        create_signal(None::<NotificationDetails>);
+
+    let remove_action = create_action(move |reply_id: &ReplyId| {
+        let reply_id = reply_id.reply_id;
+        async move {
+            match remove_reply(reply_id, global_state.id.get_untracked().unwrap()).await {
+                Ok(_) => {
+                    post_and_replies.update(|post_and_replies| {
+                        if let Some(outer_option) = post_and_replies.as_mut() {
+                            if let Some(post_and_replies) = outer_option.as_mut() {
+                                if let Some(index) = post_and_replies
+                                    .1
+                                    .iter()
+                                    .position(|r| r.reply_id == reply.reply_id)
+                                {
+                                    post_and_replies.1.remove(index);
+                                }
+                            }
+                        }
+                    });
+                }
+                Err(_) => {
+                    logging::error!("Attempt to remove reply failed. Please try again");
+                    set_notification_details(Some(NotificationDetails {
+                        message: "Failed to remove reply. Please try again.".to_string(),
+                        notification_type: NotificationType::Error,
+                    }));
+                }
+            }
+        }
+    });
+
+    let approve_action = create_action(move |reply_id: &ReplyId| {
+        let reply_id = reply_id.reply_id;
+        async move {
+            let _ = approve_reply(reply_id, global_state.id.get_untracked().unwrap(), true).await;
+        }
+    });
+
+    let unapprove_action = create_action(move |reply_id: &ReplyId| {
+        let reply_id = reply_id.reply_id;
+        async move {
+            let _ = approve_reply(reply_id, global_state.id.get_untracked().unwrap(), false).await;
+        }
+    });
+
+    let (menu_visible, set_menu_visible) = create_signal(false);
+    let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
+
+    view! {
+      <div class="flex absolute top-0 right-2 z-20 items-center">
+        <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+          <DotsIcon size="36px" />
+        </button>
+        <div class=move || {
+          if menu_visible.get() {
+            "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+          } else {
+            "hidden"
+          }
+        }>
+
+          <div class="pr-2 text-right">
+            {move || {
+              view! {
+                <div class="p-3 rounded-md w-30">
+                  {if is_instructor {
+                    if reply.approved {
+
+                      view! {
+                        <div>
+                          <button
+                            class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                            on:click=move |_| {
+                              unapprove_action
+                                .dispatch(ReplyId {
+                                  reply_id: reply.reply_id,
+                                });
+                              set_menu_visible(false);
+                            }
+                          >
+                            <span class="ml-2">Unapprove</span>
+                          </button>
+                        </div>
+                      }
+                    } else {
+                      view! {
+                        <div>
+                          <button
+                            class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                            on:click=move |_| {
+                              approve_action
+                                .dispatch(ReplyId {
+                                  reply_id: reply.reply_id,
+                                });
+                              set_menu_visible(false);
+                            }
+                          >
+                            <span class="ml-2">Approve</span>
+                          </button>
+                        </div>
+                      }
+                    }
+                  } else {
+                    view! { <div></div> }
+                  }}
+                  <button
+                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| {
+                      remove_action
+                        .dispatch(ReplyId {
+                          reply_id: reply.reply_id,
+                        });
+                      set_menu_visible(false);
+                    }
                   >
                     <span class="ml-2">Remove</span>
                   </button>
