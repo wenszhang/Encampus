@@ -283,9 +283,9 @@ pub fn QuestionTile(
         class=("bg-gray-100", move || !is_resolved())
       >
 
-        <A href=format!("{}", post.post_id)>
+        <A href=format!("{}", post.post_id) class="block w-full h-full">
           <div
-            class="flex flex-col justify-center items-center p-6 m-auto h-full text-lg font-semibold"
+            class="flex flex-col justify-between items-center p-6 m-auto h-full text-lg font-semibold"
 
             // class:border-purple-500=is_private()
 
@@ -315,17 +315,17 @@ pub fn QuestionTile(
             </div>
 
             // Card body
-            <div class="flex flex-grow justify-center items-center h-full">
-              <p class="text-center">{post.title}</p>
-              <div class="flex items-center">
-                {if is_pinned.get() {
-                  // Show filled pin icon when post is pinned
-                  view! { <PinIcon size="20px" /> }
-                } else {
-                  None
-                }}
-              </div>
-
+            <div class="flex justify-center items-center p-4 w-full h-full text-center sm:p-6 md:p-8 lg:p-12">
+              <p class="text-base">{post.title}</p>
+            // <div class="flex items-center">
+            // {if is_pinned.get() {
+            // Some(
+            // view! { <PinIcon size="20px" /> },
+            // )
+            // } else {
+            // None
+            // }}
+            // </div>
             </div>
           </div>
         </A>
@@ -356,10 +356,10 @@ pub fn QuestionTile(
               >
                 {if is_pinned.get() {
                   // Render UnPinIcon when pinned
-                  view! { <UnPinIcon size="24px" /> }
+                  view! { <PinIcon size="20px" /> }
                 } else {
                   // Render PinIcon when not pinned
-                  view! { <PinIcon size="24px" /> }
+                  view! { <UnPinIcon size="20px" /> }
                 }}
                 <span class="ml-2">{if is_pinned.get() { "Unpin" } else { "Pin" }}</span>
               </button>
