@@ -342,39 +342,66 @@ fn UserOptions(
           </div>
           {if role.get() == "Student" {
             view! {
-              <div>
-                <h2 class="font-semibold">"Classes"</h2>
-                <div class="grid grid-cols-1 gap-2">
-                  <ul>
-                    <For
-                      each=move || all_classes().unwrap_or_default()
-                      key=|class| class.id
-                      let:class
-                    >
-                      <li class="flex items-center">
-                        <span>{class.name.clone()}</span>
-                        <input
-                          type="checkbox"
-                          class="ml-2"
-                          checked=move || {
-                            if let Some(classes) = users_classes.get() {
-                              classes.iter().any(|c| c.id == class.id)
-                            } else {
-                              false
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <h2 class="font-semibold">"Classes"</h2>
+                  <div class="grid grid-cols-1 gap-2">
+                    <ul>
+                      <For
+                        each=move || all_classes().unwrap_or_default()
+                        key=|class| class.id
+                        let:class
+                      >
+                        <li class="flex items-center">
+                          <span>{class.name.clone()}</span>
+                          <input
+                            type="checkbox"
+                            class="ml-2"
+                            checked=move || {
+                              if let Some(classes) = users_classes.get() {
+                                classes.iter().any(|c| c.id == class.id)
+                              } else {
+                                false
+                              }
                             }
-                          }
-                          on:change=move |event| {
-                            let checked = event_target_checked(&event);
-                            let class = class.clone();
-                            set_class_selections
-                              .update(move |selections| {
-                                selections.insert(class.id, checked);
-                              });
-                          }
-                        />
-                      </li>
-                    </For>
-                  </ul>
+                            on:change=move |event| {
+                              let checked = event_target_checked(&event);
+                              let class = class.clone();
+                              set_class_selections
+                                .update(move |selections| {
+                                  selections.insert(class.id, checked);
+                                });
+                            }
+                          />
+                        </li>
+                      </For>
+                    </ul>
+                  </div>
+                </div>
+                <div>
+                  <h2 class="font-semibold">"Enroll as TA"</h2>
+                  <div class="grid grid-cols-1 gap-2">
+                    <ul>
+                      <For
+                        each=move || all_classes().unwrap_or_default()
+                        key=|class| class.id
+                        let:class
+                      >
+                        <li class="flex items-center">
+                          <span>{class.name.clone()}</span>
+                          <input
+                            type="checkbox"
+                            class="ml-2"
+                            checked=false
+                            on:change=move |event| {
+                              let checked = event_target_checked(&event);
+                              let class = class.clone();
+                            }
+                          />
+                        </li>
+                      </For>
+                    </ul>
+                  </div>
                 </div>
               </div>
             }
