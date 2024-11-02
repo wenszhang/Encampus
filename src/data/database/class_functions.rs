@@ -365,8 +365,8 @@ pub async fn remove_ta_from_class(user_id: i32, class_id: i32) -> Result<(), Ser
     Ok(())
 }
 
-#[server(GetTAsClasses)]
-pub async fn get_tas_classes(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnError> {
+#[server(GetClassesTA)]
+pub async fn get_classes_ta(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -374,7 +374,8 @@ pub async fn get_tas_classes(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnErr
         "Unable to complete Request".to_string(),
     ))?;
 
-    let classes: Vec<ClassInfo> = sqlx::query_as("")
+    let classes: Vec<ClassInfo> = sqlx::query_as("select ta.classid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+        from ta join classes on ta.classid = classes.courseid join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id where ta.id = $1")
         .bind(user_id)
         .fetch_all(&pool)
         .await
