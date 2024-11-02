@@ -1,7 +1,7 @@
 use std::collections::HashMap;
 
 use crate::data::database::class_functions::{
-    add_class, add_student_to_class, add_ta_to_class, delete_class, get_class_list,
+    add_class, add_student_to_class, add_ta_to_class, delete_class, get_class_list, get_classes_ta,
     get_instructors_classes, get_students_classes, remove_student_from_class, update_class_info,
     ClassInfo,
 };
@@ -199,6 +199,10 @@ fn UserOptions(
         }
     });
 
+    let ta_classes = create_resource(|| {}, {
+        move |_| async move { get_classes_ta(user.get().id).await.unwrap_or_default() }
+    });
+
     let update_user_action = create_action(move |user: &User| {
         let user = user.clone();
         async move {
@@ -270,7 +274,7 @@ fn UserOptions(
             let class_id = *class_id;
             let user = user.clone();
             async move {
-                add_ta_to_class(class_id, user.id).await.unwrap();
+                add_ta_to_class(user.id, class_id).await.unwrap();
             }
         }
     });
@@ -405,7 +409,13 @@ fn UserOptions(
                           <input
                             type="checkbox"
                             class="ml-2"
-                            checked=false
+                            checked=move || {
+                              if let Some(classes) = ta_classes.get() {
+                                classes.iter().any(|c| c.id == class.id)
+                              } else {
+                                false
+                              }
+                            }
                             on:change=move |event| {
                               let checked = event_target_checked(&event);
                               let class = class.clone();
