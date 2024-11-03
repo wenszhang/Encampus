@@ -1,5 +1,4 @@
-use leptos::*;
-use leptos::{server, ServerFnError};
+use leptos::{logging, server, ServerFnError};
 
 use crate::data::database::class_functions::{check_user_is_instructor, ClassId};
 use crate::data::database::user_functions::UserId;
