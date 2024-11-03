@@ -2,8 +2,8 @@ use std::collections::HashMap;
 
 use crate::data::database::class_functions::{
     add_class, add_student_to_class, add_ta_to_class, delete_class, get_class_list, get_classes_ta,
-    get_instructors_classes, get_students_classes, remove_student_from_class, update_class_info,
-    ClassInfo,
+    get_instructors_classes, get_students_classes, remove_student_from_class, remove_ta_from_class,
+    update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
     add_user, delete_user, get_user_password, get_users, get_users_by_role, update_user,
@@ -279,6 +279,16 @@ fn UserOptions(
         }
     });
 
+    let remove_user_as_ta_action = create_action({
+        move |(class_id, user): &(i32, User)| {
+            let class_id = *class_id;
+            let user = user.clone();
+            async move {
+                remove_ta_from_class(user.id, class_id).await.unwrap();
+            }
+        }
+    });
+
     let user_password = create_resource(
         || {},
         move |_| async move { get_user_password(user.get().id).await.unwrap_or_default() },
@@ -484,6 +494,8 @@ fn UserOptions(
               for (class_id, selected) in ta_selections.get().iter() {
                 if *selected {
                   add_user_as_ta_action.dispatch((*class_id, user.get()));
+                } else {
+                  remove_user_as_ta_action.dispatch((*class_id, user.get()));
                 }
               }
             }
