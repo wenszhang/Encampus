@@ -2,7 +2,7 @@
  * QuestionTile component, displaying a tile for one post
  */
 use crate::data::database::post_functions::{
-    endorse_post, remove_post, toggle_pin_post, Post, PostFetcher,
+    bump_post, endorse_post, remove_post, toggle_pin_post, Post, PostFetcher,
 };
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
@@ -39,6 +39,7 @@ pub fn DropDownMenu(
     post_author_id: i32,
     set_endorsed: WriteSignal<bool>,
     is_endorsed: ReadSignal<bool>,
+    set_is_pinned: WriteSignal<bool>,
     //remove_action: Action<PostId, ()>,
 ) -> impl IntoView {
     let posts: Resource<PostFetcher, Vec<Post>> =
@@ -71,6 +72,7 @@ pub fn DropDownMenu(
 
         async move {
             toggle_pin_post(post_id, is_pinned).await.unwrap();
+            set_is_pinned(!is_pinned);
 
             posts.update(|posts| {
                 if let Some(post) = posts
@@ -79,7 +81,7 @@ pub fn DropDownMenu(
                     .iter_mut()
                     .find(|post| post.post_id == post_id)
                 {
-                    post.pinned = is_pinned;
+                    post.pinned = !is_pinned;
                 }
 
                 posts.as_mut().unwrap().sort_by(|a, b| {
@@ -98,6 +100,10 @@ pub fn DropDownMenu(
         let post_id = post_id.to_owned();
 
         async move {
+            if let Err(e) = bump_post(post_id).await {
+                eprintln!("Failed to bump post: {:?}", e);
+                return;
+            }
             posts.update(|posts| {
                 if let Some(index) = posts
                     .as_mut()
@@ -115,6 +121,10 @@ pub fn DropDownMenu(
                         .unwrap_or(posts.as_ref().unwrap().len());
 
                     posts.as_mut().unwrap().insert(insert_position, bumped_post);
+
+                    if insert_position > 0 {
+                        posts.as_mut().unwrap().swap(insert_position, 0);
+                    }
                 }
             });
         }
@@ -275,7 +285,7 @@ pub fn QuestionTile(
     view! {
       <div
         class="relative h-60 rounded-lg shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-105 bg-card-bg"
-        class=("border-4", move || is_endorsed())
+        // class=("border-4", move || is_endorsed())
         class=("border-customYellow", move || is_endorsed())
         class=("bg-customRed", move || is_resolved())
         class=("hover:bg-customRed-HOVER", move || is_resolved())
@@ -289,7 +299,7 @@ pub fn QuestionTile(
 
             // class:border-purple-500=is_private()
 
-            class:border-4=is_private()
+            // class:border-4=is_private()
             class=is_private()
           >
 
@@ -346,6 +356,7 @@ pub fn QuestionTile(
               post_author_id=post.author_id
               set_endorsed=set_endorsed
               is_endorsed=is_endorsed
+              set_is_pinned=set_is_pinned
             />
             <div class="p-1">
               <button

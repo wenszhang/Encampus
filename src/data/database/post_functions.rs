@@ -45,7 +45,7 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
         and ((posts.classid = $1 and private = false) 
             or (posts.classid = $1 and authorid = $2 and private = true) 
             or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) 
-        ORDER BY timestamp desc;",
+        ORDER BY pinned desc, last_bumped desc, timestamp desc;",
     )
     .bind(class_id)
     .bind(user_id)
@@ -192,7 +192,7 @@ pub async fn bump_post(post_id: i32) -> Result<(), ServerFnError> {
         "Unable to complete request".to_string(),
     ))?;
 
-    sqlx::query("update posts set last_bumped = $1 where postid = $2")
+    sqlx::query("update posts set last_bumped = current_timestamp where postid = $1")
         .bind(Utc::now())
         .bind(post_id)
         .execute(&pool)
