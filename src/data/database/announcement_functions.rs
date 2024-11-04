@@ -3,6 +3,7 @@
  */
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
+use tokio::sync::broadcast;
 
 /**
  * Struct to hold the class info
@@ -52,6 +53,7 @@ pub async fn get_announcement_list(class_id: i32) -> Result<Vec<AnnouncementInfo
 pub async fn post_announcement(
     new_announcement_info: AddAnnouncementInfo,
     user_id: i32,
+    tx: broadcast::Sender<String>,
 ) -> Result<AnnouncementInfo, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
@@ -71,13 +73,17 @@ pub async fn post_announcement(
             classid as class_id,
             authorid as author_id",
     )
-    .bind(new_announcement_info.class_id)
-    .bind(user_id)
-    .bind(new_announcement_info.title)
-    .bind(new_announcement_info.contents)
-    .fetch_one(&pool)
-    .await
-    .expect("failed adding announcement");
+        .bind(new_announcement_info.class_id)
+        .bind(user_id)
+        .bind(new_announcement_info.title)
+        .bind(new_announcement_info.contents)
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| {
+            ServerFnError::<NoCustomError>::ServerError(format!("Failed to add announcement: {}", e))
+        })?;
+
+    let _ = tx.send(format!("New announcement: {}", announcement.title));
 
     Ok(announcement)
 }
