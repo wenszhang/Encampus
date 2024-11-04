@@ -2,7 +2,7 @@
  * QuestionTile component, displaying a tile for one post
  */
 use crate::data::database::post_functions::{
-    bump_post, endorse_post, remove_post, toggle_pin_post, Post, PostFetcher,
+    bump_post, endorse_post, remove_post, Post, PostFetcher,
 };
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
@@ -13,9 +13,7 @@ use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
-use crate::resources::images::svgs::pin_icon::PinIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
-use crate::resources::images::svgs::unpinned_icon::UnPinIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 
 use ev::MouseEvent;
@@ -39,7 +37,7 @@ pub fn DropDownMenu(
     post_author_id: i32,
     set_endorsed: WriteSignal<bool>,
     is_endorsed: ReadSignal<bool>,
-    set_is_pinned: WriteSignal<bool>,
+    // set_is_pinned: WriteSignal<bool>,
     //remove_action: Action<PostId, ()>,
 ) -> impl IntoView {
     let posts: Resource<PostFetcher, Vec<Post>> =
@@ -65,35 +63,35 @@ pub fn DropDownMenu(
             }
         })
     };
-    // Pin logic
-    let pin_action = create_action(move |(post_id, pinned): &(i32, bool)| {
-        let post_id = *post_id;
-        let is_pinned = *pinned;
+    // // Pin logic
+    // let pin_action = create_action(move |(post_id, pinned): &(i32, bool)| {
+    //     let post_id = *post_id;
+    //     let is_pinned = *pinned;
 
-        async move {
-            toggle_pin_post(post_id, is_pinned).await.unwrap();
-            set_is_pinned(!is_pinned);
+    //     async move {
+    //         toggle_pin_post(post_id, is_pinned).await.unwrap();
+    //         set_is_pinned(!is_pinned);
 
-            posts.update(|posts| {
-                if let Some(post) = posts
-                    .as_mut()
-                    .unwrap()
-                    .iter_mut()
-                    .find(|post| post.post_id == post_id)
-                {
-                    post.pinned = !is_pinned;
-                }
+    //         posts.update(|posts| {
+    //             if let Some(post) = posts
+    //                 .as_mut()
+    //                 .unwrap()
+    //                 .iter_mut()
+    //                 .find(|post| post.post_id == post_id)
+    //             {
+    //                 post.pinned = !is_pinned;
+    //             }
 
-                posts.as_mut().unwrap().sort_by(|a, b| {
-                    (b.pinned, b.last_bumped, b.created_at).cmp(&(
-                        a.pinned,
-                        a.last_bumped,
-                        a.created_at,
-                    ))
-                });
-            });
-        }
-    });
+    //             posts.as_mut().unwrap().sort_by(|a, b| {
+    //                 (b.pinned, b.last_bumped, b.created_at).cmp(&(
+    //                     a.pinned,
+    //                     a.last_bumped,
+    //                     a.created_at,
+    //                 ))
+    //             });
+    //         });
+    //     }
+    // });
 
     // Bump logic
     let bump_action = create_action(move |post_id: &i32| {
@@ -117,7 +115,7 @@ pub fn DropDownMenu(
                         .as_mut()
                         .unwrap()
                         .iter()
-                        .position(|post| !post.pinned)
+                        .position(|post| post.post_id == post_id)
                         .unwrap_or(posts.as_ref().unwrap().len());
 
                     posts.as_mut().unwrap().insert(insert_position, bumped_post);
@@ -201,24 +199,24 @@ pub fn DropDownMenu(
                   <span class="ml-2">Endorse</span>
                 </button>
               </div>
-              // Pinned view
-              <div class="p-1">
-                <button
-                  class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                  on:click=move |_| {
-                    let posts_list = posts.get().unwrap();
-                    if let Some(post) = posts_list.iter().find(|post| post.post_id == post_id) {
-                      pin_action.dispatch((post_id, !post.pinned));
-                    }
-                  }
-                >
-                  <UnPinIcon size="20px" />
-                  <span class="ml-2">Pin</span>
-                </button>
-              </div>
             }
               .into_view()
           } else {
+            // // Pinned view
+            // <div class="p-1">
+            // <button
+            // class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+            // on:click=move |_| {
+            // let posts_list = posts.get().unwrap();
+            // if let Some(post) = posts_list.iter().find(|post| post.post_id == post_id) {
+            // pin_action.dispatch((post_id, !post.pinned));
+            // }
+            // }
+            // >
+            // <UnPinIcon size="20px" />
+            // <span class="ml-2">Pin</span>
+            // </button>
+            // </div>
             // <button>pin</button>
             view! {
               <div class="p-1">
@@ -265,28 +263,28 @@ pub fn QuestionTile(
 ) -> impl IntoView {
     let (menu_invisible, set_menu_invisible) = create_signal(true);
     let (is_endorsed, set_endorsed) = create_signal(post.endorsed);
-    let (is_pinned, set_is_pinned) = create_signal(!post.pinned); // Retrieve pin state from post data
+    // let (is_pinned, set_is_pinned) = create_signal(!post.pinned); // Retrieve pin state from post data
 
     let toggle_menu = move |e: MouseEvent| {
         e.stop_propagation();
         set_menu_invisible.update(|visible| *visible = !*visible);
     };
 
-    let pin_action = create_action(move |(post_id, current_state): &(i32, bool)| {
-        let post_id = *post_id;
-        let is_pinned = *current_state;
+    // let pin_action = create_action(move |(post_id, current_state): &(i32, bool)| {
+    //     let post_id = *post_id;
+    //     let is_pinned = *current_state;
 
-        async move {
-            toggle_pin_post(post_id, is_pinned).await.unwrap();
-            set_is_pinned(!is_pinned);
-        }
-    });
+    //     async move {
+    //         toggle_pin_post(post_id, is_pinned).await.unwrap();
+    //         set_is_pinned(!is_pinned);
+    //     }
+    // });
 
     (move || console_debug_warn(format!("debug {}", is_endorsed()).as_str()))();
     view! {
       <div
         class="relative h-60 rounded-lg shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-105 bg-card-bg"
-        // class=("border-4", move || is_endorsed())
+        class=("border-4", move || is_endorsed())
         class=("border-customYellow", move || is_endorsed())
         class=("bg-customRed", move || is_resolved())
         class=("hover:bg-customRed-HOVER", move || is_resolved())
@@ -357,25 +355,25 @@ pub fn QuestionTile(
               post_author_id=post.author_id
               set_endorsed=set_endorsed
               is_endorsed=is_endorsed
-              set_is_pinned=set_is_pinned
             />
-            <div class="p-1">
-              <button
-                class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                on:click=move |_| {
-                  pin_action.dispatch((post.post_id, is_pinned.get()));
-                }
-              >
-                {if is_pinned.get() {
-                  // Render UnPinIcon when pinned
-                  view! { <PinIcon size="20px" /> }
-                } else {
-                  // Render PinIcon when not pinned
-                  view! { <UnPinIcon size="20px" /> }
-                }}
-                <span class="ml-2">{if is_pinned.get() { "Unpin" } else { "Pin" }}</span>
-              </button>
-            </div>
+          // set_is_pinned=set_is_pinned
+          // <div class="p-1">
+          // <button
+          // class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+          // on:click=move |_| {
+          // pin_action.dispatch((post.post_id, is_pinned.get()));
+          // }
+          // >
+          // {if is_pinned.get() {
+          // // Render UnPinIcon when pinned
+          // view! { <PinIcon size="20px" /> }
+          // } else {
+          // // Render PinIcon when not pinned
+          // view! { <UnPinIcon size="20px" /> }
+          // }}
+          // <span class="ml-2">{if is_pinned.get() { "Unpin" } else { "Pin" }}</span>
+          // </button>
+          // </div>
           // remove_action=Action<PostId, ()>
           </div>
         </div>
