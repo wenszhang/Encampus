@@ -78,8 +78,7 @@ pub fn FocusedPost() -> impl IntoView {
     let (order_option, set_value) = create_signal("Newest First".to_string());
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
-    let posts: Resource<PostFetcher, Vec<Post>> =
-        expect_context::<Resource<PostFetcher, Vec<Post>>>();
+    let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {

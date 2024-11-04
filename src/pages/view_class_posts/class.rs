@@ -122,7 +122,6 @@ pub fn ClassPage() -> impl IntoView {
               <InformationIcon size="20px" />
             </button>
             <h3 class="pb-1 text-s">"Help"</h3>
-
           </span>
           <div class="flex justify-center pt-8 mx-20">
             <div class="flex justify-center items-center">
