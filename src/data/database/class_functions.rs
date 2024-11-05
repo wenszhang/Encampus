@@ -328,3 +328,58 @@ pub async fn check_user_is_instructor(user_id: i32, class_id: i32) -> Result<boo
         Ok(false)
     }
 }
+
+#[server(AddTAToClass)]
+pub async fn add_ta_to_class(user_id: i32, class_id: i32) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("insert into ta (id, classid) values ($1, $2)")
+        .bind(user_id)
+        .bind(class_id)
+        .execute(&pool)
+        .await
+        .expect("Failed adding user to class");
+    Ok(())
+}
+
+#[server(RemoveTAFromClass)]
+pub async fn remove_ta_from_class(user_id: i32, class_id: i32) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("delete from ta where id = $1 and classid = $2")
+        .bind(user_id)
+        .bind(class_id)
+        .execute(&pool)
+        .await
+        .expect("Failed adding user to class");
+    Ok(())
+}
+
+#[server(GetClassesTA)]
+pub async fn get_classes_ta(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let classes: Vec<ClassInfo> = sqlx::query_as("select ta.classid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+        from ta join classes on ta.classid = classes.courseid join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id where ta.id = $1")
+        .bind(user_id)
+        .fetch_all(&pool)
+        .await
+        .expect("select should work");
+
+    Ok(classes)
+}
