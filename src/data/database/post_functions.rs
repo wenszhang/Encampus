@@ -1,6 +1,11 @@
 #[allow(unused_imports)] // Suppress UserID - false compiler warning due to RowToStruct
 use super::user_functions::UserId;
+use crate::data::database::reply_functions::add_reply;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
+use crate::{
+    data::database::ai_functions::get_ai_response,
+    pages::view_class_posts::focused_post::AddReplyInfo,
+};
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
@@ -59,6 +64,8 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         "Unable to complete Request".to_string(),
     ))?;
 
+    let post_contents = format!("{} {}", new_post_info.title, new_post_info.contents);
+
     let post: Post = sqlx::query_as("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid, resolved, private) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6, false, $7)
                         RETURNING                
                         title, 
@@ -76,6 +83,14 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         .fetch_one(&pool)
         .await
         .expect("failed adding post");
+
+    let ai_response = get_ai_response(post_contents.clone()).await.unwrap();
+
+    let reply_info = AddReplyInfo {
+        post_id: post.post_id,
+        anonymous: false,
+        contents: ai_response,
+    };
 
     Ok(post)
 }

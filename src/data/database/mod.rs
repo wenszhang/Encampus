@@ -1,3 +1,4 @@
+pub mod ai_functions;
 pub mod announcement_functions;
 pub mod class_functions;
 pub mod post_functions;
