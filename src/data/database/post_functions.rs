@@ -6,6 +6,7 @@ use crate::{
     data::database::ai_functions::get_ai_response,
     pages::view_class_posts::focused_post::AddReplyInfo,
 };
+use leptos::logging::error;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
@@ -84,9 +85,18 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         .await
         .expect("failed adding post");
 
-    let ai_response = get_ai_response(post_contents.clone())
-        .await
-        .unwrap_or_default();
+    let ai_response = match get_ai_response(post_contents.clone()).await {
+        Ok(response) => response,
+        Err(e) => {
+            error!("Failed to get AI response: {:?}", e);
+            return Err(ServerFnError::ServerError("AI response failed".to_string()));
+        }
+    };
+
+    if ai_response.is_empty() {
+        error!("AI response is empty; check API or input formatting.");
+        return Err(ServerFnError::ServerError("Empty AI response".to_string()));
+    }
 
     let reply_info = AddReplyInfo {
         post_id: post.post_id,
@@ -94,7 +104,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         contents: ai_response,
     };
 
-    add_reply(reply_info, "EncampusAssistant".to_string());
+    add_reply(reply_info, "EncampusAssistant".to_string()).await?;
 
     Ok(post)
 }
