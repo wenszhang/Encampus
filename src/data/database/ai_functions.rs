@@ -35,7 +35,7 @@ pub async fn get_ai_response(text: String) -> Result<String, reqwest::Error> {
     let request = OpenAIRequest {
         model: "gpt-3.5-turbo".to_string(),
         messages: vec![Message {
-            role: "system".to_string(),
+            role: "user".to_string(),
             content: text,
         }],
     };

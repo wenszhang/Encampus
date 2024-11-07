@@ -84,13 +84,17 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         .await
         .expect("failed adding post");
 
-    let ai_response = get_ai_response(post_contents.clone()).await.unwrap();
+    let ai_response = get_ai_response(post_contents.clone())
+        .await
+        .unwrap_or_default();
 
     let reply_info = AddReplyInfo {
         post_id: post.post_id,
         anonymous: false,
         contents: ai_response,
     };
+
+    add_reply(reply_info, "EncampusAssistant".to_string());
 
     Ok(post)
 }
