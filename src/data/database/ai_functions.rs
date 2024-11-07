@@ -1,6 +1,7 @@
 use leptos::create_signal;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use serde_json::json;
 
 #[derive(Serialize)]
 struct OpenAIRequest {
@@ -58,7 +59,7 @@ pub async fn get_openai_response(text: String) -> Result<String, reqwest::Error>
 
 #[derive(Serialize, Deserialize, Debug)]
 struct GeminiRequest {
-    prompt: String,
+    text: String,
     model: String,
 }
 
@@ -68,25 +69,38 @@ struct GeminiResponse {
 }
 
 pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error> {
-    let client = Client::new();
-    let api_key = "AIzaSyC4lMM_E_6ge-6L76YDi1Uj_VspRtKng_U";
     let project_id = "874592041558";
+    let api_key = "AIzaSyC4lMM_E_6ge-6L76YDi1Uj_VspRtKng_U";
+    let url = format!("https://us-central1-aiplatform.googleapis.com/v1/projects/{}/locations/us-central1/models/gemini-1.5-flash:predict", project_id);
 
-    let request = GeminiRequest {
+    let client = Client::new();
+
+    let body = json!({
+        "instances": [
+            {
+                "prompt": input,
+                "parameters": {
+                    "temperature": 0.7
+                }
+            }
+        ]
+    });
+    let request = OpenAIRequest {
         model: "gemini-1.5-flash".to_string(),
-        prompt: input,
+        messages: vec![Message {
+            role: "user".to_string(),
+            content: input,
+        }],
     };
 
-    let mut response = client
-        .post(format!("https://us-central1-aiplatform.googleapis.com/v1/projects/{}/locations/us-central1/models/gemini-1.5-flash-latest:predict", project_id))
+    let response = client
+        .post(url)
         .header("Authorization", format!("Bearer {}", api_key))
         .json(&request)
         .send()
-        .await?
-        .json::<GeminiResponse>()
         .await?;
 
-    let response_text = response.text;
+    let response_text = response.text().await?;
     println!("Raw response: {}", response_text);
 
     Ok("test".to_string())
