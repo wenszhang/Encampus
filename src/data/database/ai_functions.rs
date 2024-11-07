@@ -29,7 +29,7 @@ struct Message {
     content: String,
 }
 
-pub async fn get_ai_response(text: String) -> Result<String, reqwest::Error> {
+pub async fn get_openai_response(text: String) -> Result<String, reqwest::Error> {
     let client = Client::new();
     let api_key = "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";
 
@@ -69,22 +69,22 @@ struct GeminiResponse {
 
 pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error> {
     let client = Client::new();
-    let api_key = "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";
+    let api_key = "AIzaSyC4lMM_E_6ge-6L76YDi1Uj_VspRtKng_U";
+    let project_id = "874592041558";
 
     let request = GeminiRequest {
-        model: "gpt-3.5-turbo".to_string(),
+        model: "gemini-1.5-flash".to_string(),
         prompt: input,
     };
 
-    let response = client
-        .post("url")
+    let mut response = client
+        .post(format!("https://us-central1-aiplatform.googleapis.com/v1/projects/{}/locations/us-central1/models/gemini-1.5-flash-latest:predict", project_id))
+        .header("Authorization", format!("Bearer {}", api_key))
         .json(&request)
         .send()
-        .await
-        .unwrap()
+        .await?
         .json::<GeminiResponse>()
-        .await
-        .unwrap();
+        .await?;
 
     let response_text = response.text;
     println!("Raw response: {}", response_text);

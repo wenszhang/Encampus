@@ -3,7 +3,7 @@ use super::user_functions::UserId;
 use crate::data::database::reply_functions::add_reply;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
 use crate::{
-    data::database::ai_functions::get_ai_response,
+    data::database::ai_functions::{get_gemini_response, get_openai_response},
     pages::view_class_posts::focused_post::AddReplyInfo,
 };
 use leptos::logging::error;
@@ -85,7 +85,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         .await
         .expect("failed adding post");
 
-    let ai_response = match get_ai_response(post_contents.clone()).await {
+    let ai_response = match get_gemini_response(post_contents.clone()).await {
         Ok(response) => response,
         Err(e) => {
             error!("Failed to get AI response: {:?}", e);
