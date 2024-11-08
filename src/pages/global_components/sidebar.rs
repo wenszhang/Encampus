@@ -1,19 +1,24 @@
-use crate::data::database::class_functions::get_students_classes;
+use crate::data::database::class_functions::{get_students_classes, get_users_classes};
 use crate::data::database::class_functions::ClassInfo;
 use crate::data::global_state::GlobalState;
 use leptos::*;
-use leptos_router::A;
+use leptos_router::{use_params, A};
+use crate::pages::view_class_posts::class::ClassId;
 
 #[component]
 pub fn Sidebar() -> impl IntoView {
     let global_state = expect_context::<GlobalState>(); // Access global state
     let (collapsed, set_collapsed) = create_signal(false);
+    let user_role = move || global_state.role.get().unwrap_or_default(); // Wrapped in a closure
+    let curr_class_id = use_params::<ClassId>();
+    let class_id_val = curr_class_id.get_untracked().unwrap().class_id;
 
     let courses = create_resource(
         || {},
         move |_| {
             let id = global_state.id.get().unwrap_or_default();
-            async move { get_students_classes(id).await.unwrap_or_default() }
+            let role = user_role();
+            async move { get_users_classes(id, role).await.unwrap_or_default() }
         },
     );
 
@@ -28,7 +33,7 @@ pub fn Sidebar() -> impl IntoView {
         {if collapsed.get() {
           collapsed_view(set_collapsed).into_view()
         } else {
-          expanded_view(set_collapsed, courses, global_state).into_view()
+          expanded_view(set_collapsed, courses, global_state, class_id_val).into_view()
         }}
       </div>
     }
@@ -49,6 +54,7 @@ fn expanded_view(
     set_collapsed: WriteSignal<bool>,
     courses: Resource<(), Vec<ClassInfo>>,
     global_state: GlobalState,
+    class_id_val: i32,
 ) -> View {
     view! {
       <div class="flex flex-col h-full">
@@ -62,6 +68,7 @@ fn expanded_view(
         </div>
 
         // Reactive Name and Role
+        <Suspense fallback=move || view! { <p>"Loading user info..."</p> }>
         <h1 class="text-2xl font-bold text-center">
           {move || {
             let first_name = global_state.first_name.get();
@@ -69,14 +76,18 @@ fn expanded_view(
             format!("{} {}", first_name.unwrap_or_default(), last_name.unwrap_or_default())
           }}
         </h1>
+
         <h2 class="text-lg font-semibold text-center text-gray-500">
           {move || global_state.role.get().unwrap_or_default()}
         </h2>
+        </Suspense>
 
         <div class="overflow-y-auto flex-grow px-4 mt-6 custom-scrollbar">
           <h2 class="mb-2 text-sm tracking-widest text-gray-400 uppercase">"Fall 24 Courses"</h2>
-          <ul>
-            <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+
+          // Wrapping the entire course list in <Suspense />
+          <Suspense fallback=move || view! { <p>"Loading courses..."</p> }>
+            <ul>
               <For each=move || courses().unwrap_or_default() key=|class| class.id let:class>
                 <li class="py-2">
                   <A
@@ -88,27 +99,17 @@ fn expanded_view(
                   </A>
                 </li>
               </For>
-            </Suspense>
-          </ul>
+            </ul>
+          </Suspense>
 
-        // <h2 class="mt-6 mb-2 text-sm tracking-widest text-gray-400 uppercase">"Tools"</h2>
-        // <ul>
-        // <li class="py-2">
-        // <A href="/classes" class="block py-2 px-4 text-white rounded-md hover:bg-gray-700">
-        // "Private Messages"
-        // </A>
-        // </li>
-        // <li class="py-2">
-        // <A href="/classes" class="block py-2 px-4 text-white rounded-md hover:bg-gray-700">
-        // "Course Statistics"
-        // </A>
-        // </li>
-        // <li class="py-2">
-        // <A href="/classes" class="block py-2 px-4 text-white rounded-md hover:bg-gray-700">
-        // "PollV"
-        // </A>
-        // </li>
-        // </ul>
+          <h2 class="mt-6 mb-2 text-sm tracking-widest text-gray-400 uppercase">"Tools"</h2>
+          <ul>
+            <li class="py-2">
+              <A href=format!("/classes/{}/details", class_id_val)>
+                "Class Details"
+              </A>
+            </li>
+          </ul>
         </div>
 
         // Account Settings Button
