@@ -17,8 +17,9 @@ pub fn Sidebar() -> impl IntoView {
         || {},
         move |_| {
             let id = global_state.id.get().unwrap_or_default();
-            let role = user_role();
-            async move { get_users_classes(id, role).await.unwrap_or_default() }
+            async move { get_students_classes(id).await.unwrap_or_default() }
+            // let role = user_role();
+            // async move { get_users_classes(id, role).await.unwrap_or_default() }
         },
     );
 

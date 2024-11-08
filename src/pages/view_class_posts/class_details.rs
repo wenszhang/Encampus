@@ -50,7 +50,6 @@ pub fn ClassDetails() -> impl IntoView {
             <div class="content space-y-8">
                 <div class="course-info bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-2xl font-semibold mb-4 text-customBlue">"Course Information"</h2>
-                    <p class="text-gray-700">"Detailed information about the course goes here. This might include the course description, instructor details, meeting times, and other relevant information."</p>
 
                     <Suspense fallback=|| view! { <p>"Loading enrolled users..."</p> }>
                         <ul class="mt-4 space-y-2">
@@ -66,7 +65,7 @@ pub fn ClassDetails() -> impl IntoView {
 
                 <div class="course-stats bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-2xl font-semibold mb-4 text-customBlue">"Course Statistics"</h2>
-                    <p class="text-gray-700">"This section could display various course statistics, such as enrollment numbers, average grades, participation rates, etc."</p>
+                    <p class="text-gray-700">"This will display various course statistics"</p>
                 </div>
             </div>
         </div>
