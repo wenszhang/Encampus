@@ -55,7 +55,7 @@ pub async fn get_openai_response(text: String) -> Result<String, reqwest::Error>
 
     // let openai_response: OpenAIResponse = response.json().await?;
     // Ok(openai_response.choices.unwrap()[0].message.content.clone( ))
-    Ok("test".to_string())
+    Ok("AI Response".to_string())
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -72,23 +72,28 @@ struct GeminiResponse {
 pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error> {
     let project_id = "874592041558";
     let api_key = "AIzaSyC4lMM_E_6ge-6L76YDi1Uj_VspRtKng_U";
-    let url = "https://generativelanguage.googleapis.com/v1beta/{model=models/*}:generateAnswer";
+    let url = format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={}", api_key);
 
     let client = Client::new();
 
     let body = json!({
-      "prompt": input,
-      "model": "gemini-1.5-flash",
-      "safetySettings": [
-        {
-          "category": "TOXICITY",
-          "threshold": 1
-        }
-      ]
+        "contents": [{
+            "parts": [{
+                "text": input
+            }]
+        }]
+    //   "prompt": input,
+    //   "model": "gemini-1.5-flash",
+    //   "safetySettings": [
+    //     {
+    //       "category": "TOXICITY",
+    //       "threshold": 1
+    //     }
+    //   ]
     });
     let request = client
         .post(url)
-        .header("Authorization", format!("Bearer {}", api_key))
+        .header("Content-Type", "application/json")
         .json(&body)
         .build()?;
 
@@ -119,5 +124,5 @@ pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error
     // let response_text = response.text().await?;
     // println!("Raw response: {}", response_text);
 
-    Ok("test".to_string())
+    Ok("AI Response".to_string())
 }
