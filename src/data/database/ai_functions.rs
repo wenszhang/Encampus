@@ -82,15 +82,8 @@ pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error
                 "text": input
             }]
         }]
-    //   "prompt": input,
-    //   "model": "gemini-1.5-flash",
-    //   "safetySettings": [
-    //     {
-    //       "category": "TOXICITY",
-    //       "threshold": 1
-    //     }
-    //   ]
     });
+
     let request = client
         .post(url)
         .header("Content-Type", "application/json")
@@ -105,24 +98,6 @@ pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error
     } else {
         println!("Error: {:?}", response);
     }
-
-    //  OpenAIRequest {
-    //     model: "gemini-1.5-flash".to_string(),
-    //     messages: vec![Message {
-    //         role: "user".to_string(),
-    //         content: input,
-    //     }],
-    // };
-
-    // let response = client
-    //     .post(url)
-    //     .header("Authorization", format!("Bearer {}", api_key))
-    //     .json(&request)
-    //     .send()
-    //     .await?;
-
-    // let response_text = response.text().await?;
-    // println!("Raw response: {}", response_text);
 
     Ok("AI Response".to_string())
 }
