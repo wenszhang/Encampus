@@ -1,7 +1,7 @@
-use leptos::*;
-use leptos_router::{use_navigate, use_params};
 use crate::data::database::class_functions::{get_class_name, get_users_enrolled_in_class};
 use crate::pages::view_class_posts::class::ClassId;
+use leptos::*;
+use leptos_router::{use_navigate, use_params};
 
 #[component]
 pub fn ClassDetails() -> impl IntoView {
@@ -11,7 +11,9 @@ pub fn ClassDetails() -> impl IntoView {
     // Fetch the class name based on class ID
     let class_name = create_local_resource(class_id_result.clone(), |class_id_result| async {
         match class_id_result {
-            Ok(class_id) => get_class_name(class_id.class_id).await.unwrap_or("Class not found".to_string()),
+            Ok(class_id) => get_class_name(class_id.class_id)
+                .await
+                .unwrap_or("Class not found".to_string()),
             Err(_) => "Invalid class ID".to_string(),
         }
     });
@@ -19,7 +21,9 @@ pub fn ClassDetails() -> impl IntoView {
     // Fetch the list of users enrolled in the class with their roles
     let enrolled_users = create_local_resource(class_id_result.clone(), |class_id_result| async {
         match class_id_result {
-            Ok(class_id) => get_users_enrolled_in_class(class_id.class_id).await.unwrap_or_default(),
+            Ok(class_id) => get_users_enrolled_in_class(class_id.class_id)
+                .await
+                .unwrap_or_default(),
             Err(_) => vec![],
         }
     });

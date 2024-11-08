@@ -1,9 +1,9 @@
-use crate::data::database::class_functions::{get_students_classes, get_users_classes};
 use crate::data::database::class_functions::ClassInfo;
+use crate::data::database::class_functions::{get_students_classes, get_users_classes};
 use crate::data::global_state::GlobalState;
+use crate::pages::view_class_posts::class::ClassId;
 use leptos::*;
 use leptos_router::{use_params, A};
-use crate::pages::view_class_posts::class::ClassId;
 
 #[component]
 pub fn Sidebar() -> impl IntoView {

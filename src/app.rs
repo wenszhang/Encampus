@@ -16,8 +16,8 @@ use crate::{
         user_profile::user_profile_page::UserProfile,
         user_settings::user_settings_page::UserSettings,
         view_class_posts::{
-            announcement_details::AnnouncementDetails, class::ClassPage, focused_post::FocusedPost,
-            class_details::ClassDetails,
+            announcement_details::AnnouncementDetails, class::ClassPage,
+            class_details::ClassDetails, focused_post::FocusedPost,
         },
         view_enrolled_classes::classes::ClassesPage,
     },
