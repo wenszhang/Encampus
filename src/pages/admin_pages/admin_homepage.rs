@@ -289,11 +289,6 @@ fn UserOptions(
         }
     });
 
-    let user_password = create_resource(
-        || {},
-        move |_| async move { get_user_password(user.get().id).await.unwrap_or_default() },
-    );
-
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
         <div class="flex justify-between items-start mb-4">
@@ -359,7 +354,6 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user_password.get()
                 on:input=move |ev| {
                   set_password(event_target_value(&ev));
                   set_edit_password(true);
@@ -518,7 +512,7 @@ fn AddNewUser(
     let (last_name, set_last_name) = create_signal("".to_string());
     let (username, set_username) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
-    let (role, set_role) = create_signal("student".to_string()); // Set to student by default
+    let (role, set_role) = create_signal("Student".to_string()); // Set to student by default
 
     let on_input = |setter: WriteSignal<String>| {
         move |ev| {
@@ -526,10 +520,11 @@ fn AddNewUser(
         }
     };
 
-    let add_user_action = create_action(move |user: &User| {
+    let add_user_action = create_action(move |(user, password): &(User, String)| {
         let user = user.clone();
+        let password = password.clone();
         async move {
-            let user = add_user(user, "password".to_string()).await.unwrap();
+            let user = add_user(user, password).await.unwrap();
             display_user(user);
         }
     });
@@ -593,9 +588,9 @@ fn AddNewUser(
               }
               prop:value=move || role.get()
             >
-              <option value="student">"Student"</option>
-              <option value="instructor">"Instructor"</option>
-              <option value="admin">"Admin"</option>
+              <option value="Student">"Student"</option>
+              <option value="Instructor">"Instructor"</option>
+              <option value="Admin">"Admin"</option>
             </select>
           </div>
         </div>
@@ -604,13 +599,13 @@ fn AddNewUser(
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
               add_user_action
-                .dispatch(User {
+                .dispatch((User {
                   username: username.get(),
                   firstname: first_name.get(),
                   lastname: last_name.get(),
                   role: role.get(),
                   id: 0,
-                });
+                }, password.get()));
               set_first_name("".to_string());
               set_last_name("".to_string());
               set_username("".to_string());
