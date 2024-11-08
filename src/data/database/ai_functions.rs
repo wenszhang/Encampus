@@ -71,37 +71,52 @@ struct GeminiResponse {
 pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error> {
     let project_id = "874592041558";
     let api_key = "AIzaSyC4lMM_E_6ge-6L76YDi1Uj_VspRtKng_U";
-    let url = format!("https://us-central1-aiplatform.googleapis.com/v1/projects/{}/locations/us-central1/models/gemini-1.5-flash:predict", project_id);
+    let url = "https://generativelanguage.googleapis.com/v1beta/models/generateAnswer";
 
     let client = Client::new();
 
     let body = json!({
-        "instances": [
-            {
-                "prompt": input,
-                "parameters": {
-                    "temperature": 0.7
-                }
-            }
-        ]
+      "prompt": input,
+      "model": "gemini-1.5-flash",
+      "safetySettings": [
+        {
+          "category": "TOXICITY",
+          "threshold": 1
+        }
+      ]
     });
-    let request = OpenAIRequest {
-        model: "gemini-1.5-flash".to_string(),
-        messages: vec![Message {
-            role: "user".to_string(),
-            content: input,
-        }],
-    };
-
-    let response = client
+    let request = client
         .post(url)
         .header("Authorization", format!("Bearer {}", api_key))
-        .json(&request)
-        .send()
-        .await?;
+        .json(&body)
+        .build()?;
 
-    let response_text = response.text().await?;
-    println!("Raw response: {}", response_text);
+    let response = client.execute(request).await?;
+
+    if response.status().is_success() {
+        let response_text = response.text().await?;
+        println!("Raw response: {}", response_text);
+    } else {
+        println!("Error: {:?}", response);
+    }
+
+    //  OpenAIRequest {
+    //     model: "gemini-1.5-flash".to_string(),
+    //     messages: vec![Message {
+    //         role: "user".to_string(),
+    //         content: input,
+    //     }],
+    // };
+
+    // let response = client
+    //     .post(url)
+    //     .header("Authorization", format!("Bearer {}", api_key))
+    //     .json(&request)
+    //     .send()
+    //     .await?;
+
+    // let response_text = response.text().await?;
+    // println!("Raw response: {}", response_text);
 
     Ok("test".to_string())
 }

@@ -85,7 +85,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         .await
         .expect("failed adding post");
 
-    let ai_response = match get_openai_response(post_contents.clone()).await {
+    let ai_response = match get_gemini_response(post_contents.clone()).await {
         Ok(response) => response,
         Err(e) => {
             error!("Failed to get AI response: {:?}", e);
