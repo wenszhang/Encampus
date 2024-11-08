@@ -395,9 +395,10 @@ pub async fn get_classes_ta(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnErro
     Ok(classes)
 }
 
-
 #[server(GetUsersEnrolledInClass)]
-pub async fn get_users_enrolled_in_class(class_id: i32) -> Result<Vec<UserEnrollmentInfo>, ServerFnError> {
+pub async fn get_users_enrolled_in_class(
+    class_id: i32,
+) -> Result<Vec<UserEnrollmentInfo>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -424,10 +425,10 @@ pub async fn get_users_enrolled_in_class(class_id: i32) -> Result<Vec<UserEnroll
             OR e.studentid IS NOT NULL
         ",
     )
-        .bind(class_id)
-        .fetch_all(&pool)
-        .await
-        .expect("Failed to retrieve enrolled users with roles");
+    .bind(class_id)
+    .fetch_all(&pool)
+    .await
+    .expect("Failed to retrieve enrolled users with roles");
 
     Ok(users)
 }
