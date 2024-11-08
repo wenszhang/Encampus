@@ -1,3 +1,4 @@
+// use axum::response;
 use leptos::create_signal;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
@@ -71,7 +72,7 @@ struct GeminiResponse {
 pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error> {
     let project_id = "874592041558";
     let api_key = "AIzaSyC4lMM_E_6ge-6L76YDi1Uj_VspRtKng_U";
-    let url = "https://generativelanguage.googleapis.com/v1beta/models/generateAnswer";
+    let url = "https://generativelanguage.googleapis.com/v1beta/{model=models/*}:generateAnswer";
 
     let client = Client::new();
 
