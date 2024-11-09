@@ -1,5 +1,5 @@
 // use axum::response;
-use leptos::create_signal;
+use anyhow::Result;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -50,27 +50,32 @@ pub async fn get_openai_response(text: String) -> Result<String, reqwest::Error>
         .send()
         .await?;
 
-    let response_text = response.text().await?;
-    println!("Raw response: {}", response_text);
-
-    // let openai_response: OpenAIResponse = response.json().await?;
-    // Ok(openai_response.choices.unwrap()[0].message.content.clone( ))
-    Ok("AI Response".to_string())
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-struct GeminiRequest {
-    text: String,
-    model: String,
+    let openai_response: OpenAIResponse = response.json().await?;
+    Ok(openai_response.choices.unwrap()[0].message.content.clone())
 }
 
 #[derive(Serialize, Deserialize, Debug)]
 struct GeminiResponse {
+    candidates: Vec<Candidate>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Candidate {
+    content: Content,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Content {
+    parts: Vec<Part>,
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+struct Part {
     text: String,
 }
 
-pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error> {
-    let project_id = "874592041558";
+pub async fn get_gemini_response(input: String) -> Result<String> {
+    let _project_id = "874592041558";
     let api_key = "AIzaSyC4lMM_E_6ge-6L76YDi1Uj_VspRtKng_U";
     let url = format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={}", api_key);
 
@@ -95,9 +100,17 @@ pub async fn get_gemini_response(input: String) -> Result<String, reqwest::Error
     if response.status().is_success() {
         let response_text = response.text().await?;
         println!("Raw response: {}", response_text);
+
+        let gemini_response: GeminiResponse = serde_json::from_str(&response_text)?;
+
+        if let Some(first_candidate) = gemini_response.candidates.first() {
+            if let Some(first_part) = first_candidate.content.parts.first() {
+                return Ok(first_part.text.clone());
+            }
+        }
+        Ok("Response structure unexpected".to_string())
     } else {
         println!("Error: {:?}", response);
+        Ok(format!("Request failed with status: {}", response.status()))
     }
-
-    Ok("AI Response".to_string())
 }
