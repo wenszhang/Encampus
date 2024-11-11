@@ -10,6 +10,7 @@ use crate::{
             page::Page,
         },
         home::Home,
+        live_poll::LivePoll,
         login_page::LoginPage,
         register_page::RegisterPage,
         user_profile::user_profile_page::UserProfile,
@@ -81,6 +82,7 @@ pub fn App() -> impl IntoView {
                 </Route>
                 <Route path="/settings" view=UserSettings />
                 <Route path="/profile" view=UserProfile />
+                <Route path="/poll" view=LivePoll />
               </Route>
               // Accessible when logged out
               <Route path="" view=UnauthenticatedRoutes>
