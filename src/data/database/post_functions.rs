@@ -85,27 +85,29 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         .await
         .expect("failed adding post");
 
-    let ai_response = match get_gemini_response(post_contents.clone()).await {
-        Ok(response) => response,
-        Err(e) => {
-            error!("Failed to get AI response: {:?}", e);
-            return Err(ServerFnError::ServerError("AI response failed".to_string()));
+    if new_post_info.ai_response {
+        // If AI response is requested get response and add reply
+        let ai_response = match get_gemini_response(post_contents.clone()).await {
+            Ok(response) => response,
+            Err(e) => {
+                error!("Failed to get AI response: {:?}", e);
+                return Err(ServerFnError::ServerError("AI response failed".to_string()));
+            }
+        };
+
+        if ai_response.is_empty() {
+            error!("AI response is empty; check API or input formatting.");
+            return Err(ServerFnError::ServerError("Empty AI response".to_string()));
         }
-    };
 
-    if ai_response.is_empty() {
-        error!("AI response is empty; check API or input formatting.");
-        return Err(ServerFnError::ServerError("Empty AI response".to_string()));
+        let reply_info = AddReplyInfo {
+            post_id: post.post_id,
+            anonymous: false,
+            contents: ai_response,
+        };
+
+        add_reply(reply_info, "EncampusAssistant".to_string()).await?;
     }
-
-    let reply_info = AddReplyInfo {
-        post_id: post.post_id,
-        anonymous: false,
-        contents: ai_response,
-    };
-
-    add_reply(reply_info, "EncampusAssistant".to_string()).await?;
-
     Ok(post)
 }
 
