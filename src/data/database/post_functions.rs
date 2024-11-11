@@ -199,22 +199,3 @@ pub async fn bump_post(post_id: i32) -> Result<(), ServerFnError> {
 
     Ok(())
 }
-
-// #[server(TogglePinPost)]
-// pub async fn toggle_pin_post(post_id: i32, is_pinned: bool) -> Result<(), ServerFnError> {
-//     use leptos::{server_fn::error::NoCustomError, use_context};
-//     use sqlx::postgres::PgPool;
-
-//     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-//         "Unable to complete Request".to_string(),
-//     ))?;
-
-//     sqlx::query("update posts set pinned = $1 where postid = $2")
-//         .bind(is_pinned)
-//         .bind(post_id)
-//         .execute(&pool)
-//         .await
-//         .expect("Failed to toggle pin");
-
-//     Ok(())
-// }

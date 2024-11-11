@@ -37,7 +37,6 @@ pub fn DropDownMenu(
     post_author_id: i32,
     set_endorsed: WriteSignal<bool>,
     is_endorsed: ReadSignal<bool>,
-    // set_is_pinned: WriteSignal<bool>,
     //remove_action: Action<PostId, ()>,
 ) -> impl IntoView {
     let posts: Resource<PostFetcher, Vec<Post>> =
@@ -48,9 +47,6 @@ pub fn DropDownMenu(
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
 
-    // let endorse_post = move |_: MouseEvent| {
-    //     set_endorsed(true);
-    // };
     // logging::log!("Global State: {:?}", global_state);
 
     let _notification_view = move || {
@@ -63,35 +59,6 @@ pub fn DropDownMenu(
             }
         })
     };
-    // // Pin logic
-    // let pin_action = create_action(move |(post_id, pinned): &(i32, bool)| {
-    //     let post_id = *post_id;
-    //     let is_pinned = *pinned;
-
-    //     async move {
-    //         toggle_pin_post(post_id, is_pinned).await.unwrap();
-    //         set_is_pinned(!is_pinned);
-
-    //         posts.update(|posts| {
-    //             if let Some(post) = posts
-    //                 .as_mut()
-    //                 .unwrap()
-    //                 .iter_mut()
-    //                 .find(|post| post.post_id == post_id)
-    //             {
-    //                 post.pinned = !is_pinned;
-    //             }
-
-    //             posts.as_mut().unwrap().sort_by(|a, b| {
-    //                 (b.pinned, b.last_bumped, b.created_at).cmp(&(
-    //                     a.pinned,
-    //                     a.last_bumped,
-    //                     a.created_at,
-    //                 ))
-    //             });
-    //         });
-    //     }
-    // });
 
     // Bump logic
     let bump_action = create_action(move |post_id: &i32| {
@@ -202,22 +169,7 @@ pub fn DropDownMenu(
             }
               .into_view()
           } else {
-            // // Pinned view
-            // <div class="p-1">
-            // <button
-            // class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-            // on:click=move |_| {
-            // let posts_list = posts.get().unwrap();
-            // if let Some(post) = posts_list.iter().find(|post| post.post_id == post_id) {
-            // pin_action.dispatch((post_id, !post.pinned));
-            // }
-            // }
-            // >
-            // <UnPinIcon size="20px" />
-            // <span class="ml-2">Pin</span>
-            // </button>
-            // </div>
-            // <button>pin</button>
+
             view! {
               <div class="p-1">
                 <button
@@ -270,16 +222,6 @@ pub fn QuestionTile(
         set_menu_invisible.update(|visible| *visible = !*visible);
     };
 
-    // let pin_action = create_action(move |(post_id, current_state): &(i32, bool)| {
-    //     let post_id = *post_id;
-    //     let is_pinned = *current_state;
-
-    //     async move {
-    //         toggle_pin_post(post_id, is_pinned).await.unwrap();
-    //         set_is_pinned(!is_pinned);
-    //     }
-    // });
-
     (move || console_debug_warn(format!("debug {}", is_endorsed()).as_str()))();
     view! {
       <div
@@ -326,15 +268,6 @@ pub fn QuestionTile(
             // Card body
             <div class="flex justify-center items-center p-4 w-full h-full text-center sm:p-6 md:p-8 lg:p-12">
               <p class="text-base">{post.title}</p>
-            // <div class="flex items-center">
-            // {if is_pinned.get() {
-            // Some(
-            // view! { <PinIcon size="20px" /> },
-            // )
-            // } else {
-            // None
-            // }}
-            // </div>
             </div>
           </div>
         </A>
@@ -356,25 +289,7 @@ pub fn QuestionTile(
               set_endorsed=set_endorsed
               is_endorsed=is_endorsed
             />
-          // set_is_pinned=set_is_pinned
-          // <div class="p-1">
-          // <button
-          // class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-          // on:click=move |_| {
-          // pin_action.dispatch((post.post_id, is_pinned.get()));
-          // }
-          // >
-          // {if is_pinned.get() {
-          // // Render UnPinIcon when pinned
-          // view! { <PinIcon size="20px" /> }
-          // } else {
-          // // Render PinIcon when not pinned
-          // view! { <UnPinIcon size="20px" /> }
-          // }}
-          // <span class="ml-2">{if is_pinned.get() { "Unpin" } else { "Pin" }}</span>
-          // </button>
-          // </div>
-          // remove_action=Action<PostId, ()>
+
           </div>
         </div>
       </div>
