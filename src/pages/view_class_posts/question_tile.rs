@@ -1,9 +1,13 @@
+use crate::data::database::class_functions::check_user_is_instructor;
 /**
  * QuestionTile component, displaying a tile for one post
  */
 use crate::data::database::post_functions::{
     bump_post, endorse_post, remove_post, Post, PostFetcher,
 };
+
+use crate::pages::view_class_posts::class::ClassId;
+
 use crate::data::global_state::GlobalState;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
@@ -19,7 +23,7 @@ use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 use ev::MouseEvent;
 use leptos::*;
 use leptos_dom::logging::console_debug_warn;
-use leptos_router::A;
+use leptos_router::{use_params, A};
 
 struct CustomTag {
     title: String,
@@ -42,8 +46,16 @@ pub fn DropDownMenu(
     let posts: Resource<PostFetcher, Vec<Post>> =
         expect_context::<Resource<PostFetcher, Vec<Post>>>();
     let global_state: GlobalState = expect_context::<GlobalState>();
+    let class_id = use_params::<ClassId>();
     let is_on_my_post = move || (global_state.id)() == Some(post_author_id);
-    let is_professor = move || (global_state.role)() == Some("Instructor".to_string());
+    let is_instructor = create_resource(class_id, move |class_id| {
+        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        async move {
+            check_user_is_instructor(user_id, class_id.unwrap().class_id)
+                .await
+                .unwrap_or(false)
+        }
+    });
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
 
@@ -152,9 +164,9 @@ pub fn DropDownMenu(
 
     view! {
       <div class="pr-2 text-right">
-        {move || {
-          logging::log!("Checking if professor: {:?}", is_professor());
-          if is_professor() {
+        {move || match is_instructor() {
+          Some(true) => {
+            logging::log!("User is an instructor");
             // Log to verify
             view! {
               <div class="p-1">
@@ -168,8 +180,9 @@ pub fn DropDownMenu(
               </div>
             }
               .into_view()
-          } else {
-
+          }
+          Some(false) => {
+            logging::log!("User is not an instructor");
             view! {
               <div class="p-1">
                 <button
@@ -179,6 +192,15 @@ pub fn DropDownMenu(
                   <BumpIcon size="20px" />
                   <span class="ml-2">bump</span>
                 </button>
+              </div>
+            }
+              .into_view()
+          }
+          None => {
+            logging::log!("Checking instructor status...");
+            view! {
+              <div class="p-1 text-gray-500">
+                <span>"Checking instructor status..."</span>
               </div>
             }
               .into_view()
