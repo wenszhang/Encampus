@@ -15,11 +15,26 @@ module.exports = {
         customPurple: {
           DEFAULT: "#D8C4F7",
         },
+        customYellow: { 
+          DEFAULT: '#F9EBAF',
+        },
+        warningNotification: {
+          bg: '#FFEDB4',
+          details: '#B47E29',
+        },
+        errorNotification: {
+          bg: '#FDDFDD',
+          details: '#F23B2F',
+        },
         card: {
-          bg: "#FFFFFF",
+          bg: "#F8C1C0",
           header: "#EEEEEE",
         },
         plugins: [],
+      },
+      textColor: {
+        'warningNotification-details': '#B47E29',
+        'errorNotification-details': '#E54C4C',
       },
       boxShadow: {
         customInset:

@@ -15,6 +15,10 @@ pub struct Post {
     pub resolved: bool,
     pub private: bool,
     pub author_id: i32,
+    pub endorsed: bool,
+    // pub pinned: bool,
+    pub last_bumped: Option<chrono::NaiveDateTime>,
+    pub created_at: chrono::NaiveDateTime,
 }
 
 #[derive(PartialEq, Clone, Copy)]
@@ -36,7 +40,12 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
     ))?;
 
     let rows: Vec<Post> = sqlx::query_as(
-        "select title, postid as post_id, resolved, private, authorid as author_id from posts where removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp desc;",
+        "select title, postid as post_id, resolved, private, authorid as author_id, endorsed, last_bumped, timestamp, created_at 
+        from posts where removed = false 
+        and ((posts.classid = $1 and private = false) 
+            or (posts.classid = $1 and authorid = $2 and private = true) 
+            or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) 
+        ORDER BY last_bumped desc, timestamp desc;",
     )
     .bind(class_id)
     .bind(user_id)
@@ -143,7 +152,7 @@ pub async fn get_search_posts(
         "Unable to complete Request".to_string(),
     ))?;
 
-    let posts: Vec<Post> = sqlx::query_as("select title, postid as post_id, resolved, private, authorid as author_id from posts where to_tsvector(title || ' ' || contents) @@ to_tsquery($3) and classid = $1 and removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp desc")
+    let posts: Vec<Post> = sqlx::query_as("select title, postid as post_id, resolved, private, authorid as author_id, endorsed from posts where to_tsvector(title || ' ' || contents) @@ to_tsquery($3) and classid = $1 and removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp desc")
         .bind(class_id)
         .bind(user_id)
         .bind(filter_keyword)
@@ -152,4 +161,41 @@ pub async fn get_search_posts(
         .expect("No posts found");
 
     Ok(posts)
+}
+#[server(EndorsePost)]
+pub async fn endorse_post(post_id: i32, status: bool) -> Result<(), ServerFnError> {
+    println!("{}", status);
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    sqlx::query("update posts set endorsed = $1 where postid = $2")
+        .bind(status)
+        .bind(post_id)
+        .execute(&pool)
+        .await
+        .expect("Cannot resolve post");
+
+    Ok(())
+}
+
+#[server(BumpPost)]
+pub async fn bump_post(post_id: i32) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete request".to_string(),
+    ))?;
+
+    sqlx::query("update posts set last_bumped = current_timestamp where postid = $1")
+        .bind(post_id)
+        .execute(&pool)
+        .await
+        .expect("Failed to bump post");
+
+    Ok(())
 }

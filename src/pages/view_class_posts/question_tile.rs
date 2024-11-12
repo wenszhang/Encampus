@@ -1,16 +1,29 @@
+use crate::data::database::class_functions::check_user_is_instructor;
 /**
  * QuestionTile component, displaying a tile for one post
  */
-use crate::data::database::post_functions::Post;
+use crate::data::database::post_functions::{
+    bump_post, endorse_post, remove_post, Post, PostFetcher,
+};
+
+use crate::pages::view_class_posts::class::ClassId;
+
 use crate::data::global_state::GlobalState;
+use crate::pages::global_components::notification::{
+    NotificationComponent, NotificationDetails, NotificationType,
+};
+use crate::pages::view_class_posts::focused_post::get_post_details;
 use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
+use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
+use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 
 use ev::MouseEvent;
 use leptos::*;
-use leptos_router::A;
+use leptos_dom::logging::console_debug_warn;
+use leptos_router::{use_params, A};
 
 struct CustomTag {
     title: String,
@@ -23,29 +36,171 @@ enum TagPillProperties {
 }
 
 #[component]
-pub fn DropDownMenu(post_author_id: i32) -> impl IntoView {
+pub fn DropDownMenu(
+    post_id: i32,
+    post_author_id: i32,
+    set_endorsed: WriteSignal<bool>,
+    is_endorsed: ReadSignal<bool>,
+    //remove_action: Action<PostId, ()>,
+) -> impl IntoView {
+    let posts: Resource<PostFetcher, Vec<Post>> =
+        expect_context::<Resource<PostFetcher, Vec<Post>>>();
     let global_state: GlobalState = expect_context::<GlobalState>();
-    // let user_role = global_state.role.get();
-    // let is_authenticated = global_state.authenticated.get();
-    let is_on_my_post = move || global_state.id.get() == Some(post_author_id);
-    let is_professor = move || global_state.role.get() == Some("instructor".to_string());
+    let class_id = use_params::<ClassId>();
+    let is_on_my_post = move || (global_state.id)() == Some(post_author_id);
+    let is_instructor = create_resource(class_id, move |class_id| {
+        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        async move {
+            check_user_is_instructor(user_id, class_id.unwrap().class_id)
+                .await
+                .unwrap_or(false)
+        }
+    });
+    let (notification_details, set_notification_details) =
+        create_signal(None::<NotificationDetails>);
+
+    // logging::log!("Global State: {:?}", global_state);
+
+    let _notification_view = move || {
+        notification_details.get().map(|details| {
+            view! {
+              <NotificationComponent
+                notification_details=details.clone()
+                on_close=move || set_notification_details(None)
+              />
+            }
+        })
+    };
+
+    // Bump logic
+    let bump_action = create_action(move |post_id: &i32| {
+        let post_id = post_id.to_owned();
+
+        async move {
+            if let Err(e) = bump_post(post_id).await {
+                eprintln!("Failed to bump post: {:?}", e);
+                return;
+            }
+            posts.update(|posts| {
+                if let Some(index) = posts
+                    .as_mut()
+                    .unwrap()
+                    .iter()
+                    .position(|post| post.post_id == post_id)
+                {
+                    let bumped_post = posts.as_mut().unwrap().remove(index);
+
+                    let insert_position = posts
+                        .as_mut()
+                        .unwrap()
+                        .iter()
+                        .position(|post| post.post_id == post_id)
+                        .unwrap_or(posts.as_ref().unwrap().len());
+
+                    posts.as_mut().unwrap().insert(insert_position, bumped_post);
+
+                    if insert_position > 0 {
+                        posts.as_mut().unwrap().swap(insert_position, 0);
+                    }
+                }
+            });
+        }
+    });
+
+    // Endorsed logic
+    let endorsed_action = create_action(move |(post_id, status): &(i32, bool)| {
+        let post_id = post_id.to_owned();
+        let status = status.to_owned();
+
+        async move {
+            match endorse_post(post_id, status).await {
+                Ok(()) => {
+                    // Successfully endorsed the post
+                    set_endorsed(status);
+                }
+                Err(_) => {
+                    logging::error!("Attempt to endorse post failed. Please try again");
+                    set_notification_details(Some(NotificationDetails {
+                        message: "Failed to endorse post. Please try again.".to_string(),
+                        notification_type: NotificationType::Error,
+                    }));
+                }
+            }
+        }
+    });
+
+    // Remove logic
+    let remove_action = create_action(move |post_id: &i32| {
+        let post_id = post_id.to_owned();
+
+        async move {
+            match get_post_details(post_id).await {
+                Ok(current_post) => {
+                    if let Ok(()) =
+                        remove_post(post_id, global_state.id.get_untracked().unwrap()).await
+                    {
+                        posts.update(|posts| {
+                            if let Some(index) = posts
+                                .as_mut()
+                                .unwrap()
+                                .iter()
+                                .position(|post| post.post_id == current_post.0.post_id)
+                            {
+                                posts.as_mut().unwrap().remove(index);
+                            }
+                        });
+                    }
+                }
+                Err(_) => {
+                    logging::error!("Attempt to remove post failed. Please try again");
+                    set_notification_details(Some(NotificationDetails {
+                        message: "Failed to remove post. Please try again.".to_string(),
+                        notification_type: NotificationType::Error,
+                    }));
+                }
+            }
+        }
+    });
+
     view! {
       <div class="pr-2 text-right">
-        {move || {
-          if is_professor() {
+        {move || match is_instructor() {
+          Some(true) => {
+            logging::log!("User is an instructor");
+            // Log to verify
             view! {
-              <button>Endorse</button>
-              <button>remove</button>
-              <button>pin</button>
+              <div class="p-1">
+                <button
+                  class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                  on:click=move |_| endorsed_action.dispatch((post_id, !is_endorsed()))
+                >
+                  <EndorsedIcon size="20px" />
+                  <span class="ml-2">Endorse</span>
+                </button>
+              </div>
             }
               .into_view()
-          } else {
+          }
+          Some(false) => {
+            logging::log!("User is not an instructor");
             view! {
-              <div class="p-3 rounded-md w-30">
-                <button class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100">
+              <div class="p-1">
+                <button
+                  class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                  on:click=move |_| bump_action.dispatch(post_id)
+                >
                   <BumpIcon size="20px" />
                   <span class="ml-2">bump</span>
                 </button>
+              </div>
+            }
+              .into_view()
+          }
+          None => {
+            logging::log!("Checking instructor status...");
+            view! {
+              <div class="p-1 text-gray-500">
+                <span>"Checking instructor status..."</span>
               </div>
             }
               .into_view()
@@ -55,8 +210,15 @@ pub fn DropDownMenu(post_author_id: i32) -> impl IntoView {
           if is_on_my_post() {
             Some(
               view! {
-                <button>remove</button>
-                <button>pin</button>
+                <div class="p-1">
+                  <button
+                    class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| remove_action.dispatch(post_id)
+                  >
+                    <RemoveIcon size="20px" />
+                    <span class="ml-2">Remove</span>
+                  </button>
+                </div>
               },
             )
           } else {
@@ -74,27 +236,38 @@ pub fn QuestionTile(
     is_private: Signal<bool>,
 ) -> impl IntoView {
     let (menu_invisible, set_menu_invisible) = create_signal(true);
+    let (is_endorsed, set_endorsed) = create_signal(post.endorsed);
+    // let (is_pinned, set_is_pinned) = create_signal(!post.pinned); // Retrieve pin state from post data
 
     let toggle_menu = move |e: MouseEvent| {
         e.stop_propagation();
         set_menu_invisible.update(|visible| *visible = !*visible);
     };
 
+    (move || console_debug_warn(format!("debug {}", is_endorsed()).as_str()))();
     view! {
-      <div class="relative transition-transform duration-300 hover:shadow-xl hover:scale-105">
-        <A href=format!("{}", post.post_id)>
+      <div
+        class="relative h-60 rounded-lg shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-105 bg-card-bg"
+        class=("border-4", move || is_endorsed())
+        class=("border-customYellow", move || is_endorsed())
+        class=("bg-customRed", move || is_resolved())
+        class=("hover:bg-customRed-HOVER", move || is_resolved())
+        class=("hover:bg-gray-200", move || !is_resolved())
+        class=("bg-gray-100", move || !is_resolved())
+      >
+
+        <A href=format!("{}", post.post_id) class="block w-full h-full">
           <div
-            class="flex overflow-hidden flex-col justify-between items-center p-6 h-60 text-lg font-semibold rounded-lg shadow-lg w-85 bg-card-bg"
-            class=("bg-customRed", move || is_resolved())
-            class=("hover:bg-customRed-HOVER", move || is_resolved())
-            class=("hover:bg-gray-100", move || !is_resolved())
-            class:border-purple-500=is_private()
-            class:border-4=is_private()
-            class=("border-4 border-purple-500", is_private())
+            class="flex flex-col justify-between items-center p-6 m-auto h-full text-lg font-semibold"
+
+            // class:border-purple-500=is_private()
+
+            // class:border-4=is_private()
+            class=is_private()
           >
 
             // Card header
-            <div class="flex absolute top-0 left-0 z-10 gap-2 items-center pl-6 w-full h-12 text-xs rounded-t-lg shadow-md bg-card-header">
+            <div class="flex top-0 left-0 z-10 gap-2 items-center pl-6 w-full h-12 text-xs rounded-t-lg shadow-md bg-card-header">
               {move || {
                 if is_resolved() {
                   Some(view! { <TagPill props=TagPillProperties::Unresolved /> })
@@ -115,8 +288,8 @@ pub fn QuestionTile(
             </div>
 
             // Card body
-            <div class="flex flex-grow justify-center items-center mt-6">
-              <p class="text-center">{post.title}</p>
+            <div class="flex justify-center items-center p-4 w-full h-full text-center sm:p-6 md:p-8 lg:p-12">
+              <p class="text-base">{post.title}</p>
             </div>
           </div>
         </A>
@@ -129,10 +302,16 @@ pub fn QuestionTile(
             if menu_invisible() {
               "hidden"
             } else {
-              "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+              "absolute right-0 top-4 mt-2 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5 p-1"
             }
           }>
-            <DropDownMenu post_author_id=post.author_id />
+            <DropDownMenu
+              post_id=post.post_id
+              post_author_id=post.author_id
+              set_endorsed=set_endorsed
+              is_endorsed=is_endorsed
+            />
+
           </div>
         </div>
       </div>
