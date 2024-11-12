@@ -383,3 +383,19 @@ pub async fn get_classes_ta(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnErro
 
     Ok(classes)
 }
+
+#[server(GetClassDescription)]
+pub async fn get_class_description(class_id: i32) -> Result<String, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+    let ClassName(description) =
+        sqlx::query_as("select description from classes where courseid = $1")
+            .bind(class_id)
+            .fetch_one(&pool)
+            .await
+            .expect("Unable to get description");
+    Ok(description)
+}

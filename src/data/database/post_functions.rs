@@ -1,5 +1,6 @@
 #[allow(unused_imports)] // Suppress UserID - false compiler warning due to RowToStruct
 use super::user_functions::UserId;
+use crate::data::database::class_functions::get_class_description;
 use crate::data::database::reply_functions::add_reply;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
 use crate::{
@@ -65,8 +66,6 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         "Unable to complete Request".to_string(),
     ))?;
 
-    let post_contents = format!("{} {}", new_post_info.title, new_post_info.contents);
-
     let post: Post = sqlx::query_as("INSERT INTO posts(timestamp, title, contents, authorid, anonymous, limitedvisibility, classid, resolved, private) VALUES(CURRENT_TIMESTAMP, $1, $2, $3, $4, $5, $6, false, $7)
                         RETURNING                
                         title, 
@@ -86,8 +85,14 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         .expect("failed adding post");
 
     if new_post_info.ai_response {
+        let class_description = get_class_description(new_post_info.classid).await?;
+
+        let ai_input = format!(
+            "{}\n\n{}\n\n{}",
+            class_description, new_post_info.title, new_post_info.contents
+        );
         // If AI response is requested get response and add reply
-        let ai_response = match get_gemini_response(post_contents.clone()).await {
+        let ai_response = match get_gemini_response(ai_input.clone()).await {
             Ok(response) => response,
             Err(e) => {
                 error!("Failed to get AI response: {:?}", e);
