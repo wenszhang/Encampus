@@ -16,7 +16,8 @@ use crate::{
         user_profile::user_profile_page::UserProfile,
         user_settings::user_settings_page::UserSettings,
         view_class_posts::{
-            announcement_details::AnnouncementDetails, class::ClassPage, focused_post::FocusedPost,
+            announcement_details::AnnouncementDetails, class::ClassPage,
+            class_details::ClassDetails, focused_post::FocusedPost,
         },
         view_enrolled_classes::classes::ClassesPage,
     },
@@ -59,6 +60,7 @@ pub fn App() -> impl IntoView {
                 <Route path="/classes" view=ClassesPage />
                 <Route path="/classes/:class_id" view=ClassPage>
                   <Route path="" view=|| {} />
+                  <Route path="/details" view=ClassDetails />
                   <Route path="/:post_id" view=FocusedPost />
                   <Route path="/announcement/:announcement_id" view=AnnouncementDetails />
                 </Route>

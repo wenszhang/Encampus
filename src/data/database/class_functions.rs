@@ -33,6 +33,17 @@ pub struct ClassName(String);
 pub struct UserName(String);
 
 /**
+ * Struct to hold enrollment info
+ */
+#[derive(Clone, Serialize, Deserialize, Debug)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct UserEnrollmentInfo {
+    pub user_id: i32,
+    pub full_name: String,
+    pub role: String,
+}
+
+/**
  * Get all class names from the database
  * Will eventually have a user added and so query will be modified to get only the classes the user is registered to
  */
@@ -398,4 +409,42 @@ pub async fn get_class_description(class_id: i32) -> Result<String, ServerFnErro
             .await
             .expect("Unable to get description");
     Ok(description)
+}
+
+#[server(GetUsersEnrolledInClass)]
+pub async fn get_users_enrolled_in_class(
+    class_id: i32,
+) -> Result<Vec<UserEnrollmentInfo>, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let users: Vec<UserEnrollmentInfo> = sqlx::query_as(
+        "SELECT
+            u.id as user_id,
+            CONCAT(u.firstname, ' ', u.lastname) as full_name,
+            CASE
+                WHEN i.professorid IS NOT NULL THEN 'Instructor'
+                WHEN t.id IS NOT NULL THEN 'TA'
+                WHEN e.studentid IS NOT NULL THEN 'Student'
+                ELSE 'Unknown'
+            END as role
+        FROM users u
+        LEFT JOIN instructing i ON u.id = i.professorid AND i.courseid = $1
+        LEFT JOIN ta t ON u.id = t.id AND t.classid = $1
+        LEFT JOIN enrolled e ON u.id = e.studentid AND e.courseid = $1
+        WHERE i.professorid IS NOT NULL
+            OR t.id IS NOT NULL
+            OR e.studentid IS NOT NULL
+        ",
+    )
+    .bind(class_id)
+    .fetch_all(&pool)
+    .await
+    .expect("Failed to retrieve enrolled users with roles");
+
+    Ok(users)
 }
