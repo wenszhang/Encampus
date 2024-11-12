@@ -153,3 +153,35 @@ pub async fn get_search_posts(
 
     Ok(posts)
 }
+
+#[server(EditPost)]
+pub async fn edit_post(
+    post_id: i32,
+    new_title: String,
+    new_contents: String,
+    user_id: i32,
+) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let UserId(author_id) = sqlx::query_as("select authorid from posts where postid = $1")
+        .bind(post_id)
+        .fetch_one(&pool)
+        .await
+        .expect("Cannot get author id");
+
+    if author_id == user_id {
+        sqlx::query("update posts set title = $1, contents = $2 where postid = $3")
+            .bind(new_title)
+            .bind(new_contents)
+            .bind(post_id)
+            .execute(&pool)
+            .await
+            .expect("Cannot edit post");
+    }
+    Ok(())
+}

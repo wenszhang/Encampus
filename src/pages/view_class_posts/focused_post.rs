@@ -528,6 +528,12 @@ pub fn FocusedDropdown(
             {move || {
               view! {
                 <div class="p-3 rounded-md w-30">
+                  <button
+                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| {}
+                  >
+                    <span class="ml-2">Edit</span>
+                  </button>
                   {if post.resolved {
                     view! {
                       <button
@@ -650,7 +656,6 @@ pub fn ReplyDropdown(
                 <div class="p-3 rounded-md w-30">
                   {if is_instructor {
                     if reply.approved {
-
                       view! {
                         <div>
                           <button
