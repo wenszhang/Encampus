@@ -4,7 +4,7 @@ use crate::data::database::class_functions::get_class_description;
 use crate::data::database::reply_functions::add_reply;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
 use crate::{
-    data::database::ai_functions::{get_gemini_response, get_openai_response},
+    data::database::ai_functions::get_gemini_response,
     pages::view_class_posts::focused_post::AddReplyInfo,
 };
 use leptos::logging::error;
@@ -73,13 +73,13 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
                         resolved,
                         authorid as author_id,
                         private;")
-        .bind(new_post_info.title)
-        .bind(new_post_info.contents)
+        .bind(new_post_info.clone().title)
+        .bind(new_post_info.clone().contents)
         .bind(user_id)
-        .bind(new_post_info.anonymous)
-        .bind(new_post_info.limited_visibility)
-        .bind(new_post_info.classid)
-        .bind(new_post_info.private)
+        .bind(new_post_info.clone().anonymous)
+        .bind(new_post_info.clone().limited_visibility)
+        .bind(new_post_info.clone().classid)
+        .bind(new_post_info.clone().private)
         .fetch_one(&pool)
         .await
         .expect("failed adding post");
@@ -88,8 +88,12 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
         let class_description = get_class_description(new_post_info.classid).await?;
 
         let ai_input = format!(
-            "{}\n\n{}\n\n{}",
-            class_description, new_post_info.title, new_post_info.contents
+            "{}\n{}\n\n{}\n{}\n{}",
+            "A question was asked in a class. Here is the description of the class:",
+            class_description,
+            "Here is the question that was asked. Please guide the student to the right answer without giving the answer away directly",
+            new_post_info.clone().title,
+            new_post_info.clone().contents
         );
         // If AI response is requested get response and add reply
         let ai_response = match get_gemini_response(ai_input.clone()).await {
