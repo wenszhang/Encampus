@@ -98,6 +98,14 @@ pub async fn add_class(name: String, instructor_username: i32) -> Result<ClassIn
         .await
         .expect("Failed adding instructor to class");
 
+    // Add Encampus Assistant to the class, id is 334 for Encampus Assistant
+    sqlx::query("insert into ta (id, classid) values ($1, $2)")
+        .bind(334)
+        .bind(class_id)
+        .execute(&pool)
+        .await
+        .expect("Failed adding Encampus Assistant");
+
     Ok(ClassInfo {
         id: class_id,
         name,
