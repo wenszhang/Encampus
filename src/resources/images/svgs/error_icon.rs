@@ -11,16 +11,10 @@ pub fn ErrorIcon(
     size: &'static str,
 ) -> impl IntoView {
     view! {
-      <svg xmlns="http://www.w3.org/2000/svg" width=size height=size viewBox="0 0 48 48">
+      <svg xmlns="http://www.w3.org/2000/svg" width=size height=size viewBox="0 0 20 20">
         <path
-          fill="red"
-          fill-rule="evenodd"
-          stroke="red"
-          stroke-linecap="round"
-          stroke-linejoin="round"
-          stroke-width="4"
-          d="m6 11l5-5l13 13L37 6l5 5l-13 13l13 13l-5 5l-13-13l-13 13l-5-5l13-13z"
-          clip-rule="evenodd"
+          fill="#f23b2f"
+          d="M13.728 1H6.272L1 6.272v7.456L6.272 19h7.456L19 13.728V6.272zM11 15H9v-2h2zm0-4H9V5h2z"
         />
       </svg>
     }
