@@ -6,8 +6,8 @@ use crate::data::database::class_functions::{
     update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
-    add_user, delete_user, get_user_password, get_users, get_users_by_role, update_user,
-    update_user_without_password, User,
+    add_user, delete_user, get_users, get_users_by_role, update_user, update_user_without_password,
+    User,
 };
 use crate::pages::global_components::header::Header;
 use leptos::*;
@@ -599,13 +599,16 @@ fn AddNewUser(
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
               add_user_action
-                .dispatch((User {
-                  username: username.get(),
-                  firstname: first_name.get(),
-                  lastname: last_name.get(),
-                  role: role.get(),
-                  id: 0,
-                }, password.get()));
+                .dispatch((
+                  User {
+                    username: username.get(),
+                    firstname: first_name.get(),
+                    lastname: last_name.get(),
+                    role: role.get(),
+                    id: 0,
+                  },
+                  password.get(),
+                ));
               set_first_name("".to_string());
               set_last_name("".to_string());
               set_username("".to_string());
