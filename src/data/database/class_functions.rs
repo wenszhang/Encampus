@@ -19,6 +19,7 @@ pub struct ClassInfo {
     pub name: String,
     pub instructor_id: i32,
     pub instructor_name: String,
+    pub description: String,
 }
 
 /**
@@ -57,7 +58,7 @@ pub async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
     ))?;
 
     let classes: Vec<ClassInfo> =
-        sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+        sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name, description 
         from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id")
             .fetch_all(&pool)
             .await
@@ -67,7 +68,11 @@ pub async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
 }
 
 #[server(AddClass)]
-pub async fn add_class(name: String, instructor_username: i32) -> Result<ClassInfo, ServerFnError> {
+pub async fn add_class(
+    name: String,
+    instructor_username: i32,
+    class_description: String,
+) -> Result<ClassInfo, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -83,10 +88,11 @@ pub async fn add_class(name: String, instructor_username: i32) -> Result<ClassIn
             .expect("Failed getting instructor");
 
     let ClassId(class_id) = sqlx::query_as(
-        "insert into classes (coursename, instructorid, coursesection) values ($1, $2, 90) returning courseid as id",
+        "insert into classes (coursename, instructorid, coursesection, description) values ($1, $2, 90, $3) returning courseid as id",
     )
     .bind(name.clone())
     .bind(instructor.id)
+    .bind(class_description.clone())
     .fetch_one(&pool)
     .await
     .expect("Failed adding class");
@@ -111,6 +117,7 @@ pub async fn add_class(name: String, instructor_username: i32) -> Result<ClassIn
         name,
         instructor_id: instructor.id,
         instructor_name: format!("{} {}", instructor.firstname, instructor.lastname),
+        description: class_description.clone(),
     })
 }
 
@@ -299,10 +306,11 @@ pub async fn update_class_info(class: ClassInfo, instructor_id: i32) -> Result<(
         "Unable to complete Request".to_string(),
     ))?;
 
-    sqlx::query("update classes set coursename = $1, instructorid = $2 where courseid = $3")
+    sqlx::query("update classes set coursename = $1, instructorid = $2, description = $4 where courseid = $3")
         .bind(class.name)
         .bind(instructor_id)
         .bind(class.id)
+        .bind(class.description)
         .execute(&pool)
         .await
         .map_err(|_| {
