@@ -2,22 +2,21 @@ use crate::data::database::announcement_functions::{
     post_announcement, AddAnnouncementInfo, AnnouncementInfo,
 };
 use crate::data::database::class_functions::check_user_is_instructor;
-use crate::data::global_state::GlobalState;
+use crate::expect_logged_in_user;
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use leptos::*;
 use leptos_router::{use_params, A};
 
-#[component]
-
 //TODO handle too many announcements and href to announcements page
+#[component]
 pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
-    let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
+    let (user, _) = expect_logged_in_user!();
     let class_id = use_params::<ClassId>();
     let class_id_val = class_id.get_untracked().unwrap().class_id;
 
     let is_instructor = create_resource(class_id, move |class_id| {
-        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        let user_id = user().id;
         async move {
             check_user_is_instructor(user_id, class_id.unwrap().class_id)
                 .await
@@ -42,9 +41,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let add_announcement_action = create_action(move |announcementInfo: &AddAnnouncementInfo| {
         let announcementInfo = announcementInfo.clone();
         async move {
-            match post_announcement(announcementInfo, global_state.id.get_untracked().unwrap())
-                .await
-            {
+            match post_announcement(announcementInfo, user().id).await {
                 Ok(_announcement) => {}
                 Err(_) => logging::error!("Attempt to post post failed. Please try again"),
             }
@@ -167,5 +164,5 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
 
         </div>
       </div>
-    }
+    }.into_view()
 }

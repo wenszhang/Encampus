@@ -27,6 +27,8 @@ tracing-subscriber = { version = "0.3.18", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 web-sys = { version = "0.3.70", features = ["Storage"] }
+tower-sessions = { version = "0.13.0", features = ["private"], optional = true}
+serde_json = "1.0.132"
 
 
 [features]
@@ -45,6 +47,7 @@ ssr = [
     "dep:sqlx",
     "leptos_server_signal/ssr",
     "leptos_server_signal/axum",
+    "dep:tower-sessions",
 ]
 
 # Defines a size-optimized profile for the WASM bundle in release mode

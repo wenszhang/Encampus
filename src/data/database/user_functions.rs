@@ -1,11 +1,13 @@
-use leptos::{server, ServerFnError};
+use leptos::{leptos_dom::logging::console_log, server, ServerFnError};
 use serde::{Deserialize, Serialize};
+
+use crate::{data::global_state::User, pages::register_page::NewUser};
 /**
  * Struct to hold user
  */
 #[derive(Clone, Serialize, Deserialize, Default, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
-pub struct User {
+pub struct DbUser {
     pub username: String,
     pub firstname: String,
     pub lastname: String,
@@ -25,15 +27,18 @@ pub struct UserPassword(String);
  * Login a user or sign them up if they don't exist
  */
 #[server(LoginSignUp)]
-pub async fn login(username: String, password: String) -> Result<User, ServerFnError> {
+pub async fn login(username: String, password: String) -> Result<Option<DbUser>, ServerFnError> {
+    use crate::AuthenticationSession;
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
+    let auth_session =
+        use_context::<AuthenticationSession>().expect("Authentication Session should exist");
 
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
 
-    let user_result: User = sqlx::query_as(
+    let user_result: DbUser = sqlx::query_as(
         "select username, firstname, lastname, id, role from users where username = $1",
     )
     .bind(username.clone())
@@ -49,7 +54,17 @@ pub async fn login(username: String, password: String) -> Result<User, ServerFnE
             .expect("No user found");
 
     if user_password == password {
-        Ok(user_result)
+        auth_session
+            .login(User {
+                id: user_result.id,
+                first_name: user_result.firstname.clone(),
+                last_name: user_result.lastname.clone(),
+                user_name: user_result.username.clone(),
+                role: user_result.role.clone(),
+            })
+            .await;
+
+        Ok(Some(user_result))
     } else {
         Err(ServerFnError::<NoCustomError>::ServerError(
             "Incorrect Password".to_string(),
@@ -57,8 +72,19 @@ pub async fn login(username: String, password: String) -> Result<User, ServerFnE
     }
 }
 
+#[server(Logout)]
+pub async fn logout() -> Result<(), ServerFnError> {
+    use leptos::use_context;
+    let auth_session =
+        use_context::<crate::AuthenticationSession>().expect("Authentication Session should exist");
+    auth_session.logout().await;
+    leptos_axum::redirect("/login");
+    Ok(())
+}
+
 #[server(AddUser)]
-pub async fn add_user(new_user: User, password: String) -> Result<User, ServerFnError> {
+pub async fn add_user(new_user: NewUser, login_new_user: bool) -> Result<DbUser, ServerFnError> {
+    use crate::AuthenticationSession;
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -66,7 +92,7 @@ pub async fn add_user(new_user: User, password: String) -> Result<User, ServerFn
         "Unable to complete Request".to_string(),
     ))?;
 
-    let user: User = sqlx::query_as(
+    let user: DbUser = sqlx::query_as(
         "insert into users(username, firstname, lastname, role, password) values($1, $2, $3, $4, $5) 
         returning username,
         firstname,
@@ -74,11 +100,11 @@ pub async fn add_user(new_user: User, password: String) -> Result<User, ServerFn
         id,
         role",
     )
-    .bind(new_user.username.clone())
-    .bind(new_user.firstname.clone())
-    .bind(new_user.lastname.clone())
-    .bind(new_user.role.clone())
-    .bind(password)
+    .bind(new_user.user.user_name)
+    .bind(new_user.user.first_name)
+    .bind(new_user.user.last_name)
+    .bind(new_user.user.role)
+    .bind(new_user.password)
     .fetch_one(&pool)
     .await
     .map_err(|_| {
@@ -103,6 +129,20 @@ pub async fn add_user(new_user: User, password: String) -> Result<User, ServerFn
             .execute(&pool)
             .await
             .expect("no users found");
+    }
+
+    if login_new_user {
+        let auth_session =
+            use_context::<AuthenticationSession>().expect("Authentication Session should exist");
+        auth_session
+            .login(User {
+                id: user.id,
+                first_name: user.firstname.clone(),
+                last_name: user.lastname.clone(),
+                user_name: user.username.clone(),
+                role: user.role.clone(),
+            })
+            .await;
     }
     Ok(user)
 }
@@ -146,7 +186,7 @@ pub async fn delete_user(user: User) -> Result<(), ServerFnError> {
 }
 
 #[server(UpdateUser)]
-pub async fn update_user(user: User, password: String) -> Result<(), ServerFnError> {
+pub async fn update_user(new_user: NewUser) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -157,12 +197,12 @@ pub async fn update_user(user: User, password: String) -> Result<(), ServerFnErr
     sqlx::query(
         "update users set username = $1, firstname = $2, lastname = $3, role = $4, password = $5 where id = $6",
     )
-    .bind(user.username.clone())
-    .bind(user.firstname.clone())
-    .bind(user.lastname.clone())
-    .bind(user.role.clone())
-    .bind(password)
-    .bind(user.id)
+    .bind(new_user.user.user_name.clone())
+    .bind(new_user.user.first_name.clone())
+    .bind(new_user.user.last_name.clone())
+    .bind(new_user.user.role.clone())
+    .bind(new_user.password)
+    .bind(new_user.user.id)
     .execute(&pool)
     .await
     .map_err(|_| {
@@ -173,7 +213,7 @@ pub async fn update_user(user: User, password: String) -> Result<(), ServerFnErr
 }
 
 #[server(UpdateUserWithoutPassword)]
-pub async fn update_user_without_password(user: User) -> Result<(), ServerFnError> {
+pub async fn update_user_without_password(user: User) -> Result<DbUser, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -181,25 +221,25 @@ pub async fn update_user_without_password(user: User) -> Result<(), ServerFnErro
         "Unable to complete Request".to_string(),
     ))?;
 
-    sqlx::query(
-        "update users set username = $1, firstname = $2, lastname = $3, role = $4 where id = $5",
+    let user = sqlx::query_as(
+        "update users set username = $1, firstname = $2, lastname = $3, role = $4 where id = $5 returning id, username, firstname, lastname, role",
     )
-    .bind(user.username.clone())
-    .bind(user.firstname.clone())
-    .bind(user.lastname.clone())
-    .bind(user.role.clone())
+    .bind(user.user_name)
+    .bind(user.first_name)
+    .bind(user.last_name)
+    .bind(user.role)
     .bind(user.id)
-    .execute(&pool)
+    .fetch_one(&pool)
     .await
     .map_err(|_| {
         ServerFnError::<NoCustomError>::ServerError("Unable to update user".to_string())
     })?;
 
-    Ok(())
+    Ok(user)
 }
 
 #[server(GetUsers)]
-pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
+pub async fn get_users() -> Result<Vec<DbUser>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -207,7 +247,7 @@ pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let users: Vec<User> =
+    let users: Vec<DbUser> =
         sqlx::query_as("select username, firstname, lastname, id, role from users order by role")
             .fetch_all(&pool)
             .await
@@ -216,7 +256,7 @@ pub async fn get_users() -> Result<Vec<User>, ServerFnError> {
 }
 
 #[server(GetUserById)]
-pub async fn get_user_by_id(user_id: i32) -> Result<User, ServerFnError> {
+pub async fn get_user_by_id(user_id: i32) -> Result<DbUser, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -224,7 +264,7 @@ pub async fn get_user_by_id(user_id: i32) -> Result<User, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let user: User =
+    let user: DbUser =
         sqlx::query_as("select username, firstname, lastname, id, role from users where id = $1")
             .bind(user_id)
             .fetch_one(&pool)
@@ -237,7 +277,7 @@ pub async fn get_user_by_id(user_id: i32) -> Result<User, ServerFnError> {
 }
 
 #[server(GetUsersByRole)]
-pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError> {
+pub async fn get_users_by_role(role: String) -> Result<Vec<DbUser>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
@@ -245,7 +285,7 @@ pub async fn get_users_by_role(role: String) -> Result<Vec<User>, ServerFnError>
         "Unable to complete Request".to_string(),
     ))?;
 
-    let users: Vec<User> =
+    let users: Vec<DbUser> =
         sqlx::query_as("select username, firstname, lastname, id, role from users where role = $1")
             .bind(role)
             .fetch_all(&pool)

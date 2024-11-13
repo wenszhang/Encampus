@@ -1,59 +1,81 @@
-use crate::data::database::user_functions::{get_user_by_id, update_user_without_password};
+use crate::data::database::user_functions::update_user_without_password;
+use crate::data::global_state::User;
+use crate::expect_logged_in_user;
+use crate::pages::global_components::header::Header;
+use crate::pages::global_components::notification::{
+    NotificationComponent, NotificationDetails, NotificationType,
+};
 use crate::pages::global_components::sidebar::Sidebar;
-use crate::{data::global_state::GlobalState, pages::global_components::header::Header};
 use leptos::ev::SubmitEvent;
 use leptos::{
-    component, create_signal, expect_context, view, IntoView, Signal, SignalGet,
-    SignalGetUntracked, SignalSet, Suspense,
+    component, create_action, create_effect, create_signal, view, IntoView, Signal,
+    SignalGetUntracked, Suspense,
 };
+use leptos_router::use_navigate;
 use wasm_bindgen::JsCast;
-use web_sys::window;
 use web_sys::HtmlInputElement;
 
 /// Renders the user settings page
 #[component]
 pub fn UserSettings() -> impl IntoView {
-    let global_state = expect_context::<GlobalState>();
-    let user_id = global_state.id.get_untracked().unwrap_or_default();
-    let (user_name, set_user_name) =
-        create_signal(global_state.user_name.get_untracked().unwrap_or_default());
+    let (user, _) = expect_logged_in_user!();
+    let user_id = user().id;
+    let (user_name, set_user_name) = create_signal(user.get_untracked().user_name);
     let (password, set_password) = create_signal(String::new());
     let (confirm_password, set_confirm_password) = create_signal(String::new());
+    let (update_error, set_update_error) = create_signal(None::<NotificationDetails>);
 
-    // Get form data
+    let update_user_action = create_action(move |updated_user: &User| {
+        let updated_user = updated_user.clone();
+        async move {
+            update_user_without_password(updated_user)
+                .await
+                .map(|dbUser| User {
+                    id: dbUser.id,
+                    first_name: dbUser.firstname,
+                    last_name: dbUser.lastname,
+                    user_name: dbUser.username,
+                    role: dbUser.role,
+                })
+                .map_err(|_server_fn_err| "An error occurred. Please try again")
+        }
+    });
+
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
+        let mut user = user.get_untracked();
+        user.user_name = user_name.get_untracked().clone();
+        update_user_action.dispatch(user);
+    };
 
-        let user_id = user_id;
-        let user_name = user_name.get();
-        let password = password.get();
-        let confirm_password = confirm_password.get();
-
-        if password == confirm_password {
-            let future = async move {
-                match get_user_by_id(user_id).await {
-                    Ok(mut user) => {
-                        user.username = user_name.clone();
-
-                        match update_user_without_password(user).await {
-                            Ok(_) => {
-                                global_state.user_name.set(Some(user_name));
-                                window().unwrap().location().set_href("/login").unwrap();
-                            }
-                            Err(_) => {
-                                // Handle the error
-                            }
-                        }
-                    }
-                    Err(_) => {
-                        // Handle the error when getting the user fails
-                    }
-                }
-            };
-            leptos::spawn_local(future);
-        } else {
-            // Handle password mismatch (e.g., show an error message)
+    create_effect(move |_| match update_user_action.value()() {
+        None => {
+            set_update_error(Some(NotificationDetails {
+                message: "An error occurred. Please try again".to_string(),
+                notification_type: NotificationType::Error,
+            }));
         }
+        Some(Err(message)) => {
+            set_update_error(Some(NotificationDetails {
+                message: message.to_string(),
+                notification_type: NotificationType::Error,
+            }));
+        }
+        Some(Ok(_)) => {
+            let navigate = use_navigate();
+            navigate("/login", Default::default())
+        }
+    });
+
+    let notification_view = move || {
+        update_error().map(|details| {
+            view! {
+              <NotificationComponent
+                notification_details=details.clone()
+                on_close=move || set_update_error(None)
+              />
+            }
+        })
     };
 
     view! {
@@ -121,9 +143,10 @@ pub fn UserSettings() -> impl IntoView {
                   Save Changes
                 </button>
               </div>
+              {notification_view}
             </form>
           </div>
         </div>
       </div>
-    }
+    }.into_view()
 }

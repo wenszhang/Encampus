@@ -1,128 +1,117 @@
-use leptos::{create_rw_signal, RwSignal, SignalGetUntracked, SignalSet};
-#[cfg(target_arch = "wasm32")]
-use web_sys::Storage;
+use leptos::RwSignal;
+use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Debug, Default)]
-pub(crate) struct GlobalState {
-    pub _user_token: RwSignal<Option<String>>,
-    pub user_name: RwSignal<Option<String>>,
-    pub first_name: RwSignal<Option<String>>,
-    pub last_name: RwSignal<Option<String>>,
-    pub id: RwSignal<Option<i32>>,
-    pub role: RwSignal<Option<String>>,
-    pub authenticated: RwSignal<bool>,
+#[derive(Default, Clone)]
+pub struct UserBuilder {
+    pub user_name: Option<String>,
+    pub first_name: Option<String>,
+    pub last_name: Option<String>,
+    pub id: Option<i32>,
+    pub role: Option<String>,
 }
 
-impl GlobalState {
-    pub fn new() -> Self {
-        let state = Self {
-            _user_token: create_rw_signal(None),
-            user_name: create_rw_signal(None),
-            first_name: create_rw_signal(None),
-            last_name: create_rw_signal(None),
-            id: create_rw_signal(None),
-            role: create_rw_signal(None),
-            authenticated: create_rw_signal(false),
-        };
-
-        #[cfg(target_arch = "wasm32")]
-        state.load_from_local_storage();
-
-        state
-    }
-
-    // Method to get localStorage in WASM targets
-    #[cfg(target_arch = "wasm32")]
-    fn local_storage() -> Storage {
-        web_sys::window()
-            .expect("should have a window in this context")
-            .local_storage()
-            .expect("should have access to localStorage")
-            .expect("could not get localStorage")
-    }
-
-    // Load user data from localStorage on app initialization (WASM only)
-    #[cfg(target_arch = "wasm32")]
-    pub fn load_from_local_storage(&self) {
-        let storage = Self::local_storage();
-
-        if let Some(username) = storage.get_item("user_name").unwrap_or(None) {
-            self.user_name.set(Some(username));
+impl UserBuilder {
+    pub fn to_user(self) -> Result<User, String> {
+        match self {
+            UserBuilder {
+                user_name: Some(user_name),
+                first_name: Some(first_name),
+                last_name: Some(last_name),
+                id: Some(id),
+                role: Some(role),
+            } => Ok(User {
+                user_name,
+                first_name,
+                last_name,
+                id,
+                role,
+            }),
+            UserBuilder {
+                user_name,
+                first_name,
+                last_name,
+                id,
+                role,
+            } => {
+                let error_message = format!(
+                    "Couldn't create User. The following fields weren't found: {} {} {} {} {}",
+                    user_name.map_or("user_name", |_| ""),
+                    first_name.map_or("first_name", |_| ""),
+                    last_name.map_or("last_name", |_| ""),
+                    id.map_or("id", |_| ""),
+                    role.map_or("role", |_| ""),
+                );
+                Err(error_message)
+            }
         }
-        if let Some(first_name) = storage.get_item("first_name").unwrap_or(None) {
-            self.first_name.set(Some(first_name));
-        }
-        if let Some(last_name) = storage.get_item("last_name").unwrap_or(None) {
-            self.last_name.set(Some(last_name));
-        }
-        if let Some(id) = storage.get_item("id").unwrap_or(None) {
-            self.id.set(Some(id.parse().unwrap()));
-        }
-        if let Some(role) = storage.get_item("role").unwrap_or(None) {
-            self.role.set(Some(role));
-        }
-        if self.user_name.get_untracked().is_some() {
-            self.authenticated.set(true);
-        }
-    }
-
-    // No-op version for non-WASM targets
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn load_from_local_storage(&self) {
-        // No operation
-    }
-
-    // Save user data to localStorage after login (WASM only)
-    #[cfg(target_arch = "wasm32")]
-    pub fn save_to_local_storage(&self) {
-        let storage = Self::local_storage();
-
-        if let Some(username) = self.user_name.get_untracked() {
-            storage.set_item("user_name", &username).unwrap();
-        }
-        if let Some(first_name) = self.first_name.get_untracked() {
-            storage.set_item("first_name", &first_name).unwrap();
-        }
-        if let Some(last_name) = self.last_name.get_untracked() {
-            storage.set_item("last_name", &last_name).unwrap();
-        }
-        if let Some(id) = self.id.get_untracked() {
-            storage.set_item("id", &id.to_string()).unwrap();
-        }
-        if let Some(role) = self.role.get_untracked() {
-            storage.set_item("role", &role).unwrap();
-        }
-    }
-
-    // No-op version for non-WASM targets
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn save_to_local_storage(&self) {
-        // No operation
-    }
-
-    // Clear localStorage and log out (WASM only)
-    #[cfg(target_arch = "wasm32")]
-    pub fn clear_local_storage(&self) {
-        let storage = Self::local_storage();
-
-        storage.remove_item("user_name").unwrap();
-        storage.remove_item("first_name").unwrap();
-        storage.remove_item("last_name").unwrap();
-        storage.remove_item("id").unwrap();
-        storage.remove_item("role").unwrap();
-
-        // Reset the state
-        self.authenticated.set(false);
-        self.user_name.set(None);
-        self.first_name.set(None);
-        self.last_name.set(None);
-        self.id.set(None);
-        self.role.set(None);
-    }
-
-    // No-op version for non-WASM targets
-    #[cfg(not(target_arch = "wasm32"))]
-    pub fn clear_local_storage(&self) {
-        // No operation
     }
 }
+
+#[derive(Clone, PartialEq, Serialize, Deserialize, Debug)]
+pub struct User {
+    pub user_name: String,
+    pub first_name: String,
+    pub last_name: String,
+    pub id: i32,
+    // TODO make role an enum
+    pub role: String,
+}
+
+impl User {
+    pub fn fields() -> core::array::IntoIter<UserFields, 5> {
+        let fields = [
+            UserFields::UserName,
+            UserFields::FirstName,
+            UserFields::LastName,
+            UserFields::Id,
+            UserFields::Role,
+        ];
+        fields.into_iter()
+    }
+}
+
+pub enum UserFields {
+    UserName,
+    FirstName,
+    LastName,
+    Id,
+    Role,
+}
+
+impl UserFields {
+    pub fn key(&self) -> &str {
+        match self {
+            UserFields::UserName => "user_name",
+            UserFields::FirstName => "first_name",
+            UserFields::LastName => "last_name",
+            UserFields::Id => "id",
+            UserFields::Role => "role",
+        }
+    }
+}
+
+#[derive(Clone)]
+pub enum Authentication {
+    Authenticated(User),
+    Unauthenticated,
+}
+
+impl Authentication {
+    pub fn is_authenticated(&self) -> bool {
+        match self {
+            Authentication::Authenticated(_) => true,
+            Authentication::Unauthenticated => false,
+        }
+    }
+    pub fn is_unauthenticated(&self) -> bool {
+        !self.is_authenticated()
+    }
+    pub fn get_user(&self) -> Option<&User> {
+        match self {
+            Authentication::Authenticated(user) => Some(user),
+            Authentication::Unauthenticated => None,
+        }
+    }
+}
+
+pub type AuthContext = RwSignal<Authentication>;
