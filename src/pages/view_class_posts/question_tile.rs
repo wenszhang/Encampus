@@ -15,6 +15,7 @@ use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
+use crate::resources::images::svgs::paper_icon::PaperIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 use ev::MouseEvent;
@@ -334,7 +335,13 @@ fn TagPill(props: TagPillProperties) -> impl IntoView {
           </div>
         },
         TagPillProperties::Custom(CustomTag { title }) => {
-            view! { <div class=[sharedClassesAll, "bg-white text-gray-600"].join(" ")>{title}</div> }
+            view! {
+              <div class=[sharedClassesAll, "bg-customGreen text-white flex items-center "]
+                .join(" ")>
+                <PaperIcon size="1em" />
+                {title}
+              </div>
+            }
         }
     }
 }

@@ -8,6 +8,11 @@ use leptos::*;
 
 use serde::{Deserialize, Serialize};
 
+use crate::data::database::class_functions::check_user_is_instructor;
+use crate::data::global_state::GlobalState;
+use crate::pages::view_class_posts::class::ClassId;
+use leptos_router::use_params;
+
 #[derive(Clone, Serialize, Deserialize, Default, Debug)]
 pub struct Poll {
     pub id: i32,
@@ -28,6 +33,23 @@ pub struct PollOption {
 pub fn LivePoll() -> impl IntoView {
     let (polls, set_polls) = create_signal(Vec::<Poll>::new());
     let (show_modal, set_show_modal) = create_signal(false);
+    let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
+    let class_id = use_params::<ClassId>();
+    let class_id_val = class_id.get_untracked().unwrap().class_id;
+
+    let is_instructor = create_resource(class_id, move |class_id| {
+        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        println!(
+            "Checking if user {} is an instructor for class {:?}",
+            user_id, class_id_val
+        );
+
+        async move {
+            check_user_is_instructor(user_id, class_id.unwrap().class_id)
+                .await
+                .unwrap_or(false)
+        }
+    });
 
     // Create a new poll and add it to the list
     let create_new_poll = move |question: String| {
@@ -45,23 +67,26 @@ pub fn LivePoll() -> impl IntoView {
       <div class="container my-8 mx-auto">
         <div class="flex justify-between items-center mb-4">
           <h1 class="text-2xl font-bold">"Polls"</h1>
-          <button
-            class="py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300"
-            on:click=move |_| set_show_modal.update(|v| *v = true)
-          >
-            "Create Poll"
-          </button>
+          <Suspense fallback=move || view! { <div>"Loading..."</div> }>
+            <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
+              <button
+                class="py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300"
+                on:click=move |_| set_show_modal.update(|v| *v = true)
+              >
+                "Create Poll"
+              </button>
+            </Show>
+          </Suspense>
         </div>
 
-        <div class="space-y-4">
-          {move || {
-            polls()
-              .iter()
-              .map(|poll| { view! { <PollCard poll=poll.clone() /> }.into_view() })
-              .collect::<Vec<_>>()
-          }}
-        </div>
-
+      </div>
+      <div class="space-y-4">
+        {move || {
+          polls()
+            .iter()
+            .map(|poll| { view! { <PollCard poll=poll.clone() /> }.into_view() })
+            .collect::<Vec<_>>()
+        }}
         <PollCreationModal
           is_visible=show_modal.into()
           on_close=Box::new(move |_| set_show_modal.update(|v| *v = false))

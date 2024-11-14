@@ -10,6 +10,7 @@ pub mod filter_icon;
 pub mod information_icon;
 pub mod lock_icon;
 pub mod magnifying_glass;
+pub mod paper_icon;
 pub mod pin_icon;
 pub mod remove_icon;
 pub mod text_area_icon;

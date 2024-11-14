@@ -18,6 +18,12 @@ module.exports = {
         customYellow: { 
           DEFAULT: '#F9EBAF',
         },
+        customGreen: { 
+          DEFAULT: '#4CAF50',
+        },
+        customGreen: { 
+          DEFAULT: '#4CAF50',
+        },
         warningNotification: {
           bg: '#FFEDB4',
           details: '#B47E29',
@@ -30,6 +36,7 @@ module.exports = {
           bg: "#F8C1C0",
           header: "#EEEEEE",
         },
+       
         plugins: [],
       },
       textColor: {
