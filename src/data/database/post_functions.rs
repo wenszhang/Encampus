@@ -74,7 +74,10 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
                         postid as post_id,
                         resolved,
                         authorid as author_id,
-                        private;")
+                        private,
+                        endorsed, 
+                        last_bumped, 
+                        created_at;")
         .bind(new_post_info.title)
         .bind(new_post_info.contents)
         .bind(user_id)
