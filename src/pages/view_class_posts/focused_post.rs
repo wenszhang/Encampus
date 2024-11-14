@@ -38,16 +38,16 @@ pub struct ReplyId {
 #[derive(Clone, Serialize, Deserialize, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct PostDetails {
-    post_id: i32,
-    timestamp: NaiveDateTime,
-    title: String,
-    contents: String,
-    author_first_name: String,
-    author_last_name: String,
-    anonymous: bool,
-    resolved: bool,
-    author_id: i32,
-    private: bool,
+    pub post_id: i32,
+    pub timestamp: NaiveDateTime,
+    pub title: String,
+    pub contents: String,
+    pub author_first_name: String,
+    pub author_last_name: String,
+    pub anonymous: bool,
+    pub resolved: bool,
+    pub author_id: i32,
+    pub private: bool,
 }
 
 #[derive(Clone, Serialize, Deserialize, PartialEq)]
@@ -330,12 +330,12 @@ pub fn FocusedPost() -> impl IntoView {
                 </div>
               </label>
               <button
-                class="p-2 text-white bg-blue-500 rounded-full hover:bg-blue-700"
+                class="p-2 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
                 on:click=move |_| {
                   if reply_contents().is_empty() {
                     set_notification_details(
                       Some(NotificationDetails {
-                        message: "Reply content cannot be empty.".to_string(),
+                        message: "Response cannot be empty.".to_string(),
                         notification_type: NotificationType::Warning,
                       }),
                     );

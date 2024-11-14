@@ -52,7 +52,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     });
 
     view! {
-      <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg bg-card-bg">
+      <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg">
         // Announcement header
         <div class="flex justify-between items-center px-3 w-full h-7 rounded-t-lg bg-customBlue">
           <div class="flex items-center text-white">
@@ -60,7 +60,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
             <h3 class="px-2">"RECENT ANNOUNCEMENTS"</h3>
           </div>
 
-          <div class="flex items-center text-white hover:bg-gray-300 hover:text-customBlue-HOVER">
+          <div class="flex items-center text-white hover:text-gray-400">
             <button on:click=move |_| set_is_expanded.update(|v| *v = !*v)>
               <details open=is_expanded.get()>
                 <summary>{move || if is_expanded.get() { "COLLAPSE" } else { "EXPAND" }}</summary>
