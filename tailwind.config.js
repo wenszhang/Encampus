@@ -18,8 +18,8 @@ module.exports = {
         customYellow: { 
           DEFAULT: '#F9EBAF',
         },
-        customGreen: { 
-          DEFAULT: '#4CAF50',
+        customOrange: { 
+          DEFAULT: '#FFB74D',
         },
         customGreen: { 
           DEFAULT: '#4CAF50',

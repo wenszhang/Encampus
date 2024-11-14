@@ -35,15 +35,10 @@ pub fn LivePoll() -> impl IntoView {
     let (show_modal, set_show_modal) = create_signal(false);
     let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
     let class_id = use_params::<ClassId>();
-    let class_id_val = class_id.get_untracked().unwrap().class_id;
+    // let class_id_val = class_id.get_untracked().unwrap().class_id;
 
     let is_instructor = create_resource(class_id, move |class_id| {
         let user_id = global_state.id.get_untracked().unwrap_or_default();
-        println!(
-            "Checking if user {} is an instructor for class {:?}",
-            user_id, class_id_val
-        );
-
         async move {
             check_user_is_instructor(user_id, class_id.unwrap().class_id)
                 .await
@@ -67,16 +62,14 @@ pub fn LivePoll() -> impl IntoView {
       <div class="container my-8 mx-auto">
         <div class="flex justify-between items-center mb-4">
           <h1 class="text-2xl font-bold">"Polls"</h1>
-          <Suspense fallback=move || view! { <div>"Loading..."</div> }>
-            <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
-              <button
-                class="py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300"
-                on:click=move |_| set_show_modal.update(|v| *v = true)
-              >
-                "Create Poll"
-              </button>
-            </Show>
-          </Suspense>
+          <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
+            <button
+              class="py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300"
+              on:click=move |_| set_show_modal.update(|v| *v = true)
+            >
+              "Create Poll"
+            </button>
+          </Show>
         </div>
 
       </div>

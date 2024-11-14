@@ -336,7 +336,7 @@ fn TagPill(props: TagPillProperties) -> impl IntoView {
         },
         TagPillProperties::Custom(CustomTag { title }) => {
             view! {
-              <div class=[sharedClassesAll, "bg-customGreen text-white flex items-center "]
+              <div class=[sharedClassesAll, "bg-customOrange text-white flex items-center "]
                 .join(" ")>
                 <PaperIcon size="1em" />
                 {title}
