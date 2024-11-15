@@ -1,14 +1,15 @@
-use super::class::ClassId;
 /**
  * This file contains the CreatePost component, which is a form that allows
  * users to create a new post.
  */
-use crate::data::database::post_functions::{add_post, Post, PostFetcher};
+use super::class::ClassId;
+use crate::{
+    data::database::post_functions::{add_post, Post, PostFetcher},
+    expect_logged_in_user,
+};
 use leptos::*;
 use leptos_router::use_params;
 use serde::{Deserialize, Serialize};
-
-use crate::data::global_state::GlobalState;
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct AddPostInfo {
@@ -22,8 +23,8 @@ pub struct AddPostInfo {
 
 #[component]
 pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
+    let (user, _) = expect_logged_in_user!();
     let class_id = use_params::<ClassId>();
-    let global_state = expect_context::<GlobalState>();
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
 
     let on_input = |setter: WriteSignal<String>| {
@@ -40,7 +41,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
         async move {
-            match add_post(postInfo, global_state.id.get_untracked().unwrap()).await {
+            match add_post(postInfo, user().id).await {
                 Ok(post) => {
                     let post_id = post.post_id;
                     posts.update(|posts| {

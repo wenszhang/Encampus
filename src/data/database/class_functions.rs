@@ -1,7 +1,7 @@
 /**
  * This file contains all the database functions that are used in the server
  */
-use crate::data::database::user_functions::User;
+use crate::data::database::user_functions::DbUser;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
@@ -75,7 +75,7 @@ pub async fn add_class(name: String, instructor_username: i32) -> Result<ClassIn
         "Unable to complete Request".to_string(),
     ))?;
 
-    let instructor: User =
+    let instructor: DbUser =
         sqlx::query_as("select username, firstname, lastname, id, role from users where id = $1")
             .bind(instructor_username)
             .fetch_one(&pool)

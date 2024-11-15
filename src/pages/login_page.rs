@@ -1,88 +1,82 @@
 /**
  * Component for the login page where users can login to their account
  */
-use leptos::{ev::SubmitEvent, *};
-
-use crate::data::{database::user_functions::login, global_state::GlobalState};
+use crate::app::expect_auth_context;
+use crate::data::database::user_functions::login;
+use crate::data::global_state::{Authentication, User};
+use crate::on_input;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
+use leptos::{ev::SubmitEvent, *};
+
+struct LoginText {
+    username: String,
+    password: String,
+}
 
 #[component]
 pub fn LoginPage() -> impl IntoView {
     let (username, set_username) = create_signal("".to_string());
     let (password, set_password) = create_signal("".to_string());
     let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
+    let auth_context = expect_auth_context();
 
-    // Input event handler for controlled components
-    let on_input = |setter: WriteSignal<String>| {
-        move |ev| {
-            setter(event_target_value(&ev));
-        }
-    };
-
-    let login_action = create_action(move |_| {
-        let username = username.get().to_owned();
-        let password = password.get().to_owned();
+    let login_action = create_action(|LoginText { username, password }| {
+        let username = username.to_owned();
+        let password = password.to_owned();
         async move {
-            match login(username.clone(), password.clone()).await {
-                Ok(user) => (
-                    Some(user.username),
-                    Some(user.id),
-                    Some(user.firstname),
-                    Some(user.lastname),
-                    Some(user.role),
-                    Some(None),
-                ),
-                Err(ServerFnError::ServerError(err_msg)) => {
-                    (None, None, None, None, None, Some(Some(err_msg)))
-                }
-                Err(_) => (
-                    None,
-                    None,
-                    None,
-                    None,
-                    None,
-                    Some(Some("Unknown error".to_string())),
-                ),
-            }
+            login(username, password)
+                .await
+                .map(|user_option| {
+                    user_option.map(|dbUser| User {
+                        id: dbUser.id,
+                        first_name: dbUser.firstname,
+                        last_name: dbUser.lastname,
+                        user_name: dbUser.username,
+                        role: dbUser.role,
+                    })
+                })
+                .map_err(|_server_fn_err| "An error occurred. Please try again")
         }
     });
 
     create_effect(move |_| {
-        let global_state = expect_context::<GlobalState>();
-        if let Some(userInfo) = login_action.value()() {
-            if let Some(Some(error_msg)) = userInfo.5 {
+        match login_action.value()() {
+            // action hasn't finished yet
+            None => {}
+            // an error occurred during login request
+            Some(Err(message)) => {
                 set_login_error.set(Some(NotificationDetails {
-                    message: format!("Failed Signing In: {}", error_msg),
+                    message: message.to_string(),
                     notification_type: NotificationType::Error,
                 }));
-            } else {
-                global_state.authenticated.set(true);
-                global_state
-                    .user_name
-                    .set(Some(userInfo.0.unwrap_or_default()));
-                global_state.id.set(Some(userInfo.1.unwrap_or_default()));
-                global_state
-                    .first_name
-                    .set(Some(userInfo.2.unwrap_or_default()));
-                global_state
-                    .last_name
-                    .set(Some(userInfo.3.unwrap_or_default()));
-                global_state.role.set(Some(userInfo.4.unwrap_or_default()));
-
-                // Save user info to local storage
-                global_state.save_to_local_storage();
+            }
+            // login returned no user
+            Some(Ok(None)) => {
+                set_login_error.set(Some(NotificationDetails {
+                    message: "Failed Signing In: No user found. Please try again".to_string(),
+                    notification_type: NotificationType::Error,
+                }));
+            }
+            // login returned a user :)
+            Some(Ok(Some(user))) => {
+                let role = user.role.clone();
+                // set global authentication context
+                auth_context.set(Authentication::Authenticated(user));
 
                 // Navigate based on the user's role
                 let navigate = leptos_router::use_navigate();
-                match global_state.role.get().unwrap_or_default().as_str() {
+                match role.as_str() {
                     "Student" => navigate("/classes", Default::default()),
                     // Change to instructor page when implemented
                     "Instructor" => navigate("/classes", Default::default()),
                     // Change to admin page when implemented
                     "Admin" => navigate("/AdminHomePage", Default::default()),
-                    _ => navigate("/login", Default::default()),
+                    _ => set_login_error.set(Some(NotificationDetails {
+                        message: format!("A unexpected user role was encountered on this user. Failing to redirect. Role: {}", role),
+                        notification_type: NotificationType::Error,
+                    }))
                 }
             }
         }
@@ -91,11 +85,14 @@ pub fn LoginPage() -> impl IntoView {
     // Form submission handler
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
-        login_action.dispatch(username());
+        login_action.dispatch(LoginText {
+            username: username(),
+            password: password(),
+        });
     };
 
     let notification_view = move || {
-        login_error.get().map(|details| {
+        login_error().map(|details| {
             view! {
               <NotificationComponent
                 notification_details=details.clone()
@@ -124,7 +121,7 @@ pub fn LoginPage() -> impl IntoView {
                 placeholder="Enter your Username"
                 required
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
-                on:input=on_input(set_username)
+                on:input=on_input!(set_username)
                 prop:value=username
               />
               <label for="password" class="block mt-2 font-bold text-gray-700">
@@ -136,7 +133,7 @@ pub fn LoginPage() -> impl IntoView {
                 placeholder="Enter your Password"
                 required
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
-                on:input=on_input(set_password)
+                on:input=on_input!(set_password)
                 prop:value=password
               />
             </div>

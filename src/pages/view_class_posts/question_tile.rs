@@ -1,17 +1,15 @@
-use crate::data::database::class_functions::check_user_is_instructor;
 /**
  * QuestionTile component, displaying a tile for one post
  */
+use crate::data::database::class_functions::check_user_is_instructor;
 use crate::data::database::post_functions::{
     bump_post, endorse_post, remove_post, Post, PostFetcher,
 };
-
-use crate::pages::view_class_posts::class::ClassId;
-
-use crate::data::global_state::GlobalState;
+use crate::expect_logged_in_user;
 use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
+use crate::pages::view_class_posts::class::ClassId;
 use crate::pages::view_class_posts::focused_post::get_post_details;
 use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
@@ -19,7 +17,6 @@ use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
-
 use ev::MouseEvent;
 use leptos::*;
 use leptos_dom::logging::console_debug_warn;
@@ -45,11 +42,11 @@ pub fn DropDownMenu(
 ) -> impl IntoView {
     let posts: Resource<PostFetcher, Vec<Post>> =
         expect_context::<Resource<PostFetcher, Vec<Post>>>();
-    let global_state: GlobalState = expect_context::<GlobalState>();
+    let (user, _) = expect_logged_in_user!();
     let class_id = use_params::<ClassId>();
-    let is_on_my_post = move || (global_state.id)() == Some(post_author_id);
+    let is_on_my_post = move || user().id == post_author_id;
     let is_instructor = create_resource(class_id, move |class_id| {
-        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        let user_id = user().id;
         async move {
             check_user_is_instructor(user_id, class_id.unwrap().class_id)
                 .await
@@ -136,9 +133,7 @@ pub fn DropDownMenu(
         async move {
             match get_post_details(post_id).await {
                 Ok(current_post) => {
-                    if let Ok(()) =
-                        remove_post(post_id, global_state.id.get_untracked().unwrap()).await
-                    {
+                    if let Ok(()) = remove_post(post_id, user().id).await {
                         posts.update(|posts| {
                             if let Some(index) = posts
                                 .as_mut()
@@ -226,7 +221,7 @@ pub fn DropDownMenu(
           }
         }}
       </div>
-    }
+    }.into_view()
 }
 
 #[component]

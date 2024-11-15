@@ -1,7 +1,16 @@
-use crate::data::database::class_functions::check_user_is_instructor;
 /**
  * This file contains the FocusedPost component which is used to display a single post and its replies.
  */
+use crate::data::database::class_functions::check_user_is_instructor;
+use crate::data::database::class_functions::get_instructor;
+use crate::data::database::post_functions::{remove_post, resolve_post, Post, PostFetcher};
+use crate::data::database::reply_functions::{add_reply, approve_reply, remove_reply};
+use crate::expect_logged_in_user;
+use crate::pages::global_components::notification::{
+    NotificationComponent, NotificationDetails, NotificationType,
+};
+use crate::pages::view_class_posts::class::ClassId;
+use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::text_area_icon::TextAreaIcon;
 use chrono::FixedOffset;
 use chrono::NaiveDateTime;
@@ -11,16 +20,6 @@ use leptos_router::Params;
 use leptos_router::ParamsError;
 use serde::Deserialize;
 use serde::Serialize;
-
-use crate::data::database::class_functions::get_instructor;
-use crate::data::database::post_functions::{remove_post, resolve_post, Post, PostFetcher};
-use crate::data::database::reply_functions::{add_reply, approve_reply, remove_reply};
-use crate::data::global_state::GlobalState;
-use crate::pages::global_components::notification::{
-    NotificationComponent, NotificationDetails, NotificationType,
-};
-use crate::pages::view_class_posts::class::ClassId;
-use crate::resources::images::svgs::dots_icon::DotsIcon;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct PostId {
@@ -72,9 +71,10 @@ pub struct AddReplyInfo {
 
 #[component]
 pub fn FocusedPost() -> impl IntoView {
+    let (user, _) = expect_logged_in_user!();
+    // Fetch post id from route in the format of "class/:class_id/:post_id"
     let post_id = use_params::<PostId>();
     let class_id = use_params::<ClassId>();
-    let global_state = expect_context::<GlobalState>();
     let (order_option, set_value) = create_signal("Newest First".to_string());
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
@@ -102,7 +102,7 @@ pub fn FocusedPost() -> impl IntoView {
     let add_reply_action = create_action(move |reply_info: &AddReplyInfo| {
         let reply_info = reply_info.clone();
         async move {
-            match add_reply(reply_info, global_state.user_name.get_untracked().unwrap()).await {
+            match add_reply(reply_info, user().user_name).await {
                 Ok(reply) => {
                     post_and_replies.update(|post_and_replies| {
                         if let Some(outer_option) = post_and_replies.as_mut() {
@@ -148,7 +148,7 @@ pub fn FocusedPost() -> impl IntoView {
     });
 
     let is_instructor = create_resource(class_id, move |class_id| {
-        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        let user_id = user().id;
         async move {
             check_user_is_instructor(user_id, class_id.unwrap().class_id)
                 .await
@@ -178,9 +178,9 @@ pub fn FocusedPost() -> impl IntoView {
                 // Post Dropdown
                 {post()
                   .map(|post| post.author_id)
-                  .filter(|&author_id| author_id == global_state.id.get().unwrap_or_default())
+                  .filter(|&author_id| author_id == user().id)
                   .or_else(|| {
-                    if is_instructor().unwrap_or_default() {
+                    if instructor() == Some(user().user_name) {
                       Some(class_id.get().unwrap().class_id)
                     } else {
                       None
@@ -227,9 +227,10 @@ pub fn FocusedPost() -> impl IntoView {
                     <b>"No Replies Yet"</b>
                   </span>
                 }
+                  .into_view()
               } else {
                 view! {
-                  <span class="inline-block flex justify-between">
+                  <div class="flex justify-between">
                     <b class="inline-block">"Replies:"</b>
                     <span class="inline-block">
                       <select on:change=move |ev| {
@@ -241,8 +242,9 @@ pub fn FocusedPost() -> impl IntoView {
                       // <SelectOrderOption order_option is="By Rating"/>
                       </select>
                     </span>
-                  </span>
+                  </div>
                 }
+                  .into_view()
               }
             }}
           </div>
@@ -264,9 +266,7 @@ pub fn FocusedPost() -> impl IntoView {
                     </p>
                     <div class="flex gap-5 justify-end">
                       <div class="flex items-center cursor-pointer select-none">
-                        {if reply.author_id == global_state.id.get().unwrap_or_default()
-                          || is_instructor().unwrap_or_default()
-                        {
+                        {if reply.author_id == user().id || is_instructor().unwrap_or_default() {
                           let reply = reply.clone();
                           view! {
                             <div>
@@ -358,15 +358,14 @@ pub fn FocusedPost() -> impl IntoView {
             <div class="flex items-center cursor-pointer select-none">
               // For some crazy reason removing this makes the dropdown up above not show up
               // It's totally not related but no clue why
-              {if post().map(|post| post.author_id)
-                == Some(global_state.id.get().unwrap_or_default())
-                || instructor() == Some(global_state.user_name.get().unwrap_or_default())
+              {if post().map(|post| post.author_id) == Some(user().id)
+                || instructor() == Some(user().user_name)
               {}}
             </div>
           </div>
         </Suspense>
       </div>
-    }
+    }.into_view()
 }
 
 #[component]
@@ -444,7 +443,7 @@ pub fn FocusedDropdown(
     posts: Resource<PostFetcher, Vec<Post>>,
     post: PostDetails,
 ) -> impl IntoView {
-    let global_state: GlobalState = expect_context::<GlobalState>();
+    let (user, _) = expect_logged_in_user!();
     let (_notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
 
@@ -453,9 +452,7 @@ pub fn FocusedDropdown(
         async move {
             match get_post_details(post_id).await {
                 Ok(current_post) => {
-                    if let Ok(()) =
-                        remove_post(post_id, global_state.id.get_untracked().unwrap()).await
-                    {
+                    if let Ok(_) = remove_post(post_id, user().id).await {
                         posts.update(|posts| {
                             if let Some(index) = posts
                                 .as_mut()
@@ -569,7 +566,7 @@ pub fn FocusedDropdown(
           </div>
         </div>
       </div>
-    }
+    }.into_view()
 }
 
 type PostAndReplies = Resource<Result<PostId, ParamsError>, Option<(PostDetails, Vec<Reply>)>>;
@@ -580,14 +577,14 @@ pub fn ReplyDropdown(
     reply: Reply,
     is_instructor: bool,
 ) -> impl IntoView {
-    let global_state: GlobalState = expect_context::<GlobalState>();
+    let (user, _) = expect_logged_in_user!();
     let (_notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
 
     let remove_action = create_action(move |reply_id: &ReplyId| {
         let reply_id = reply_id.reply_id;
         async move {
-            match remove_reply(reply_id, global_state.id.get_untracked().unwrap()).await {
+            match remove_reply(reply_id, user().id).await {
                 Ok(_) => {
                     post_and_replies.update(|post_and_replies| {
                         if let Some(outer_option) = post_and_replies.as_mut() {
@@ -617,14 +614,14 @@ pub fn ReplyDropdown(
     let approve_action = create_action(move |reply_id: &ReplyId| {
         let reply_id = reply_id.reply_id;
         async move {
-            let _ = approve_reply(reply_id, global_state.id.get_untracked().unwrap(), true).await;
+            let _ = approve_reply(reply_id, user().id, true).await;
         }
     });
 
     let unapprove_action = create_action(move |reply_id: &ReplyId| {
         let reply_id = reply_id.reply_id;
         async move {
-            let _ = approve_reply(reply_id, global_state.id.get_untracked().unwrap(), false).await;
+            let _ = approve_reply(reply_id, user().id, false).await;
         }
     });
 
@@ -707,5 +704,5 @@ pub fn ReplyDropdown(
           </div>
         </div>
       </div>
-    }
+    }.into_view()
 }
