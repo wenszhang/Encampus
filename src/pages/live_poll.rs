@@ -62,14 +62,16 @@ pub fn LivePoll() -> impl IntoView {
       <div class="container my-8 mx-auto">
         <div class="flex justify-between items-center mb-4">
           <h1 class="text-2xl font-bold">"Polls"</h1>
-          <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
-            <button
-              class="py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300"
-              on:click=move |_| set_show_modal.update(|v| *v = true)
-            >
-              "Create Poll"
-            </button>
-          </Show>
+          <Suspense fallback=move || view! { Loading... }>
+            <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
+              <button
+                class="py-2 px-4 bg-gray-200 rounded-md hover:bg-gray-300"
+                on:click=move |_| set_show_modal.update(|v| *v = true)
+              >
+                "Create Poll"
+              </button>
+            </Show>
+          </Suspense>
         </div>
 
       </div>

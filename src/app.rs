@@ -80,9 +80,9 @@ pub fn App() -> impl IntoView {
                   <Route path="/:post_id" view=FocusedPost />
                   <Route path="/announcement/:announcement_id" view=AnnouncementDetails />
                 </Route>
+                <Route path="/class/:class_id/poll" view=LivePoll />
                 <Route path="/settings" view=UserSettings />
                 <Route path="/profile" view=UserProfile />
-                <Route path="/poll" view=LivePoll />
               </Route>
               // Accessible when logged out
               <Route path="" view=UnauthenticatedRoutes>
