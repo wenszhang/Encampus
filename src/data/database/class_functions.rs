@@ -1,7 +1,7 @@
 /**
  * This file contains all the database functions that are used in the server
  */
-use crate::data::database::user_functions::User;
+use crate::data::database::user_functions::DbUser;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
@@ -80,7 +80,7 @@ pub async fn add_class(
         "Unable to complete Request".to_string(),
     ))?;
 
-    let instructor: User =
+    let instructor: DbUser =
         sqlx::query_as("select username, firstname, lastname, id, role from users where id = $1")
             .bind(instructor_username)
             .fetch_one(&pool)
@@ -231,7 +231,7 @@ pub async fn get_students_classes(user_id: i32) -> Result<Vec<ClassInfo>, Server
         "Unable to complete Request".to_string(),
     ))?;
 
-    let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+    let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name, description 
     from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id join enrolled on classes.courseid = enrolled.courseid where enrolled.studentid = $1")
         .bind(user_id)
         .fetch_all(&pool)
@@ -273,7 +273,7 @@ pub async fn get_users_classes(
     ))?;
 
     if role == "Student" {
-        let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+        let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name, description 
         from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id join enrolled on classes.courseid = enrolled.courseid where enrolled.studentid = $1")
             .bind(user_id)
             .fetch_all(&pool)
