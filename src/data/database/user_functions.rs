@@ -1,4 +1,4 @@
-use leptos::{leptos_dom::logging::console_log, server, ServerFnError};
+use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
 use crate::{data::global_state::User, pages::register_page::NewUser};
