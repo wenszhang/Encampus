@@ -229,9 +229,9 @@ fn UserOptions(
             if edit_password.get() {
                 update_user(NewUser {
                     user: User {
-                        user_name: user.user_name.clone(),
-                        first_name: user.first_name.clone(),
-                        last_name: user.last_name.clone(),
+                        user_name: username.get(),
+                        first_name: first_name.get(),
+                        last_name: last_name.get(),
                         id: user.id,
                         role: role.get(),
                     },
@@ -241,9 +241,9 @@ fn UserOptions(
                 .unwrap();
             } else {
                 update_user_without_password(User {
-                    user_name: user.user_name.clone(),
-                    first_name: user.first_name.clone(),
-                    last_name: user.last_name.clone(),
+                    user_name: username.get(),
+                    first_name: first_name.get(),
+                    last_name: last_name.get(),
                     id: user.id,
                     role: role.get(),
                 })
@@ -329,7 +329,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user().first_name
+                value=first_name
                 on:input=move |ev| {
                   set_first_name(event_target_value(&ev));
                 }
@@ -339,7 +339,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user().last_name
+                value=last_name
                 on:input=move |ev| {
                   set_last_name(event_target_value(&ev));
                 }
@@ -349,7 +349,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user().user_name
+                value=username
                 on:input=move |ev| {
                   set_username(event_target_value(&ev));
                 }
@@ -492,9 +492,9 @@ fn UserOptions(
             on:click=move |_| {
               update_user_action
                 .dispatch(User {
-                  user_name: user().user_name,
-                  first_name: user().first_name,
-                  last_name: user().last_name,
+                  user_name: username.get(),
+                  first_name: first_name.get(),
+                  last_name: last_name.get(),
                   role: role.get(),
                   id: user.get().id,
                 });

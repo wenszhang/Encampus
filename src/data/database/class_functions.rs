@@ -401,7 +401,7 @@ pub async fn get_classes_ta(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnErro
         "Unable to complete Request".to_string(),
     ))?;
 
-    let classes: Vec<ClassInfo> = sqlx::query_as("select ta.classid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+    let classes: Vec<ClassInfo> = sqlx::query_as("select ta.classid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name, description
         from ta join classes on ta.classid = classes.courseid join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id where ta.id = $1")
         .bind(user_id)
         .fetch_all(&pool)
