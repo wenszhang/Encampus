@@ -77,7 +77,8 @@ struct Part {
 pub async fn get_gemini_response(input: String) -> Result<String> {
     let _project_id = "874592041558";
     let api_key = "AIzaSyC4lMM_E_6ge-6L76YDi1Uj_VspRtKng_U";
-    let url = format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key={}", api_key);
+    let url = format!("https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={}", api_key);
+    // Ideally use gemini-1.5-flash-latest but hasn't always been reliable
 
     let client = Client::new();
 
@@ -99,8 +100,6 @@ pub async fn get_gemini_response(input: String) -> Result<String> {
 
     if response.status().is_success() {
         let response_text = response.text().await?;
-        println!("Raw response: {}", response_text);
-
         let gemini_response: GeminiResponse = serde_json::from_str(&response_text)?;
 
         if let Some(first_candidate) = gemini_response.candidates.first() {

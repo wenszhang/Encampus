@@ -103,7 +103,7 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
             "{}\n{}\n\n{}\n{}\n{}",
             "A question was asked in a class. Here is the description of the class:",
             class_description,
-            "Here is the question that was asked. Please guide the student to the right answer.",
+            "Here is the question that was asked. Please guide the student to the right answer. They won't be able to ask follow-up questions.",
             new_post_info.clone().title,
             new_post_info.clone().contents
         );

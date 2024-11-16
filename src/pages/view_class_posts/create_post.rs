@@ -25,6 +25,7 @@ pub struct AddPostInfo {
 #[component]
 pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
+    let user_id = user().id;
     let class_id = use_params::<ClassId>();
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
 
@@ -43,7 +44,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
         async move {
-            match add_post(postInfo, user().id).await {
+            match add_post(postInfo, user_id).await {
                 Ok(post) => {
                     let post_id = post.post_id;
                     posts.update(|posts| {
