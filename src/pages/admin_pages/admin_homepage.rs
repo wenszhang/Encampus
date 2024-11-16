@@ -57,6 +57,7 @@ pub fn AdminHomePage() -> impl IntoView {
         name: "".to_string(),
         instructor_id: 0,
         instructor_name: "".to_string(),
+        description: "".to_string(),
     });
 
     view! {
@@ -228,9 +229,9 @@ fn UserOptions(
             if edit_password.get() {
                 update_user(NewUser {
                     user: User {
-                        user_name: user.user_name.clone(),
-                        first_name: user.first_name.clone(),
-                        last_name: user.last_name.clone(),
+                        user_name: username.get(),
+                        first_name: first_name.get(),
+                        last_name: last_name.get(),
                         id: user.id,
                         role: role.get(),
                     },
@@ -240,9 +241,9 @@ fn UserOptions(
                 .unwrap();
             } else {
                 update_user_without_password(User {
-                    user_name: user.user_name.clone(),
-                    first_name: user.first_name.clone(),
-                    last_name: user.last_name.clone(),
+                    user_name: username.get(),
+                    first_name: first_name.get(),
+                    last_name: last_name.get(),
                     id: user.id,
                     role: role.get(),
                 })
@@ -328,7 +329,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user().first_name
+                value=first_name
                 on:input=move |ev| {
                   set_first_name(event_target_value(&ev));
                 }
@@ -338,7 +339,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user().last_name
+                value=last_name
                 on:input=move |ev| {
                   set_last_name(event_target_value(&ev));
                 }
@@ -348,7 +349,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user().user_name
+                value=username
                 on:input=move |ev| {
                   set_username(event_target_value(&ev));
                 }
@@ -491,9 +492,9 @@ fn UserOptions(
             on:click=move |_| {
               update_user_action
                 .dispatch(User {
-                  user_name: user().user_name,
-                  first_name: user().first_name,
-                  last_name: user().last_name,
+                  user_name: username.get(),
+                  first_name: first_name.get(),
+                  last_name: last_name.get(),
                   role: role.get(),
                   id: user.get().id,
                 });
@@ -662,6 +663,7 @@ fn AddNewUser(
 fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
     let (class_name, set_class_name) = create_signal("".to_string());
     let (instructor_id, set_instructor_id) = create_signal(0);
+    let (description, set_description) = create_signal("".to_string());
 
     let instructors = create_resource(
         || {},
@@ -673,7 +675,9 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
     );
 
     let add_class_action = create_action(move |_| async move {
-        add_class(class_name(), instructor_id()).await.unwrap();
+        add_class(class_name(), instructor_id(), description.get())
+            .await
+            .unwrap();
     });
 
     let on_input = |setter: WriteSignal<String>| {
@@ -725,6 +729,14 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
               </For>
             </select>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Class Description"</label>
+            <textarea
+              class="block py-2 px-3 mt-1 w-full h-24 rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              on:input=on_input(set_description)
+              prop:value=description
+            />
+          </div>
         </div>
         <div class="mt-4 text-right">
           <button
@@ -748,6 +760,7 @@ fn ClassOptions(
 ) -> impl IntoView {
     let (class_name, set_class_name) = create_signal(class.name.clone());
     let (instructor_id, set_instructor_id) = create_signal(class.instructor_id);
+    let (description, set_description) = create_signal(class.description.clone());
     let (class, _set_class) = create_signal(class.clone());
 
     let update_class_action = create_action(move |class: &ClassInfo| {
@@ -820,6 +833,16 @@ fn ClassOptions(
               </For>
             </select>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Class Description"</label>
+            <textarea
+              class="block py-2 px-3 mt-1 w-full h-24 rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              prop:value=description
+              on:input=move |ev| {
+                set_description(event_target_value(&ev));
+              }
+            />
+          </div>
         </div>
 
         <div class="flex justify-between items-center mt-4">
@@ -847,6 +870,7 @@ fn ClassOptions(
                     .unwrap()
                     .firstname
                     .clone(),
+                  description: description.get(),
                 });
             }
           >

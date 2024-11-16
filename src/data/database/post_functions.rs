@@ -1,6 +1,13 @@
 #[allow(unused_imports)] // Suppress UserID - false compiler warning due to RowToStruct
 use super::user_functions::UserId;
+use crate::data::database::class_functions::get_class_description;
+use crate::data::database::reply_functions::add_reply;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
+use crate::{
+    data::database::ai_functions::get_gemini_response,
+    pages::view_class_posts::focused_post::AddReplyInfo,
+};
+use leptos::logging::error;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
@@ -78,17 +85,50 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
                         endorsed, 
                         last_bumped, 
                         created_at;")
-        .bind(new_post_info.title)
-        .bind(new_post_info.contents)
+        .bind(new_post_info.clone().title)
+        .bind(new_post_info.clone().contents)
         .bind(user_id)
-        .bind(new_post_info.anonymous)
-        .bind(new_post_info.limited_visibility)
-        .bind(new_post_info.classid)
-        .bind(new_post_info.private)
+        .bind(new_post_info.clone().anonymous)
+        .bind(new_post_info.clone().limited_visibility)
+        .bind(new_post_info.clone().classid)
+        .bind(new_post_info.clone().private)
         .fetch_one(&pool)
         .await
         .expect("failed adding post");
 
+    if new_post_info.ai_response {
+        let class_description = get_class_description(new_post_info.classid).await?;
+
+        let ai_input = format!(
+            "{}\n{}\n\n{}\n{}\n{}",
+            "A question was asked in a class. Here is the description of the class:",
+            class_description,
+            "Here is the question that was asked. Please guide the student to the right answer. They won't be able to ask follow-up questions.",
+            new_post_info.clone().title,
+            new_post_info.clone().contents
+        );
+        // If AI response is requested get response and add reply
+        let ai_response = match get_gemini_response(ai_input.clone()).await {
+            Ok(response) => response,
+            Err(e) => {
+                error!("Failed to get AI response: {:?}", e);
+                return Err(ServerFnError::ServerError("AI response failed".to_string()));
+            }
+        };
+
+        if ai_response.is_empty() {
+            error!("AI response is empty; check API or input formatting.");
+            return Err(ServerFnError::ServerError("Empty AI response".to_string()));
+        }
+
+        let reply_info = AddReplyInfo {
+            post_id: post.post_id,
+            anonymous: false,
+            contents: ai_response,
+        };
+
+        add_reply(reply_info, "EncampusAssistant".to_string()).await?;
+    }
     Ok(post)
 }
 

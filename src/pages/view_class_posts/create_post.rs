@@ -19,11 +19,13 @@ pub struct AddPostInfo {
     pub limited_visibility: bool,
     pub classid: i32,
     pub private: bool,
+    pub ai_response: bool,
 }
 
 #[component]
 pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
+    let user_id = user().id;
     let class_id = use_params::<ClassId>();
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
 
@@ -37,11 +39,12 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let (private_state, set_private_state) = create_signal(false);
     let (post_title, set_post_title) = create_signal("".to_string());
     let (post_contents, set_post_contents) = create_signal("".to_string());
+    let (ai_response, set_ai_response) = create_signal(false);
 
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
         async move {
-            match add_post(postInfo, user().id).await {
+            match add_post(postInfo, user_id).await {
                 Ok(post) => {
                     let post_id = post.post_id;
                     posts.update(|posts| {
@@ -85,6 +88,20 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
         </div>
         <div class="flex gap-5 justify-end">
           <label for="privateToggle" class="flex items-center cursor-pointer select-none">
+            <span class="mx-2">"Encampus Assistant:"</span>
+            <div class="relative">
+              <input
+                type="checkbox"
+                id="privateToggle"
+                class="sr-only peer"
+                prop:checked=ai_response
+                on:change=move |_| set_ai_response(!ai_response())
+              />
+              <div class="block w-14 h-8 bg-gray-500 rounded-full"></div>
+              <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
+            </div>
+          </label>
+          <label for="privateToggle" class="flex items-center cursor-pointer select-none">
             <span class="mx-2">"Private:"</span>
             <div class="relative">
               <input
@@ -127,6 +144,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                   limited_visibility: false,
                   classid: class_id.get().unwrap().class_id,
                   private: private_state(),
+                  ai_response: ai_response(),
                 });
               on_new_post();
             }
