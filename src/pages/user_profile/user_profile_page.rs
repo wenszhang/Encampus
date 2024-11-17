@@ -1,49 +1,75 @@
-use crate::data::database::user_functions::{get_user_by_id, update_user_without_password, User};
-use crate::pages::global_components::sidebar::Sidebar;
-use crate::{data::global_state::GlobalState, pages::global_components::header::Header};
-use leptos::ev::SubmitEvent;
-use leptos::window;
-use leptos::{
-    component, create_signal, expect_context, view, IntoView, Signal, SignalGet,
-    SignalGetUntracked, Suspense,
+use crate::data::database::user_functions::update_user_without_password;
+use crate::data::global_state::{User, UserBuilder};
+use crate::pages::global_components::header::Header;
+use crate::pages::global_components::notification::{
+    NotificationComponent, NotificationDetails, NotificationType,
 };
-use wasm_bindgen::JsCast;
+use crate::pages::global_components::sidebar::Sidebar;
+use crate::{expect_logged_in_user, on_input};
+use leptos::ev::SubmitEvent;
+use leptos::{component, create_action, create_signal, view, IntoView, Signal, Suspense};
+use leptos::{create_effect, SignalGetUntracked};
 
 /// Renders the user settings page
 #[component]
 pub fn UserProfile() -> impl IntoView {
-    let global_state = expect_context::<GlobalState>();
-    let user_id = global_state.id.get_untracked().unwrap_or_default();
-    let (first_name, set_first_name) =
-        create_signal(global_state.first_name.get_untracked().unwrap_or_default());
-    let (last_name, set_last_name) =
-        create_signal(global_state.last_name.get_untracked().unwrap_or_default());
+    let (user, set_user) = expect_logged_in_user!();
+    let (first_name, set_first_name) = create_signal(user.get_untracked().first_name.clone());
+    let (last_name, set_last_name) = create_signal(user.get_untracked().last_name.clone());
+    let (update_error, set_update_error) = create_signal(None::<NotificationDetails>);
+
+    let update_user_action = create_action(move |updated_user: &User| {
+        let updated_user = updated_user.clone();
+        async move {
+            update_user_without_password(updated_user)
+                .await
+                .map(|dbUser| User {
+                    id: dbUser.id,
+                    first_name: dbUser.firstname,
+                    last_name: dbUser.lastname,
+                    user_name: dbUser.username,
+                    role: dbUser.role,
+                })
+                .map_err(|_server_fn_err| "An error occurred. Please try again")
+        }
+    });
 
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
-        let first_name = first_name.get();
-        let last_name = last_name.get();
+        let mut user = user.get_untracked();
+        user.first_name = first_name.get_untracked().clone();
+        user.last_name = last_name.get_untracked().clone();
+        update_user_action.dispatch(user);
+    };
 
-        leptos::spawn_local(async move {
-            if let Ok(user) = get_user_by_id(user_id).await {
-                let updated_user = User {
-                    username: user.username,
-                    firstname: first_name,
-                    lastname: last_name,
-                    id: user.id,
-                    role: user.role,
-                };
-                if let Err(_err) = update_user_without_password(updated_user).await {
-                    // handle error
-                } else {
-                    // Temp solution to handle global state issues
-                    window().location().set_href("/login").unwrap();
-                    // // Reload the page on success by navigating to the current URL
-                    // let current_url = window().location().href().unwrap();
-                    // window().location().set_href(&current_url).unwrap();
-                }
+    create_effect(move |_| match update_user_action.value()() {
+        None => {}
+        Some(Err(message)) => {
+            set_update_error(Some(NotificationDetails {
+                message: message.to_string(),
+                notification_type: NotificationType::Error,
+            }));
+        }
+        Some(Ok(user)) => {
+            set_user(UserBuilder {
+                first_name: Some(user.first_name.clone()),
+                last_name: Some(user.last_name.clone()),
+                user_name: Some(user.user_name.clone()),
+                id: Some(user.id.clone()),
+                role: Some(user.role.clone()),
+            });
+        }
+    });
+
+    let notification_view = move || {
+        update_error().map(|details| {
+            view! {
+              <NotificationComponent
+                notification_details=details.clone()
+                on_close=move || set_update_error(None)
+              />
             }
-        });
+        })
     };
 
     view! {
@@ -75,9 +101,7 @@ pub fn UserProfile() -> impl IntoView {
                   name="first_name"
                   class="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   prop:value=first_name
-                  on:input=move |e| set_first_name(
-                    e.target().unwrap().dyn_into::<web_sys::HtmlInputElement>().unwrap().value(),
-                  )
+                  on:input=on_input!(set_first_name)
                 />
               </div>
               <div class="flex flex-col">
@@ -90,9 +114,7 @@ pub fn UserProfile() -> impl IntoView {
                   name="last_name"
                   class="p-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   prop:value=last_name
-                  on:input=move |e| set_last_name(
-                    e.target().unwrap().dyn_into::<web_sys::HtmlInputElement>().unwrap().value(),
-                  )
+                  on:input=on_input!(set_last_name)
                 />
               </div>
               <div class="flex justify-end mt-6">
@@ -103,9 +125,10 @@ pub fn UserProfile() -> impl IntoView {
                   Save Changes
                 </button>
               </div>
+              {notification_view}
             </form>
           </div>
         </div>
       </div>
-    }
+    }.into_view()
 }

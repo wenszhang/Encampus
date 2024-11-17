@@ -1,22 +1,41 @@
-use std::collections::HashMap;
-
 use crate::data::database::class_functions::{
     add_class, add_student_to_class, add_ta_to_class, delete_class, get_class_list, get_classes_ta,
     get_instructors_classes, get_students_classes, remove_student_from_class, remove_ta_from_class,
     update_class_info, ClassInfo,
 };
 use crate::data::database::user_functions::{
-    add_user, delete_user, get_user_password, get_users, get_users_by_role, update_user,
-    update_user_without_password, User,
+    add_user, delete_user, get_users, get_users_by_role, update_user, update_user_without_password,
 };
+use crate::data::global_state::User;
 use crate::pages::global_components::header::Header;
+use crate::pages::register_page::NewUser;
 use leptos::*;
 use leptos::{component, create_resource, view, For, IntoView, Signal};
 use leptos_router::A;
+use std::collections::HashMap;
 
 #[component]
 pub fn AdminHomePage() -> impl IntoView {
-    let users = create_resource(|| {}, |_| async { get_users().await.unwrap_or_default() });
+    let users = create_resource(
+        || {},
+        |_| async {
+            get_users()
+                .await
+                .map(|array| {
+                    array
+                        .iter()
+                        .map(|user| User {
+                            user_name: user.username.clone(),
+                            id: user.id,
+                            first_name: user.firstname.clone(),
+                            last_name: user.lastname.clone(),
+                            role: user.role.clone(),
+                        })
+                        .collect::<Vec<User>>()
+                })
+                .unwrap_or_default()
+        },
+    );
     let classes = create_resource(
         || {},
         |_| async { get_class_list().await.unwrap_or_default() },
@@ -25,9 +44,9 @@ pub fn AdminHomePage() -> impl IntoView {
     let (new_user_visible, set_new_user_visible) = create_signal(false);
     let (user_options_visible, set_user_options_visible) = create_signal(false);
     let (display_user, set_display_user) = create_signal(User {
-        username: "".to_string(),
-        firstname: "".to_string(),
-        lastname: "".to_string(),
+        user_name: "".to_string(),
+        first_name: "".to_string(),
+        last_name: "".to_string(),
         id: 0,
         role: "Student".to_string(),
     });
@@ -38,6 +57,7 @@ pub fn AdminHomePage() -> impl IntoView {
         name: "".to_string(),
         instructor_id: 0,
         instructor_name: "".to_string(),
+        description: "".to_string(),
     });
 
     view! {
@@ -104,11 +124,11 @@ pub fn AdminHomePage() -> impl IntoView {
                           set_new_user_visible(false);
                         }
                       >
-                        {user.firstname}
+                        {user.first_name}
                         " "
-                        {user.lastname}
+                        {user.last_name}
                       </a>
-                      <div>{user.username}</div>
+                      <div>{user.user_name}</div>
                       <div>{user.role}</div>
                     </div>
                   }
@@ -173,9 +193,9 @@ fn UserOptions(
     set_user_options_visible: WriteSignal<bool>,
     display_user_options: WriteSignal<bool>,
 ) -> impl IntoView {
-    let (first_name, set_first_name) = create_signal(user.firstname.clone());
-    let (last_name, set_last_name) = create_signal(user.lastname.clone());
-    let (username, set_username) = create_signal(user.username.clone());
+    let (first_name, set_first_name) = create_signal(user.first_name.clone());
+    let (last_name, set_last_name) = create_signal(user.last_name.clone());
+    let (username, set_username) = create_signal(user.user_name.clone());
     let (role, set_role) = create_signal(user.role.clone());
     let (user, _set_user) = create_signal(user.clone());
     let (password, set_password) = create_signal("".to_string());
@@ -207,23 +227,23 @@ fn UserOptions(
         let user = user.clone();
         async move {
             if edit_password.get() {
-                update_user(
-                    User {
-                        username: username.get(),
-                        firstname: first_name.get(),
-                        lastname: last_name.get(),
+                update_user(NewUser {
+                    user: User {
+                        user_name: username.get(),
+                        first_name: first_name.get(),
+                        last_name: last_name.get(),
                         id: user.id,
                         role: role.get(),
                     },
-                    password.get(),
-                )
+                    password: password.get(),
+                })
                 .await
                 .unwrap();
             } else {
                 update_user_without_password(User {
-                    username: username.get(),
-                    firstname: first_name.get(),
-                    lastname: last_name.get(),
+                    user_name: username.get(),
+                    first_name: first_name.get(),
+                    last_name: last_name.get(),
                     id: user.id,
                     role: role.get(),
                 })
@@ -309,7 +329,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.get().firstname
+                value=first_name
                 on:input=move |ev| {
                   set_first_name(event_target_value(&ev));
                 }
@@ -319,7 +339,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.get().lastname
+                value=last_name
                 on:input=move |ev| {
                   set_last_name(event_target_value(&ev));
                 }
@@ -329,7 +349,7 @@ fn UserOptions(
               <input
                 class="p-2 rounded border"
                 type="text"
-                value=user.get().username
+                value=username
                 on:input=move |ev| {
                   set_username(event_target_value(&ev));
                 }
@@ -472,9 +492,9 @@ fn UserOptions(
             on:click=move |_| {
               update_user_action
                 .dispatch(User {
-                  username: username.get(),
-                  firstname: first_name.get(),
-                  lastname: last_name.get(),
+                  user_name: username.get(),
+                  first_name: first_name.get(),
+                  last_name: last_name.get(),
                   role: role.get(),
                   id: user.get().id,
                 });
@@ -524,8 +544,23 @@ fn AddNewUser(
         let user = user.clone();
         let password = password.clone();
         async move {
-            let user = add_user(user, password).await.unwrap();
-            display_user(user);
+            let user = add_user(
+                NewUser {
+                    user: user.clone(),
+                    password,
+                },
+                false,
+            )
+            .await
+            .map(|dnUser| User {
+                user_name: dnUser.username,
+                first_name: dnUser.firstname,
+                last_name: dnUser.lastname,
+                id: dnUser.id,
+                role: dnUser.role,
+            })
+            .unwrap();
+            display_user(user.clone());
         }
     });
     view! {
@@ -599,13 +634,16 @@ fn AddNewUser(
             class="py-1 px-2 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
               add_user_action
-                .dispatch((User {
-                  username: username.get(),
-                  firstname: first_name.get(),
-                  lastname: last_name.get(),
-                  role: role.get(),
-                  id: 0,
-                }, password.get()));
+                .dispatch((
+                  User {
+                    user_name: username.get(),
+                    first_name: first_name.get(),
+                    last_name: last_name.get(),
+                    role: role.get(),
+                    id: 0,
+                  },
+                  password.get(),
+                ));
               set_first_name("".to_string());
               set_last_name("".to_string());
               set_username("".to_string());
@@ -625,6 +663,7 @@ fn AddNewUser(
 fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
     let (class_name, set_class_name) = create_signal("".to_string());
     let (instructor_id, set_instructor_id) = create_signal(0);
+    let (description, set_description) = create_signal("".to_string());
 
     let instructors = create_resource(
         || {},
@@ -636,7 +675,9 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
     );
 
     let add_class_action = create_action(move |_| async move {
-        add_class(class_name(), instructor_id()).await.unwrap();
+        add_class(class_name(), instructor_id(), description.get())
+            .await
+            .unwrap();
     });
 
     let on_input = |setter: WriteSignal<String>| {
@@ -688,6 +729,14 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
               </For>
             </select>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Class Description"</label>
+            <textarea
+              class="block py-2 px-3 mt-1 w-full h-24 rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              on:input=on_input(set_description)
+              prop:value=description
+            />
+          </div>
         </div>
         <div class="mt-4 text-right">
           <button
@@ -711,6 +760,7 @@ fn ClassOptions(
 ) -> impl IntoView {
     let (class_name, set_class_name) = create_signal(class.name.clone());
     let (instructor_id, set_instructor_id) = create_signal(class.instructor_id);
+    let (description, set_description) = create_signal(class.description.clone());
     let (class, _set_class) = create_signal(class.clone());
 
     let update_class_action = create_action(move |class: &ClassInfo| {
@@ -783,6 +833,16 @@ fn ClassOptions(
               </For>
             </select>
           </div>
+          <div>
+            <label class="block text-sm font-medium text-gray-700">"Class Description"</label>
+            <textarea
+              class="block py-2 px-3 mt-1 w-full h-24 rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
+              prop:value=description
+              on:input=move |ev| {
+                set_description(event_target_value(&ev));
+              }
+            />
+          </div>
         </div>
 
         <div class="flex justify-between items-center mt-4">
@@ -810,6 +870,7 @@ fn ClassOptions(
                     .unwrap()
                     .firstname
                     .clone(),
+                  description: description.get(),
                 });
             }
           >

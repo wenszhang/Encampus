@@ -14,7 +14,7 @@ leptos_axum = { version = "0.6", optional = true }
 leptos_meta = { version = "0.6", features = ["nightly"] }
 leptos_router = { version = "0.6", features = ["nightly"] }
 leptos_server_signal = { version = "0.6"}
-tokio = { version = "1", features = ["rt-multi-thread", "macros"], optional = true }
+tokio = { version = "1", features = ["full"], optional = true }
 tower = { version = "0.4", optional = true }
 tower-http = { version = "0.5", features = ["fs", "trace"], optional = true }
 thiserror = "1"
@@ -27,6 +27,10 @@ tracing-subscriber = { version = "0.3.18", optional = true }
 serde = { version = "1.0", features = ["derive"] }
 chrono = { version = "0.4.38", features = ["serde"] }
 web-sys = { version = "0.3.70", features = ["Storage"] }
+tower-sessions = { version = "0.13.0", features = ["private"], optional = true}
+serde_json = "1.0.132"
+reqwest = {version = "0.11", features = ["default", "json"]}
+anyhow = "1.0"
 
 
 [features]
@@ -45,6 +49,7 @@ ssr = [
     "dep:sqlx",
     "leptos_server_signal/ssr",
     "leptos_server_signal/axum",
+    "dep:tower-sessions",
 ]
 
 # Defines a size-optimized profile for the WASM bundle in release mode

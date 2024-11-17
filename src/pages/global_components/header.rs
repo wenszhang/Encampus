@@ -1,12 +1,15 @@
 /**
  * Component view and logic for the header at the top of the page of the site
  */
-use crate::data::database::announcement_functions::get_announcement_list;
-use crate::data::global_state::GlobalState;
+use crate::data::database::user_functions::Logout;
+use crate::data::global_state::{Authentication, User};
 use crate::resources::images::svgs::announcement_bell::AnnouncementBell;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
+use crate::{
+    app::expect_auth_context, data::database::announcement_functions::get_announcement_list,
+};
 use leptos::*;
-use leptos_router::use_navigate;
+use leptos_router::ActionForm;
 
 #[component]
 pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
@@ -39,12 +42,21 @@ pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
 
 #[component]
 pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>) -> impl IntoView {
-    let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
-    let navigate = use_navigate(); // Create a navigation function
     let logo_src = logo.as_deref().unwrap_or("images/BlockU_RGB.png");
 
-    // Clone global_state so it can be used in multiple closures
-    let global_state_clone = global_state.clone();
+    let authentication = expect_auth_context();
+
+    let (first_name, _) = create_slice(
+        authentication,
+        |auth| {
+            if let Authentication::Authenticated(User { first_name, .. }) = auth {
+                Some(first_name.clone())
+            } else {
+                None
+            }
+        },
+        |_, _: &String| todo!(), // Unimportant
+    );
 
     let (dropdown_visible, set_dropdown_visible) = create_signal(false);
 
@@ -58,12 +70,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
         }
     };
 
-    let logout = move |_| {
-        // Clear local storage and reset global state
-        global_state_clone.clear_local_storage();
-        // Redirect the user to the login page after logging out
-        navigate("/login", Default::default());
-    };
+    let logout_action = create_server_action::<Logout>();
 
     view! {
       <div class="flex justify-between items-center p-4 text-gray-600 bg-white">
@@ -98,10 +105,8 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                   </div>
                 }
               })
-          }}
-          <span class="flex items-center mr-4 text-xl font-bold">
-            {move || global_state.first_name.get()}
-          </span> <div class="flex relative items-center group">
+          }} <span class="flex items-center mr-4 text-xl font-bold">{first_name}</span>
+          <div class="flex relative items-center group">
             <button on:click=move |_| set_dropdown_visible(!dropdown_visible())>
               <DropDownBars size="1.3rem" />
             </button>
@@ -135,9 +140,9 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                   </a>
                 </li>
                 <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <div class="block w-full h-full" on:click=logout>
-                    Logout
-                  </div>
+                  <ActionForm action=logout_action>
+                    <input class="block w-full h-full" type="submit" value="Logout" />
+                  </ActionForm>
                 </li>
               </ul>
             </div>

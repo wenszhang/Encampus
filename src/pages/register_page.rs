@@ -1,89 +1,81 @@
-use crate::data::database::user_functions::add_user;
-use crate::data::database::user_functions::User;
-use crate::data::global_state::GlobalState;
-use crate::pages::global_components::notification::{
-    NotificationComponent, NotificationDetails, NotificationType,
-};
 /**
  * Component for the login page where users can login to their account
  */
+use crate::app::expect_auth_context;
+use crate::data::database::user_functions::add_user;
+use crate::data::global_state::Authentication;
+use crate::data::global_state::User;
+use crate::pages::global_components::notification::{
+    NotificationComponent, NotificationDetails, NotificationType,
+};
 use leptos::{ev::SubmitEvent, *};
+use serde::Deserialize;
+use serde::Serialize;
+
+#[macro_export]
+macro_rules! on_input {
+    ($setter:ident) => {
+        move |ev: web_sys::Event| {
+            $setter(leptos::event_target_value(&ev));
+        }
+    };
+}
+
+#[derive(Clone, Serialize, Deserialize, Debug)]
+pub struct NewUser {
+    pub user: User,
+    pub password: String,
+}
 
 #[component]
 pub fn RegisterPage() -> impl IntoView {
+    let auth_context = expect_auth_context();
     let (username, set_username) = create_signal("".to_string());
     let (first_name, set_first_name) = create_signal("".to_string());
     let (last_name, set_last_name) = create_signal("".to_string());
-    let (user_id, set_user_id) = create_signal(0);
     let (password, set_password) = create_signal("".to_string());
     let (confirm_password, set_confirm_password) = create_signal("".to_string());
     let (login_error, set_login_error) = create_signal(None::<NotificationDetails>);
 
-    let on_input = |setter: WriteSignal<String>| {
-        move |ev| {
-            setter(event_target_value(&ev));
-        }
-    };
-
-    let new_user = User {
-        username: username.get(),
-        firstname: first_name.get(),
-        lastname: last_name.get(),
-        role: "Student".to_string(),
-        id: 0,
-    };
-
-    let new_user_action = create_action(move |_| async move {
-        if password.get() != confirm_password.get() {
-            set_login_error(Some(NotificationDetails {
-                message: "Passwords do not match.".to_string(),
-                notification_type: NotificationType::Error,
-            }));
-        } else {
-            match add_user(
-                User {
-                    username: username.get(),
-                    firstname: first_name.get(),
-                    lastname: last_name.get(),
-                    role: "Student".to_string(),
-                    id: 0,
-                },
-                password.get(),
-            )
-            .await
-            {
-                Ok(user) => {
-                    set_user_id(user.id);
-                }
-                Err(_) => {
-                    set_login_error(Some(NotificationDetails {
-                        message: "Failed adding user, username already exists.".to_string(),
-                        notification_type: NotificationType::Error,
-                    }));
-                }
-            }
+    let new_user_action = create_action(move |new_user: &NewUser| {
+        let new_user = new_user.to_owned();
+        async move {
+            add_user(new_user, true)
+                .await
+                .map(|dbUser| User {
+                    id: dbUser.id,
+                    user_name: dbUser.username,
+                    first_name: dbUser.firstname,
+                    last_name: dbUser.lastname,
+                    role: dbUser.role,
+                })
+                .map_err(|_server_fn_err| "An error occurred. Please try again")
         }
     });
 
     create_effect(move |_| {
-        let global_state = expect_context::<GlobalState>();
-        if let Some(_id) = new_user_action.value()() {
-            if user_id.get() > 0 {
-                global_state.authenticated.set(true);
-                global_state.user_name.set(Some(username.get()));
-                global_state.id.set(Some(user_id.get()));
-                global_state.first_name.set(Some(first_name.get()));
-                global_state.last_name.set(Some(last_name.get()));
-                global_state.role.set(Some("Student".to_string()));
+        match new_user_action.value()() {
+            None => {}
+            Some(Err(message)) => {
+                set_login_error.set(Some(NotificationDetails {
+                    message: message.to_string(),
+                    notification_type: NotificationType::Error,
+                }));
+            }
+            Some(Ok(user)) => {
+                auth_context.set(Authentication::Authenticated(user.clone()));
 
                 let navigate = leptos_router::use_navigate();
-                match global_state.role.get().unwrap_or_default().as_str() {
+                match user.role.as_str() {
                     "Student" => navigate("/classes", Default::default()),
                     // Change to instructor page when implemented
                     "Instructor" => navigate("/classes", Default::default()),
                     // Change to admin page when implemented
                     "Admin" => navigate("/classes", Default::default()),
-                    _ => navigate("/login", Default::default()),
+                    _ => set_login_error.set(Some(NotificationDetails {
+                      message: format!("A unexpected user role was encountered on this user. Failing to redirect. Role: {}", user.role),
+                      notification_type: NotificationType::Error,
+                  }))
                 }
             }
         }
@@ -91,7 +83,23 @@ pub fn RegisterPage() -> impl IntoView {
 
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
-        new_user_action.dispatch(new_user.clone());
+        if password() != confirm_password() {
+            set_login_error(Some(NotificationDetails {
+                message: "Passwords do not match.".to_string(),
+                notification_type: NotificationType::Error,
+            }));
+            return;
+        }
+        new_user_action.dispatch(NewUser {
+            user: User {
+                first_name: first_name(),
+                last_name: last_name(),
+                user_name: username(),
+                role: "Student".to_string(),
+                id: 0,
+            },
+            password: password(),
+        });
     };
 
     let notification_view = move || {
@@ -127,7 +135,7 @@ pub fn RegisterPage() -> impl IntoView {
                 placeholder="Enter your Username"
                 required
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
-                on:input=on_input(set_username)
+                on:input=on_input!(set_username)
                 prop:value=username
               />
               <label for="first_name" class="flex row-auto mb-2 font-bold text-gray-700">
@@ -139,7 +147,7 @@ pub fn RegisterPage() -> impl IntoView {
                 placeholder="First Name"
                 required
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
-                on:input=on_input(set_first_name)
+                on:input=on_input!(set_first_name)
                 prop:value=first_name
               />
               <label for="last_name" class="flex row-auto mb-2 font-bold text-gray-700">
@@ -151,7 +159,7 @@ pub fn RegisterPage() -> impl IntoView {
                 placeholder="Last Name"
                 required
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
-                on:input=on_input(set_last_name)
+                on:input=on_input!(set_last_name)
                 prop:value=last_name
               />
               <label for="password" class="flex row-auto mb-2 font-bold text-gray-700">
@@ -163,7 +171,7 @@ pub fn RegisterPage() -> impl IntoView {
                 placeholder="Enter your Password"
                 required
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
-                on:input=on_input(set_password)
+                on:input=on_input!(set_password)
                 prop:value=password
               />
               <label for="confirm_password" class="flex row-auto mb-2 font-bold text-gray-700">
@@ -175,7 +183,7 @@ pub fn RegisterPage() -> impl IntoView {
                 placeholder="Confirm your Password"
                 required
                 class="py-2 px-3 w-full rounded-md border border-gray-300 focus:border-blue-500 focus:outline-none"
-                on:input=on_input(set_confirm_password)
+                on:input=on_input!(set_confirm_password)
                 prop:value=confirm_password
               />
             </div>

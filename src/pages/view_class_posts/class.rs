@@ -5,7 +5,7 @@ use crate::data::database::post_functions::get_posts;
 use crate::data::database::post_functions::get_search_posts;
 use crate::data::database::post_functions::Post;
 use crate::data::database::post_functions::PostFetcher;
-use crate::data::global_state::GlobalState;
+use crate::expect_logged_in_user;
 use crate::pages::global_components::announcements::Announcements;
 use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
@@ -32,7 +32,8 @@ pub struct FilterKeywords {
  */
 #[component]
 pub fn ClassPage() -> impl IntoView {
-    let global_state = expect_context::<GlobalState>();
+    let (user, _) = expect_logged_in_user!();
+
     // Fetch class id from route in the format of "class/:class_id"
     let class_id = use_params::<ClassId>();
     let (post_list, set_posts) = create_signal::<Vec<Post>>(vec![]);
@@ -46,7 +47,7 @@ pub fn ClassPage() -> impl IntoView {
 
     let post_data = PostFetcher {
         class_id: class_id.get().unwrap().class_id,
-        user_id: global_state.id.get_untracked().unwrap_or_default(),
+        user_id: user().id,
     };
     let posts = create_resource(
         move || (post_data),
@@ -61,7 +62,7 @@ pub fn ClassPage() -> impl IntoView {
     let filtered_posts_action = create_action(move |_| async move {
         if let Ok(new_posts) = get_search_posts(
             class_id.get().unwrap().class_id,
-            global_state.id.get_untracked().unwrap_or_default(),
+            user().id,
             filter_keywords.get(),
         )
         .await
@@ -114,7 +115,7 @@ pub fn ClassPage() -> impl IntoView {
             <Header
               text=class_name().unwrap_or_default()
               logo=None
-              class_id=Signal::derive(move || class_id().ok().map(|id| id.class_id))
+              class_id=(move || class_id().ok().map(|id| id.class_id)).into_signal()
             />
           </Suspense>
           <span class="inline-flex items-baseline ml-5">
@@ -211,5 +212,5 @@ pub fn ClassPage() -> impl IntoView {
           </div>
         </div>
       </div>
-    }
+    }.into_view()
 }
