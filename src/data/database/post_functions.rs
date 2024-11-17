@@ -237,6 +237,7 @@ pub async fn edit_post(
     }
     Ok(())
 }
+
 #[server(EndorsePost)]
 pub async fn endorse_post(post_id: i32, status: bool) -> Result<(), ServerFnError> {
     println!("{}", status);

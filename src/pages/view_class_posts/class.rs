@@ -10,6 +10,7 @@ use crate::pages::global_components::announcements::Announcements;
 use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::pages::view_class_posts::create_post::CreatePost;
+use crate::pages::view_class_posts::edit_post::EditPost;
 use crate::resources::images::svgs::filter_icon::FilterIcon;
 use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
@@ -106,6 +107,7 @@ pub fn ClassPage() -> impl IntoView {
     });
 
     let (is_visible, set_is_visible) = create_signal(false);
+    let (is_visible_edit, set_is_visible_edit) = create_signal(false);
 
     view! {
       <div class="flex">
@@ -168,6 +170,9 @@ pub fn ClassPage() -> impl IntoView {
           <div class="flex flex-col gap-4 my-10 mx-20 align">
             <Show when=is_visible fallback=|| ()>
               <CreatePost on_new_post=move || set_is_visible(false) />
+            </Show>
+            <Show when=is_visible_edit fallback=|| ()>
+              <EditPost class_id=class_id on_edit_post=move || set_is_visible_edit(false) />
             </Show>
             // Gets replaced with the focused post if there's one in the route. See router
             <Outlet />
