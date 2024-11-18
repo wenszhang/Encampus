@@ -1,43 +1,50 @@
+use super::class::ClassId;
 use crate::{
-    data::database::post_functions::{edit_post, Post, PostFetcher},
+    data::database::post_functions::edit_post,
     expect_logged_in_user,
-    pages::view_class_posts::create_post::AddPostInfo,
+    pages::view_class_posts::focused_post::{get_post_details, PostId},
 };
 use leptos::*;
-use logging::log;
-
-use super::focused_post::PostDetails;
+use leptos_router::use_params;
 
 #[component]
-pub fn EditPost(
-    class_id: i32,
-    posts: Resource<PostFetcher, Vec<Post>>,
-    post: PostDetails,
-    on_edit_post: impl Fn() + 'static,
-) -> impl IntoView {
+pub fn EditPost(on_edit_post: impl Fn() + 'static) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
-    let (post_title, set_post_title) = create_signal(post.title);
-    let (post_contents, set_post_contents) = create_signal(post.contents);
-    let (private_state, set_private_state) = create_signal(post.private);
-    let (anonymous_state, set_anonymous_state) = create_signal(post.anonymous);
+    let post_id = use_params::<PostId>();
+    let class_id = use_params::<ClassId>();
+
+    let post_and_replies = create_resource(post_id, |post_id| async {
+        if let Ok(post_id) = post_id {
+            Some(get_post_details(post_id.post_id).await.unwrap())
+        } else {
+            None
+        }
+    });
+
+    let post = move || post_and_replies().flatten().map(|tuple| tuple.0);
+
+    let (post_title, set_post_title) = create_signal(post().unwrap().title);
+    let (post_contents, set_post_contents) = create_signal(post().unwrap().contents);
+    let (private_state, set_private_state) = create_signal(post().unwrap().private);
+    let (anonymous_state, set_anonymous_state) = create_signal(post().unwrap().anonymous);
 
     let edit_post_action = create_action(move |_| {
-        let post_id = post.post_id;
-        let post_info = AddPostInfo {
-            title: post_title(),
-            contents: post_contents(),
-            anonymous: anonymous_state(),
-            limited_visibility: false,
-            classid: class_id,
-            private: private_state(),
-            ai_response: false,
-        };
+        let post_id = post_id.get().unwrap().post_id;
+        // let post_info = AddPostInfo {
+        //     title: post_title(),
+        //     contents: post_contents(),
+        //     anonymous: anonymous_state(),
+        //     limited_visibility: false,
+        //     classid: class_id,
+        //     private: private_state(),
+        //     ai_response: false,
+        // };
         async move {
             match edit_post(post_id, post_title.get(), post_contents.get(), user().id).await {
                 Ok(_) => {
                     let navigate = leptos_router::use_navigate();
                     navigate(
-                        format!("/classes/{}", class_id).as_str(),
+                        format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
                         Default::default(),
                     );
                 }
@@ -106,6 +113,7 @@ pub fn EditPost(
             class="p-2 text-white bg-gray-500 rounded-full hover:bg-gray-600"
             on:click=move |_| {
               edit_post_action.dispatch(());
+              on_edit_post();
             }
           >
             "Post"

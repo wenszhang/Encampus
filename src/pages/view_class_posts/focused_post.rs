@@ -10,6 +10,7 @@ use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 use crate::pages::view_class_posts::class::ClassId;
+use crate::pages::view_class_posts::class::IS_DISPLAYED_EDIT;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::text_area_icon::TextAreaIcon;
 use chrono::FixedOffset;
@@ -452,7 +453,7 @@ pub fn FocusedDropdown(
         async move {
             match get_post_details(post_id).await {
                 Ok(current_post) => {
-                    if let Ok(_) = remove_post(post_id, user().id).await {
+                    if (remove_post(post_id, user().id).await).is_ok() {
                         posts.update(|posts| {
                             if let Some(index) = posts
                                 .as_mut()
@@ -527,7 +528,9 @@ pub fn FocusedDropdown(
                 <div class="p-3 rounded-md w-30">
                   <button
                     class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                    on:click=move |_| {}
+                    on:click=move |_| {
+                      IS_DISPLAYED_EDIT.update(|value| *value = !*value);
+                    }
                   >
                     <span class="ml-2">Edit</span>
                   </button>

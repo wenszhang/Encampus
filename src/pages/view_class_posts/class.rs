@@ -17,6 +17,7 @@ use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params};
+use once_cell::sync::Lazy;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {
@@ -28,6 +29,7 @@ pub struct FilterKeywords {
     keywords: String,
 }
 
+pub static IS_DISPLAYED_EDIT: Lazy<RwSignal<bool>> = Lazy::new(|| create_rw_signal(false));
 /**
  * Page getting and displaying all posts in a class
  */
@@ -172,7 +174,7 @@ pub fn ClassPage() -> impl IntoView {
               <CreatePost on_new_post=move || set_is_visible(false) />
             </Show>
             <Show when=is_visible_edit fallback=|| ()>
-              <EditPost class_id=class_id on_edit_post=move || set_is_visible_edit(false) />
+              <EditPost on_edit_post=move || set_is_visible_edit(false) />
             </Show>
             // Gets replaced with the focused post if there's one in the route. See router
             <Outlet />
