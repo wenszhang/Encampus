@@ -109,7 +109,6 @@ pub fn ClassPage() -> impl IntoView {
     });
 
     let (is_visible, set_is_visible) = create_signal(false);
-    let (is_visible_edit, set_is_visible_edit) = create_signal(false);
 
     view! {
       <div class="flex">
@@ -173,9 +172,9 @@ pub fn ClassPage() -> impl IntoView {
             <Show when=is_visible fallback=|| ()>
               <CreatePost on_new_post=move || set_is_visible(false) />
             </Show>
-            <Show when=is_visible_edit fallback=|| ()>
-              <EditPost on_edit_post=move || set_is_visible_edit(false) />
-            </Show>
+            // <Show when=move || IS_DISPLAYED_EDIT.get() fallback=|| ()>
+            // <EditPost />
+            // </Show>
             // Gets replaced with the focused post if there's one in the route. See router
             <Outlet />
             // announcements section

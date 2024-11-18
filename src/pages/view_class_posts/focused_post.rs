@@ -168,13 +168,28 @@ pub fn FocusedPost() -> impl IntoView {
         })
     };
 
+    let (is_editing, set_is_editing) = create_signal(false);
+
     view! {
       <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
         <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
           <DarkenedCard class="relative p-5">
-            <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
-
-            <div class="flex gap-5 justify-end">
+            {if is_editing() {
+              view! {
+                <div>
+                  <textarea
+                    class="p-2 w-full h-12 rounded-t-lg border border-gray-300 resize-none"
+                    prop:value=post().map(|post| post.title)
+                  ></textarea>
+                </div>
+              }
+            } else {
+              view! {
+                <div>
+                  <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
+                </div>
+              }
+            }} <div class="flex gap-5 justify-end">
               <div class="flex items-center cursor-pointer select-none">
                 // Post Dropdown
                 {post()
@@ -193,12 +208,12 @@ pub fn FocusedPost() -> impl IntoView {
                         class_id=class_id.get().unwrap().class_id
                         posts=posts
                         post=post().unwrap()
+                        set_is_editing=set_is_editing
                       />
                     }
                   })}
               </div>
             </div>
-
             <p class="text-sm font-light">
               "Posted by " {move || post().map(|post| post.author_first_name)} " "
               {move || post().map(|post| post.author_last_name)}
@@ -215,9 +230,24 @@ pub fn FocusedPost() -> impl IntoView {
                     )
                   })
               }}
-            </p>
-            <br />
-            <p>{move || post().map(|post| post.contents)}</p>
+            </p> <br />
+            {if is_editing() {
+              view! {
+                <div>
+                  <textarea
+                    class="p-2 w-full h-96 rounded-b-lg border border-gray-300 resize-none"
+                    prop:value=post().map(|post| post.contents)
+                  ></textarea>
+                </div>
+              }
+            } else {
+
+              view! {
+                <div>
+                  <p>{move || post().map(|post| post.contents)}</p>
+                </div>
+              }
+            }}
           // TODO use the post's timestamp
           </DarkenedCard>
           <div>
@@ -443,6 +473,7 @@ pub fn FocusedDropdown(
     class_id: i32,
     posts: Resource<PostFetcher, Vec<Post>>,
     post: PostDetails,
+    set_is_editing: WriteSignal<bool>,
 ) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
     let (_notification_details, set_notification_details) =
@@ -529,7 +560,8 @@ pub fn FocusedDropdown(
                   <button
                     class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
                     on:click=move |_| {
-                      IS_DISPLAYED_EDIT.update(|value| *value = !*value);
+                      set_is_editing(true);
+                      set_menu_visible(false);
                     }
                   >
                     <span class="ml-2">Edit</span>

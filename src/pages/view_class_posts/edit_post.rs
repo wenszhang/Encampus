@@ -1,4 +1,5 @@
 use super::class::ClassId;
+use crate::pages::view_class_posts::class::IS_DISPLAYED_EDIT;
 use crate::{
     data::database::post_functions::edit_post,
     expect_logged_in_user,
@@ -8,7 +9,7 @@ use leptos::*;
 use leptos_router::use_params;
 
 #[component]
-pub fn EditPost(on_edit_post: impl Fn() + 'static) -> impl IntoView {
+pub fn EditPost() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
     let post_id = use_params::<PostId>();
     let class_id = use_params::<ClassId>();
@@ -23,10 +24,20 @@ pub fn EditPost(on_edit_post: impl Fn() + 'static) -> impl IntoView {
 
     let post = move || post_and_replies().flatten().map(|tuple| tuple.0);
 
-    let (post_title, set_post_title) = create_signal(post().unwrap().title);
-    let (post_contents, set_post_contents) = create_signal(post().unwrap().contents);
-    let (private_state, set_private_state) = create_signal(post().unwrap().private);
-    let (anonymous_state, set_anonymous_state) = create_signal(post().unwrap().anonymous);
+    let (post_title, set_post_title) = create_signal(
+        post()
+            .as_ref()
+            .map_or_else(|| "".to_string(), |p| p.title.clone()),
+    );
+    let (post_contents, set_post_contents) = create_signal(
+        post()
+            .as_ref()
+            .map_or_else(|| "".to_string(), |p| p.contents.clone()),
+    );
+    let (private_state, set_private_state) =
+        create_signal(post().as_ref().map_or_else(|| false, |p| p.private));
+    let (anonymous_state, set_anonymous_state) =
+        create_signal(post().as_ref().map_or_else(|| false, |p| p.anonymous));
 
     let edit_post_action = create_action(move |_| {
         let post_id = post_id.get().unwrap().post_id;
@@ -113,7 +124,7 @@ pub fn EditPost(on_edit_post: impl Fn() + 'static) -> impl IntoView {
             class="p-2 text-white bg-gray-500 rounded-full hover:bg-gray-600"
             on:click=move |_| {
               edit_post_action.dispatch(());
-              on_edit_post();
+              IS_DISPLAYED_EDIT.set(false);
             }
           >
             "Post"
