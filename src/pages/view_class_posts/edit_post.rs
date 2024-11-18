@@ -74,7 +74,7 @@ pub fn EditPost() -> impl IntoView {
 
     view! {
       <DarkenedCard class="flex flex-col gap-2 p-5">
-        <p>"Create New Post"</p>
+        <p>"Edit Post"</p>
         <div class="p-3 bg-white rounded-t-lg">
           // Inner border
           <p>"Title:"</p>
