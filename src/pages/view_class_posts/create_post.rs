@@ -87,12 +87,12 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
           ></textarea>
         </div>
         <div class="flex gap-5 justify-end">
-          <label for="privateToggle" class="flex items-center cursor-pointer select-none">
+          <label for="assistantToggle" class="flex items-center cursor-pointer select-none">
             <span class="mx-2">"Encampus Assistant:"</span>
             <div class="relative">
               <input
                 type="checkbox"
-                id="privateToggle"
+                id="assistantToggle"
                 class="sr-only peer"
                 prop:checked=ai_response
                 on:change=move |_| set_ai_response(!ai_response())
