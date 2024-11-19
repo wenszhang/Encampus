@@ -560,8 +560,12 @@ pub fn FocusedDropdown(
                   <button
                     class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
                     on:click=move |_| {
-                      set_is_editing(true);
                       set_menu_visible(false);
+                      let navigate = leptos_router::use_navigate();
+                      navigate(
+                        format!("/classes/{}/{}/edit", class_id, post.post_id).as_str(),
+                        Default::default(),
+                      );
                     }
                   >
                     <span class="ml-2">Edit</span>
