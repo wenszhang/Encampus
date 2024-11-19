@@ -351,7 +351,6 @@ pub async fn check_user_is_instructor(user_id: i32, class_id: i32) -> Result<boo
         .fetch_one(&pool)
         .await
         .expect("select should work");
-    console_log(instructor_count.to_string().as_str());
     if instructor_count > 0 {
         Ok(true)
     } else {

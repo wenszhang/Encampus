@@ -9,7 +9,7 @@ use leptos::*;
 use serde::{Deserialize, Serialize};
 
 use crate::data::database::class_functions::check_user_is_instructor;
-use crate::data::global_state::GlobalState;
+use crate::expect_logged_in_user;
 use crate::pages::view_class_posts::class::ClassId;
 use leptos_router::use_params;
 
@@ -31,14 +31,14 @@ pub struct PollOption {
 
 #[component]
 pub fn LivePoll() -> impl IntoView {
+    let (user, _) = expect_logged_in_user!();
     let (polls, set_polls) = create_signal(Vec::<Poll>::new());
     let (show_modal, set_show_modal) = create_signal(false);
-    let global_state: GlobalState = expect_context::<GlobalState>(); // Access global state
     let class_id = use_params::<ClassId>();
     // let class_id_val = class_id.get_untracked().unwrap().class_id;
 
     let is_instructor = create_resource(class_id, move |class_id| {
-        let user_id = global_state.id.get_untracked().unwrap_or_default();
+        let user_id = user().id;
         async move {
             check_user_is_instructor(user_id, class_id.unwrap().class_id)
                 .await
@@ -89,6 +89,7 @@ pub fn LivePoll() -> impl IntoView {
         />
       </div>
     }
+    .into_view()
 }
 
 #[component]
