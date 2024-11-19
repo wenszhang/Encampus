@@ -3,10 +3,7 @@ use super::user_functions::UserId;
 use crate::data::database::class_functions::get_class_description;
 use crate::data::database::reply_functions::add_reply;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
-use crate::{
-    data::database::ai_functions::get_gemini_response,
-    pages::view_class_posts::focused_post::AddReplyInfo,
-};
+use crate::pages::view_class_posts::focused_post::AddReplyInfo;
 use leptos::logging::error;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
@@ -68,6 +65,7 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
  */
 #[server(AddPost)]
 pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, ServerFnError> {
+    use crate::data::database::ai_functions::get_gemini_response;
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
