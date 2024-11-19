@@ -1,4 +1,6 @@
 use crate::data::database::class_functions::{get_class_name, get_users_enrolled_in_class};
+use crate::data::database::post_functions::{get_resolved_questions, get_total_questions};
+use crate::data::generate_graphs::generate_answered_unanswered_histogram;
 use crate::pages::view_class_posts::class::ClassId;
 use leptos::*;
 use leptos_router::{use_navigate, use_params};
@@ -25,6 +27,25 @@ pub fn ClassDetails() -> impl IntoView {
                 .await
                 .unwrap_or_default(),
             Err(_) => vec![],
+        }
+    });
+
+    // Canvas ID
+    let canvas_id = "question-resolution-chart";
+
+    create_effect(move |_| {
+        if let Ok(class_id) = class_id_result.get() {
+            spawn_local(async move {
+                let total_questions =
+                    get_total_questions(class_id.class_id).await.unwrap_or(0) as i32;
+                let resolved = get_resolved_questions(class_id.class_id).await.unwrap_or(0) as i32;
+                let unresolved = total_questions - resolved;
+
+                if let Err(e) =
+                    generate_answered_unanswered_histogram(canvas_id, unresolved, resolved)
+                {
+                }
+            });
         }
     });
 
@@ -65,7 +86,12 @@ pub fn ClassDetails() -> impl IntoView {
 
                 <div class="course-stats bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-2xl font-semibold mb-4 text-customBlue">"Course Statistics"</h2>
-                    <p class="text-gray-700">"This will display various course statistics"</p>
+                    // <p class="text-gray-700">"This will display various course statistics"</p>
+
+                    // Render the chart on a canvas
+                    <Suspense fallback=|| view! { <p>"Loading enrolled users..."</p> }>
+                        <canvas id=canvas_id width="640" height="480"></canvas>
+                    </Suspense>
                 </div>
             </div>
         </div>
