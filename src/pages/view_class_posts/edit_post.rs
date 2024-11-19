@@ -81,13 +81,13 @@ pub fn EditPost() -> impl IntoView {
           <textarea
             class="p-2 w-full h-12 rounded-t-lg border border-gray-300 resize-none"
             on:input=on_input(set_post_title)
-            prop:value=post_title
+            prop:value=move || post().map(|post| post.title)
           ></textarea>
           <p>"Contents:"</p>
           <textarea
             class="p-2 w-full h-96 rounded-b-lg border border-gray-300 resize-none"
             on:input=on_input(set_post_contents)
-            prop:value=post_contents
+            prop:value=move || post().map(|post| post.contents)
           ></textarea>
         </div>
         <div class="flex gap-5 justify-end">

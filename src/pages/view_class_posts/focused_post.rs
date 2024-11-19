@@ -208,7 +208,6 @@ pub fn FocusedPost() -> impl IntoView {
                         class_id=class_id.get().unwrap().class_id
                         posts=posts
                         post=post().unwrap()
-                        set_is_editing=set_is_editing
                       />
                     }
                   })}
@@ -241,7 +240,6 @@ pub fn FocusedPost() -> impl IntoView {
                 </div>
               }
             } else {
-
               view! {
                 <div>
                   <p>{move || post().map(|post| post.contents)}</p>
@@ -473,7 +471,6 @@ pub fn FocusedDropdown(
     class_id: i32,
     posts: Resource<PostFetcher, Vec<Post>>,
     post: PostDetails,
-    set_is_editing: WriteSignal<bool>,
 ) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
     let (_notification_details, set_notification_details) =
