@@ -45,7 +45,7 @@ cfg_if::cfg_if! {
             }
             pub async fn logout(&self) {
                 self.0
-                    .delete()
+                    .flush()
                     .await
                     .expect("Memory Store should always be available for deletion");
             }
