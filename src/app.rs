@@ -8,6 +8,7 @@ use crate::{
         global_components::{
             error_template::{AppError, ErrorTemplate},
             page::Page,
+            push_notifications::{configure_notifications, send_newest_announcement_notification},
         },
         home::Home,
         login_page::LoginPage,
@@ -22,13 +23,10 @@ use crate::{
     },
 };
 use gloo_timers::callback::Interval;
-use js_sys::Reflect;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use wasm_bindgen::JsValue;
-use wasm_bindgen_futures::JsFuture;
-use web_sys::{window, Notification, Window};
+use web_sys::window;
 
 const EMBEDDED_AUTHENTICATION_KEY: &str = "__EMBEDDED_ENCAMPUS_AUTHENTICATION__";
 
@@ -208,21 +206,35 @@ fn UnauthenticatedRoutes() -> impl IntoView {
 
 // [Application-wide helpers] ===============================================
 
-/// Timer functionality separated into its own function
+/// Starts a persistent clock. Configures notifications once, then calls create_push_notification on a loop
+#[cfg(target_arch = "wasm32")]
 fn start_timer() {
-    let (index, set_index) = create_signal(0);
-    let (increment_by, set_increment_by) = create_signal(1);
+    // Timer signals
+    let (tick_counter, set_tick_counter) = create_signal(0);
 
+    // Timer interval
     let interval = Interval::new(20000, move || {
-        set_index.update(|v| *v += increment_by.get_untracked()); // Use `increment_by.get()` in closure to avoid accessing outside reactive context
-        logging::log!("Index updated to: {}", index.get()); // Print to console for testing
+        set_tick_counter.update(|v| *v += 1);
+    });
 
-        let window = window().expect("should have a window in this context");
-
-        // Handle push notifications asynchronously
-        spawn_local(async move {
-            if let Err(err) = handle_push_notifications(&window).await {
+    // Configure push notifications once
+    spawn_local(async {
+        if let Some(window) = window() {
+            if let Err(err) = configure_notifications(&window).await {
                 logging::log!("Notification handling error: {:?}", err);
+            }
+        }
+    });
+
+    // Listen for timer changes
+    create_effect(move |_| {
+        let tick_value = tick_counter.get();
+        logging::log!("Index updated to: {}", tick_value); // Print to console for testing
+
+        // Call the send_newest_announcement_notification function
+        spawn_local(async move {
+            if let Err(err) = send_newest_announcement_notification().await {
+                logging::log!("Failed to send announcement notification: {:?}", err);
             }
         });
     });
@@ -231,49 +243,8 @@ fn start_timer() {
     leptos::on_cleanup(move || drop(interval));
 }
 
-async fn handle_push_notifications(window: &Window) -> Result<(), JsValue> {
-    // Check if Notifications are supported
-    let is_supported = move || {
-        Reflect::has(&JsValue::from(window), &JsValue::from_str("Notification")).unwrap_or(false)
-    };
-
-    if !is_supported() {
-        logging::log!("Notifications are not supported in this browser.");
-        return Err(JsValue::from_str("Notifications not supported"));
-    }
-
-    // Request or check notification permissions
-    let permission = match request_notification_permission().await {
-        Ok(permission) => permission,
-        Err(err) => {
-            logging::log!("Failed to request notification permission: {:?}", err);
-            return Err(err);
-        }
-    };
-
-    match permission.as_str() {
-        "granted" => {
-            logging::log!("Notifications permission granted.");
-            if let Ok(notification) = Notification::new("Timer Alert") {
-                logging::log!("Notification displayed successfully.");
-            } else {
-                logging::log!("Failed to create notification.");
-            }
-            Ok(())
-        }
-        "denied" => {
-            logging::log!("Notifications permission denied by the user.");
-            Err(JsValue::from_str("Notifications denied"))
-        }
-        _ => {
-            logging::log!("Notifications permission is in default state.");
-            Err(JsValue::from_str("Notifications permission not granted"))
-        }
-    }
-}
-
-async fn request_notification_permission() -> Result<String, JsValue> {
-    let promise = Notification::request_permission().unwrap();
-    let result = JsFuture::from(promise).await?;
-    Ok(result.as_string().unwrap_or_else(|| "default".to_string()))
+#[cfg(not(target_arch = "wasm32"))]
+fn start_timer() {
+    // Empty or placeholder function for non-WASM environments.
+    // This ensures the function exists but does nothing outside WASM.
 }
