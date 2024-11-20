@@ -10,14 +10,12 @@ use crate::pages::global_components::announcements::Announcements;
 use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::pages::view_class_posts::create_post::CreatePost;
-use crate::pages::view_class_posts::edit_post::EditPost;
 use crate::resources::images::svgs::filter_icon::FilterIcon;
 use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params};
-use once_cell::sync::Lazy;
 
 #[derive(Params, PartialEq, Clone)]
 pub struct ClassId {
@@ -29,7 +27,6 @@ pub struct FilterKeywords {
     keywords: String,
 }
 
-pub static IS_DISPLAYED_EDIT: Lazy<RwSignal<bool>> = Lazy::new(|| create_rw_signal(false));
 /**
  * Page getting and displaying all posts in a class
  */

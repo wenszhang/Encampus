@@ -10,7 +10,6 @@ use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 use crate::pages::view_class_posts::class::ClassId;
-use crate::pages::view_class_posts::class::IS_DISPLAYED_EDIT;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::text_area_icon::TextAreaIcon;
 use chrono::FixedOffset;
@@ -168,28 +167,12 @@ pub fn FocusedPost() -> impl IntoView {
         })
     };
 
-    let (is_editing, set_is_editing) = create_signal(false);
-
     view! {
       <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
         <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
           <DarkenedCard class="relative p-5">
-            {if is_editing() {
-              view! {
-                <div>
-                  <textarea
-                    class="p-2 w-full h-12 rounded-t-lg border border-gray-300 resize-none"
-                    prop:value=post().map(|post| post.title)
-                  ></textarea>
-                </div>
-              }
-            } else {
-              view! {
-                <div>
-                  <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
-                </div>
-              }
-            }} <div class="flex gap-5 justify-end">
+            <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
+            <div class="flex gap-5 justify-end">
               <div class="flex items-center cursor-pointer select-none">
                 // Post Dropdown
                 {post()
@@ -229,23 +212,9 @@ pub fn FocusedPost() -> impl IntoView {
                     )
                   })
               }}
-            </p> <br />
-            {if is_editing() {
-              view! {
-                <div>
-                  <textarea
-                    class="p-2 w-full h-96 rounded-b-lg border border-gray-300 resize-none"
-                    prop:value=post().map(|post| post.contents)
-                  ></textarea>
-                </div>
-              }
-            } else {
-              view! {
-                <div>
-                  <p>{move || post().map(|post| post.contents)}</p>
-                </div>
-              }
-            }}
+            </p>
+            <br />
+            <p>{move || post().map(|post| post.contents)}</p>
           // TODO use the post's timestamp
           </DarkenedCard>
           <div>

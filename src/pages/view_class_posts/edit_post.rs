@@ -1,5 +1,4 @@
 use super::class::ClassId;
-use crate::pages::view_class_posts::class::IS_DISPLAYED_EDIT;
 use crate::{
     data::database::post_functions::edit_post,
     expect_logged_in_user,
@@ -124,7 +123,6 @@ pub fn EditPost() -> impl IntoView {
             class="p-2 text-white bg-gray-500 rounded-full hover:bg-gray-600"
             on:click=move |_| {
               edit_post_action.dispatch(());
-              IS_DISPLAYED_EDIT.set(false);
             }
           >
             "Post"

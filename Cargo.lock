@@ -718,7 +718,6 @@ dependencies = [
  "leptos_meta",
  "leptos_router",
  "leptos_server_signal",
- "once_cell",
  "reqwest",
  "serde",
  "serde_json",
