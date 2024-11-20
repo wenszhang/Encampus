@@ -155,15 +155,16 @@ pub async fn send_newest_announcement_notification() -> Result<(), JsValue> {
         };
 
         // Check if the announcement time is more recent than the cutoff time
-        if cutoff_time.is_none() || announcement_time > cutoff_time.unwrap() {
+        if cutoff_time.is_some() && announcement_time > cutoff_time.unwrap() {
             // Create a push notification with the announcement details
             create_push_notification(&title, &contents)?;
             logging::log!("Notification sent.");
             // Update the cutoff time after successfully sending the notification
             let mut cutoff_time_lock = CUTOFF_TIME.lock().unwrap();
             *cutoff_time_lock = Some(announcement_time);
-        } else {
-            //logging::log!("Announcement is not newer than cutoff time. Notification not sent.");
+        } else if cutoff_time.is_none() {
+            let mut cutoff_time_lock = CUTOFF_TIME.lock().unwrap();
+            *cutoff_time_lock = Some(announcement_time);
         }
     }
     Ok(())
