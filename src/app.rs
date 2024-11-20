@@ -21,9 +21,15 @@ use crate::{
         view_enrolled_classes::classes::ClassesPage,
     },
 };
+use gloo_timers::callback::Interval;
+use js_sys::Reflect;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
+use wasm_bindgen::prelude::*;
+use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen_futures::JsFuture;
+use web_sys::{window, Notification, Window};
 
 const EMBEDDED_AUTHENTICATION_KEY: &str = "__EMBEDDED_ENCAMPUS_AUTHENTICATION__";
 
@@ -40,7 +46,6 @@ pub fn App() -> impl IntoView {
     let auth = expect_auth_context();
 
     view! {
-      // WARNING - VITAL FOR SSR AUTHENTICATION
       {auth
         .get_untracked()
         .get_user()
@@ -178,6 +183,29 @@ fn provide_authentication_from_window_context() {
 #[component]
 pub fn AuthenticatedRoutes() -> impl IntoView {
     let auth_context = expect_auth_context();
+    let (index, set_index) = create_signal(0);
+    let (increment_by, set_increment_by) = create_signal(1);
+
+    // This effect will run every time `increment_by` changes
+    create_effect(move |_| {
+        let interval = Interval::new(20000, move || {
+            set_index.update(|v| *v += increment_by.get()); // Use `increment_by.get()` in closure to avoid accessing outside reactive context
+            log::info!("Index updated to: {}", index.get()); // Print to console for testing
+
+            let window = window().expect("should have a window in this context");
+
+            // Handle push notifications asynchronously
+            spawn_local(async move {
+                if let Err(err) = handle_push_notifications(&window).await {
+                    log::error!("Notification handling error: {:?}", err);
+                }
+            });
+        });
+
+        // Interval will be dropped at the end of this scope, cancelling itself
+        leptos::on_cleanup(move || drop(interval));
+    });
+
     match auth_context.get() {
         Authentication::Authenticated(_) => view! { <Outlet /> }.into_view(),
         Authentication::Unauthenticated => {
@@ -188,6 +216,52 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
             view! { Redirecting to login... }.into_view()
         }
     }
+}
+
+async fn handle_push_notifications(window: &Window) -> Result<(), JsValue> {
+    // Check if Notifications are supported
+    let is_supported =
+        Reflect::has(&JsValue::from(window), &JsValue::from_str("Notification")).unwrap_or(false);
+
+    if !is_supported {
+        log::error!("Notifications are not supported in this browser.");
+        return Err(JsValue::from_str("Notifications not supported"));
+    }
+
+    // Request or check notification permissions
+    let permission = match request_notification_permission().await {
+        Ok(permission) => permission,
+        Err(err) => {
+            log::error!("Failed to request notification permission: {:?}", err);
+            return Err(err);
+        }
+    };
+
+    match permission.as_str() {
+        "granted" => {
+            log::info!("Notifications permission granted.");
+            if let Ok(notification) = Notification::new("Timer Alert") {
+                log::info!("Notification displayed successfully.");
+            } else {
+                log::error!("Failed to create notification.");
+            }
+            Ok(())
+        }
+        "denied" => {
+            log::warn!("Notifications permission denied by the user.");
+            Err(JsValue::from_str("Notifications denied"))
+        }
+        _ => {
+            log::info!("Notifications permission is in default state.");
+            Err(JsValue::from_str("Notifications permission not granted"))
+        }
+    }
+}
+
+async fn request_notification_permission() -> Result<String, JsValue> {
+    let promise = Notification::request_permission().unwrap();
+    let result = JsFuture::from(promise).await?;
+    Ok(result.as_string().unwrap_or_else(|| "default".to_string()))
 }
 
 /// General route wrapping
