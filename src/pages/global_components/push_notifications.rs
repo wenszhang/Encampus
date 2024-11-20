@@ -141,8 +141,8 @@ pub async fn send_newest_announcement_notification() -> Result<(), JsValue> {
     let user_id = user.id;
     let role = user.role.clone();
 
-    logging::log!("Checking...");
     // Get the newest announcement for the user
+    // If checks if announcement body is valid
     if let Some((announcement_time, title, contents)) =
         get_newest_announcement_for_user(user_id, role)
             .await
@@ -153,9 +153,7 @@ pub async fn send_newest_announcement_notification() -> Result<(), JsValue> {
             let cutoff_time_lock = CUTOFF_TIME.lock().unwrap();
             *cutoff_time_lock
         };
-        logging::log!("Check passed");
-        logging::log!("Current cutoff time: {:?}", cutoff_time);
-        logging::log!("Announcement time: {:?}", announcement_time);
+
         // Check if the announcement time is more recent than the cutoff time
         if cutoff_time.is_none() || announcement_time > cutoff_time.unwrap() {
             // Create a push notification with the announcement details
@@ -165,9 +163,8 @@ pub async fn send_newest_announcement_notification() -> Result<(), JsValue> {
             let mut cutoff_time_lock = CUTOFF_TIME.lock().unwrap();
             *cutoff_time_lock = Some(announcement_time);
         } else {
-            logging::log!("Announcement is not newer than cutoff time. Notification not sent.");
+            //logging::log!("Announcement is not newer than cutoff time. Notification not sent.");
         }
     }
-    logging::log!("Check finished");
     Ok(())
 }

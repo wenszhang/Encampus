@@ -214,7 +214,7 @@ fn start_timer() {
         let (tick_counter, set_tick_counter) = create_signal(0);
 
         // Timer interval
-        let interval = Interval::new(20000, move || {
+        let interval = Interval::new(7000, move || {
             set_tick_counter.update(|v| *v += 1);
         });
 
@@ -230,11 +230,9 @@ fn start_timer() {
         // Listen for timer changes
         create_effect(move |_| {
             let tick_value = tick_counter.get();
-            logging::log!("Index updated to: {}", tick_value); // Print to console for testing
 
             // Call the send_newest_announcement_notification function
             spawn_local(async move {
-                logging::log!("Attempt to push");
                 if let Err(err) = send_newest_announcement_notification().await {
                     logging::log!("Failed to send announcement notification: {:?}", err);
                 }
