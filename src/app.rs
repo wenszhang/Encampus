@@ -177,33 +177,16 @@ fn provide_authentication_from_window_context() {
     }
 }
 
+// [Route wrappers] ===============================================
+
 /// Prevent errors due to loading pages that require authentication while logged
 /// out
 #[component]
 pub fn AuthenticatedRoutes() -> impl IntoView {
     let auth_context = expect_auth_context();
-    let (index, set_index) = create_signal(0);
-    let (increment_by, set_increment_by) = create_signal(1);
 
-    // This effect will run every time `increment_by` changes
-    create_effect(move |_| {
-        let interval = Interval::new(20000, move || {
-            set_index.update(|v| *v += increment_by.get()); // Use `increment_by.get()` in closure to avoid accessing outside reactive context
-            logging::log!("Index updated to: {}", index.get()); // Print to console for testing
-
-            let window = window().expect("should have a window in this context");
-
-            // Handle push notifications asynchronously
-            spawn_local(async move {
-                if let Err(err) = handle_push_notifications(&window).await {
-                    logging::log!("Notification handling error: {:?}", err);
-                }
-            });
-        });
-
-        // Interval will be dropped at the end of this scope, cancelling itself
-        leptos::on_cleanup(move || drop(interval));
-    });
+    // Start the timer
+    start_timer();
 
     match auth_context.get() {
         Authentication::Authenticated(_) => view! { <Outlet /> }.into_view(),
@@ -215,6 +198,37 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
             view! { Redirecting to login... }.into_view()
         }
     }
+}
+
+/// General route wrapping
+#[component]
+fn UnauthenticatedRoutes() -> impl IntoView {
+    view! { <Outlet /> }
+}
+
+// [Application-wide helpers] ===============================================
+
+/// Timer functionality separated into its own function
+fn start_timer() {
+    let (index, set_index) = create_signal(0);
+    let (increment_by, set_increment_by) = create_signal(1);
+
+    let interval = Interval::new(20000, move || {
+        set_index.update(|v| *v += increment_by.get_untracked()); // Use `increment_by.get()` in closure to avoid accessing outside reactive context
+        logging::log!("Index updated to: {}", index.get()); // Print to console for testing
+
+        let window = window().expect("should have a window in this context");
+
+        // Handle push notifications asynchronously
+        spawn_local(async move {
+            if let Err(err) = handle_push_notifications(&window).await {
+                logging::log!("Notification handling error: {:?}", err);
+            }
+        });
+    });
+
+    // Interval will be dropped at the end of this scope, cancelling itself
+    leptos::on_cleanup(move || drop(interval));
 }
 
 async fn handle_push_notifications(window: &Window) -> Result<(), JsValue> {
@@ -262,10 +276,4 @@ async fn request_notification_permission() -> Result<String, JsValue> {
     let promise = Notification::request_permission().unwrap();
     let result = JsFuture::from(promise).await?;
     Ok(result.as_string().unwrap_or_else(|| "default".to_string()))
-}
-
-/// General route wrapping
-#[component]
-fn UnauthenticatedRoutes() -> impl IntoView {
-    view! { <Outlet /> }
 }
