@@ -207,44 +207,41 @@ fn UnauthenticatedRoutes() -> impl IntoView {
 // [Application-wide helpers] ===============================================
 
 /// Starts a persistent clock. Configures notifications once, then calls create_push_notification on a loop
-#[cfg(target_arch = "wasm32")]
 fn start_timer() {
-    // Timer signals
-    let (tick_counter, set_tick_counter) = create_signal(0);
+    #[cfg(target_arch = "wasm32")]
+    {
+        // Timer signals
+        let (tick_counter, set_tick_counter) = create_signal(0);
 
-    // Timer interval
-    let interval = Interval::new(20000, move || {
-        set_tick_counter.update(|v| *v += 1);
-    });
+        // Timer interval
+        let interval = Interval::new(20000, move || {
+            set_tick_counter.update(|v| *v += 1);
+        });
 
-    // Configure push notifications once
-    spawn_local(async {
-        if let Some(window) = window() {
-            if let Err(err) = configure_notifications(&window).await {
-                logging::log!("Notification handling error: {:?}", err);
-            }
-        }
-    });
-
-    // Listen for timer changes
-    create_effect(move |_| {
-        let tick_value = tick_counter.get();
-        logging::log!("Index updated to: {}", tick_value); // Print to console for testing
-
-        // Call the send_newest_announcement_notification function
-        spawn_local(async move {
-            if let Err(err) = send_newest_announcement_notification().await {
-                logging::log!("Failed to send announcement notification: {:?}", err);
+        // Configure push notifications once
+        spawn_local(async {
+            if let Some(window) = window() {
+                if let Err(err) = configure_notifications(&window).await {
+                    logging::log!("Notification handling error: {:?}", err);
+                }
             }
         });
-    });
 
-    // Interval will be dropped at the end of this scope, cancelling itself
-    leptos::on_cleanup(move || drop(interval));
-}
+        // Listen for timer changes
+        create_effect(move |_| {
+            let tick_value = tick_counter.get();
+            logging::log!("Index updated to: {}", tick_value); // Print to console for testing
 
-#[cfg(not(target_arch = "wasm32"))]
-fn start_timer() {
-    // Empty or placeholder function for non-WASM environments.
-    // This ensures the function exists but does nothing outside WASM.
+            // Call the send_newest_announcement_notification function
+            spawn_local(async move {
+                logging::log!("Attempt to push");
+                if let Err(err) = send_newest_announcement_notification().await {
+                    logging::log!("Failed to send announcement notification: {:?}", err);
+                }
+            });
+        });
+
+        // Interval will be dropped at the end of this scope, cancelling itself
+        leptos::on_cleanup(move || drop(interval));
+    }
 }

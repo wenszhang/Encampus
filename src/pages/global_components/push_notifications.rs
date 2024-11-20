@@ -1,21 +1,16 @@
 // Requests and creates push notifications
 use chrono::NaiveDateTime;
 use js_sys::Reflect;
-use leptos::{component, logging, view, IntoView, ServerFnError, SignalGetUntracked};
+use leptos::{logging, ServerFnError, SignalGetUntracked};
 use once_cell::sync::Lazy;
 use std::sync::Mutex;
 use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{Notification, NotificationOptions, Window};
 
-use crate::{
-    data::{
-        database::{
-            announcement_functions::get_announcement_list, class_functions::get_users_classes,
-        },
-        global_state::User,
-    },
-    expect_logged_in_user,
+use crate::data::{
+    database::{announcement_functions::get_announcement_list, class_functions::get_users_classes},
+    global_state::User,
 };
 
 // Stores the cutoff time for filtering announcements, initialized as None
@@ -69,6 +64,7 @@ pub async fn configure_notifications(window: &Window) -> Result<(), JsValue> {
             let user_id = user.id;
             let role = user.role.clone();
 
+            // Don't push past notifications
             if let Some((time, _, _)) = get_newest_announcement_for_user(user_id, role)
                 .await
                 .unwrap_or(None)
@@ -112,24 +108,11 @@ pub async fn get_newest_announcement_for_user(
     user_id: i32,
     role: String,
 ) -> Result<Option<(NaiveDateTime, String, String)>, ServerFnError> {
-    // Acquire and drop the lock before the await
-    let cutoff_time_val = {
-        let cutoff_time = CUTOFF_TIME.lock().unwrap();
-        *cutoff_time
-    };
-
     let classes = get_users_classes(user_id, role).await?;
     let mut latest_announcement: Option<(NaiveDateTime, String, String)> = None;
 
     for class in classes {
-        let announcements =
-            get_announcement_list(class.id)
-                .await?
-                .into_iter()
-                .filter(|announcement| match cutoff_time_val {
-                    Some(time) => announcement.time > time,
-                    None => true,
-                });
+        let announcements = get_announcement_list(class.id).await?;
 
         for announcement in announcements {
             if latest_announcement.is_none()
@@ -139,12 +122,6 @@ pub async fn get_newest_announcement_for_user(
                     Some((announcement.time, announcement.title, announcement.contents));
             }
         }
-    }
-
-    // Update the cutoff time to the latest announcement time if available
-    if let Some((time, _, _)) = latest_announcement {
-        let mut cutoff_time = CUTOFF_TIME.lock().unwrap();
-        *cutoff_time = Some(time);
     }
 
     Ok(latest_announcement)
@@ -164,14 +141,33 @@ pub async fn send_newest_announcement_notification() -> Result<(), JsValue> {
     let user_id = user.id;
     let role = user.role.clone();
 
+    logging::log!("Checking...");
     // Get the newest announcement for the user
-    if let Some((_, title, contents)) = get_newest_announcement_for_user(user_id, role)
-        .await
-        .unwrap_or(None)
+    if let Some((announcement_time, title, contents)) =
+        get_newest_announcement_for_user(user_id, role)
+            .await
+            .unwrap_or(None)
     {
-        // Create a push notification with the announcement details
-        create_push_notification(&title, &contents)?;
+        // Acquire the cutoff time
+        let cutoff_time = {
+            let cutoff_time_lock = CUTOFF_TIME.lock().unwrap();
+            *cutoff_time_lock
+        };
+        logging::log!("Check passed");
+        logging::log!("Current cutoff time: {:?}", cutoff_time);
+        logging::log!("Announcement time: {:?}", announcement_time);
+        // Check if the announcement time is more recent than the cutoff time
+        if cutoff_time.is_none() || announcement_time > cutoff_time.unwrap() {
+            // Create a push notification with the announcement details
+            create_push_notification(&title, &contents)?;
+            logging::log!("Notification sent.");
+            // Update the cutoff time after successfully sending the notification
+            let mut cutoff_time_lock = CUTOFF_TIME.lock().unwrap();
+            *cutoff_time_lock = Some(announcement_time);
+        } else {
+            logging::log!("Announcement is not newer than cutoff time. Notification not sent.");
+        }
     }
-
+    logging::log!("Check finished");
     Ok(())
 }
