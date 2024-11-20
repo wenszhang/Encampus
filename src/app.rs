@@ -26,8 +26,7 @@ use js_sys::Reflect;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use wasm_bindgen::prelude::*;
-use wasm_bindgen::{JsCast, JsValue};
+use wasm_bindgen::JsValue;
 use wasm_bindgen_futures::JsFuture;
 use web_sys::{window, Notification, Window};
 
@@ -190,14 +189,14 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
     create_effect(move |_| {
         let interval = Interval::new(20000, move || {
             set_index.update(|v| *v += increment_by.get()); // Use `increment_by.get()` in closure to avoid accessing outside reactive context
-            log::info!("Index updated to: {}", index.get()); // Print to console for testing
+            logging::log!("Index updated to: {}", index.get()); // Print to console for testing
 
             let window = window().expect("should have a window in this context");
 
             // Handle push notifications asynchronously
             spawn_local(async move {
                 if let Err(err) = handle_push_notifications(&window).await {
-                    log::error!("Notification handling error: {:?}", err);
+                    logging::log!("Notification handling error: {:?}", err);
                 }
             });
         });
@@ -220,11 +219,12 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
 
 async fn handle_push_notifications(window: &Window) -> Result<(), JsValue> {
     // Check if Notifications are supported
-    let is_supported =
-        Reflect::has(&JsValue::from(window), &JsValue::from_str("Notification")).unwrap_or(false);
+    let is_supported = move || {
+        Reflect::has(&JsValue::from(window), &JsValue::from_str("Notification")).unwrap_or(false)
+    };
 
-    if !is_supported {
-        log::error!("Notifications are not supported in this browser.");
+    if !is_supported() {
+        logging::log!("Notifications are not supported in this browser.");
         return Err(JsValue::from_str("Notifications not supported"));
     }
 
@@ -232,27 +232,27 @@ async fn handle_push_notifications(window: &Window) -> Result<(), JsValue> {
     let permission = match request_notification_permission().await {
         Ok(permission) => permission,
         Err(err) => {
-            log::error!("Failed to request notification permission: {:?}", err);
+            logging::log!("Failed to request notification permission: {:?}", err);
             return Err(err);
         }
     };
 
     match permission.as_str() {
         "granted" => {
-            log::info!("Notifications permission granted.");
+            logging::log!("Notifications permission granted.");
             if let Ok(notification) = Notification::new("Timer Alert") {
-                log::info!("Notification displayed successfully.");
+                logging::log!("Notification displayed successfully.");
             } else {
-                log::error!("Failed to create notification.");
+                logging::log!("Failed to create notification.");
             }
             Ok(())
         }
         "denied" => {
-            log::warn!("Notifications permission denied by the user.");
+            logging::log!("Notifications permission denied by the user.");
             Err(JsValue::from_str("Notifications denied"))
         }
         _ => {
-            log::info!("Notifications permission is in default state.");
+            logging::log!("Notifications permission is in default state.");
             Err(JsValue::from_str("Notifications permission not granted"))
         }
     }
