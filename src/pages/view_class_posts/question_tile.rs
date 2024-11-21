@@ -22,14 +22,14 @@ use leptos::*;
 use leptos_dom::logging::console_debug_warn;
 use leptos_router::{use_params, A};
 
-struct CustomTag {
-    title: String,
-}
+// struct CustomTag {
+//     title: String,
+// }
 
 enum TagPillProperties {
     Unresolved,
     Private,
-    Custom(CustomTag),
+    // Custom(CustomTag),
 }
 
 #[component]
@@ -277,9 +277,9 @@ pub fn QuestionTile(
                   None
                 }
               }}
-              <TagPill props=TagPillProperties::Custom(CustomTag {
-                title: "HW1".to_string(),
-              }) />
+            // <TagPill props=TagPillProperties::Custom(CustomTag {
+            // title: "HW1".to_string(),
+            // }) />
             </div>
 
             // Card body
@@ -333,8 +333,8 @@ fn TagPill(props: TagPillProperties) -> impl IntoView {
             Private
           </div>
         },
-        TagPillProperties::Custom(CustomTag { title }) => {
-            view! { <div class=[sharedClassesAll, "bg-white text-gray-600"].join(" ")>{title}</div> }
-        }
+        // TagPillProperties::Custom(CustomTag { title }) => {
+        //     view! { <div class=[sharedClassesAll, "bg-white text-gray-600"].join(" ")>{title}</div> }
+        // }
     }
 }

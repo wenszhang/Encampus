@@ -81,7 +81,7 @@ fn expanded_view(
         // Reactive Name and Role
         <Suspense fallback=move || view! { <p>"Loading user info..."</p> }>
           <h1 class="text-2xl font-bold text-center">
-            {move || user().first_name.clone()} {move || user().last_name.clone()}
+            {move || user().first_name.clone()} " " {move || user().last_name.clone()}
           </h1>
 
           <h2 class="text-lg font-semibold text-center text-gray-500">
@@ -112,19 +112,15 @@ fn expanded_view(
           <h2 class="mt-6 mb-2 text-sm tracking-widest text-gray-400 uppercase">"Tools"</h2>
           <ul>
             <li class="py-2">
-            {
-                if let Some(class_id) = class_id_val {
-                    view! {
-                        <div>
-                            <A href=format!("/classes/{}/details", class_id)>"Class Details"</A>
-                        </div>
-                    }
-                } else {
-                    view! {
-                        <div></div>
-                    }
+              {if let Some(class_id) = class_id_val {
+                view! {
+                  <div>
+                    <A href=format!("/classes/{}/details", class_id)>"Class Details"</A>
+                  </div>
                 }
-            }
+              } else {
+                view! { <div></div> }
+              }}
             </li>
           </ul>
         </div>
