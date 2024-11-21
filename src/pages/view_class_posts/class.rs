@@ -118,11 +118,10 @@ pub fn ClassPage() -> impl IntoView {
               class_id=(move || class_id().ok().map(|id| id.class_id)).into_signal()
             />
           </Suspense>
-          <span class="inline-flex items-baseline ml-5">
-            <button class="pt-7 pr-1">
-              <InformationIcon size="20px" />
-            </button>
-            <h3 class="pb-1 text-s">"Help"</h3>
+          <span class="inline-flex items-baseline ml-5">// <button class="pt-7 pr-1">
+          // <InformationIcon size="20px" />
+          // </button>
+          // <h3 class="pb-1 text-s">"Help"</h3>
           </span>
           <div class="flex justify-center pt-8 mx-20">
             <div class="flex justify-center items-center">
@@ -169,9 +168,6 @@ pub fn ClassPage() -> impl IntoView {
             <Show when=is_visible fallback=|| ()>
               <CreatePost on_new_post=move || set_is_visible(false) />
             </Show>
-            // <Show when=move || IS_DISPLAYED_EDIT.get() fallback=|| ()>
-            // <EditPost />
-            // </Show>
             // Gets replaced with the focused post if there's one in the route. See router
             <Outlet />
             // announcements section

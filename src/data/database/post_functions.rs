@@ -210,6 +210,8 @@ pub async fn edit_post(
     new_title: String,
     new_contents: String,
     user_id: i32,
+    private: bool,
+    anonymous: bool,
 ) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
@@ -225,9 +227,11 @@ pub async fn edit_post(
         .expect("Cannot get author id");
 
     if author_id == user_id {
-        sqlx::query("update posts set title = $1, contents = $2 where postid = $3")
+        sqlx::query("update posts set title = $1, contents = $2, private = $3, anonymous = $4 where postid = $5")
             .bind(new_title)
             .bind(new_contents)
+            .bind(private)
+            .bind(anonymous)
             .bind(post_id)
             .execute(&pool)
             .await
