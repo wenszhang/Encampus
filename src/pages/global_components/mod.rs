@@ -5,4 +5,5 @@ pub mod error_template;
 pub mod header;
 pub(crate) mod notification;
 pub mod page;
+pub mod push_notifications;
 pub mod sidebar;
