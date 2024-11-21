@@ -341,15 +341,13 @@ pub async fn get_all_polls(course_id: i32) -> Result<Vec<Poll>, ServerFnError> {
         "Unable to complete request".to_string(),
     ))?;
 
-    let polls: Vec<Poll> = sqlx::query_as::<_, Poll>(
-        "SELECT * FROM polls WHERE course_id = $1 ORDER BY created_at DESC",
-    )
-    .bind(course_id)
-    .fetch_all(&pool)
-    .await
-    .map_err(|_| {
-        ServerFnError::<NoCustomError>::ServerError("Unable to delete poll".to_string())
-    })?;
+    let polls: Vec<Poll> = sqlx::query_as("SELECT * FROM polls WHERE course_id = $1")
+        .bind(course_id)
+        .fetch_all(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Unable to delete poll".to_string())
+        })?;
 
     Ok(polls)
 }
