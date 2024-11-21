@@ -28,3 +28,7 @@ a[href="/classes"] {
     font-size: 0.875rem; /* Smaller font size */
     line-height: 1rem; /* Adjust line height */
 }
+
+.tiptap > * {
+    all: revert;
+}

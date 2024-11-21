@@ -2,9 +2,13 @@
 name = "encampus"
 version = "0.1.0"
 edition = "2021"
+build = "build.rs"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
+
+[build-dependencies]
+leptos-tiptap-build = { version = "0.2.6" }
 
 [dependencies]
 axum = { version = "0.7", features=["macros"], optional = true }
@@ -33,6 +37,7 @@ plotters = {version = "0.3", default-features = false, features = ["bitmap_backe
 plotters-canvas = "0.3"
 reqwest = {version = "0.11", default-features = false, features = ["json", "rustls-tls"], optional = true}
 anyhow = "1.0"
+leptos-tiptap = "0.7.0"
 gloo-timers = "0.3"
 log = "0.4.20"
 wasm-bindgen-futures = "0.4.43"

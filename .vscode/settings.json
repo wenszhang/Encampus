@@ -6,7 +6,8 @@
         "lastname",
         "leptos",
         "sqlx",
-        "stylesheet"
+        "stylesheet",
+        "tiptap"
     ],
     "files.associations": {
         "*.rs": "rust"

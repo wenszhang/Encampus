@@ -9,6 +9,7 @@ use crate::{
             error_template::{AppError, ErrorTemplate},
             page::Page,
             push_notifications::{configure_notifications, send_newest_announcement_notification},
+            rich_text_box::RichTextBox,
         },
         home::Home,
         live_poll::LivePoll,
@@ -56,6 +57,10 @@ pub fn App() -> impl IntoView {
           )
         })}
 
+      // tiptap.js files
+      <Script type_="module" src="/js/tiptap-bundle.min.js" />
+      <Script type_="module" src="/js/tiptap.js" />
+
       // injects a stylesheet into the document <head>
       // id=leptos means cargo-leptos will hot-reload this stylesheet
       <Stylesheet id="leptos" href="/pkg/encampus.css" />
@@ -72,6 +77,7 @@ pub fn App() -> impl IntoView {
         <main>
           <Routes>
             <Route path="" view=Page>
+              <Route path="dev" view=RichTextBox />
               // Only accessible when logged in
               <Route path="" view=AuthenticatedRoutes>
                 <Route path="/AdminHomePage" view=AdminHomePage />
