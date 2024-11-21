@@ -31,7 +31,7 @@ pub fn EditPost() -> impl IntoView {
     let (post_contents, set_post_contents) = create_signal(
         post()
             .as_ref()
-            .map_or_else(|| "".to_string(), |p| p.contents.clone()),
+            .map_or_else(|| "".to_string(), |p| p.title.clone()),
     );
     let (private_state, set_private_state) =
         create_signal(post().as_ref().map_or_else(|| false, |p| p.private));
@@ -49,6 +49,12 @@ pub fn EditPost() -> impl IntoView {
         //     private: private_state(),
         //     ai_response: false,
         // };
+        if post_title.get().is_empty() {
+            set_post_title(post().map(|post| post.title).unwrap());
+        }
+        if post_contents.get().is_empty() {
+            set_post_contents(post().map(|post| post.contents).unwrap());
+        }
         async move {
             match edit_post(post_id, post_title.get(), post_contents.get(), user().id).await {
                 Ok(_) => {
@@ -125,7 +131,7 @@ pub fn EditPost() -> impl IntoView {
               edit_post_action.dispatch(());
             }
           >
-            "Post"
+            "Save"
           </button>
         </div>
       </DarkenedCard>
