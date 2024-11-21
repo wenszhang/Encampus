@@ -8,6 +8,7 @@ use crate::{
         global_components::{
             error_template::{AppError, ErrorTemplate},
             page::Page,
+            push_notifications::{configure_notifications, send_newest_announcement_notification},
         },
         home::Home,
         live_poll::LivePoll,
@@ -17,14 +18,16 @@ use crate::{
         user_settings::user_settings_page::UserSettings,
         view_class_posts::{
             announcement_details::AnnouncementDetails, class::ClassPage,
-            class_details::ClassDetails, focused_post::FocusedPost,
+            class_details::ClassDetails, edit_post::EditPost, focused_post::FocusedPost,
         },
         view_enrolled_classes::classes::ClassesPage,
     },
 };
+use gloo_timers::callback::Interval;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
+use web_sys::window;
 
 const EMBEDDED_AUTHENTICATION_KEY: &str = "__EMBEDDED_ENCAMPUS_AUTHENTICATION__";
 
@@ -41,7 +44,6 @@ pub fn App() -> impl IntoView {
     let auth = expect_auth_context();
 
     view! {
-      // WARNING - VITAL FOR SSR AUTHENTICATION
       {auth
         .get_untracked()
         .get_user()
@@ -78,6 +80,7 @@ pub fn App() -> impl IntoView {
                   <Route path="" view=|| {} />
                   <Route path="/details" view=ClassDetails />
                   <Route path="/:post_id" view=FocusedPost />
+                  <Route path="/:post_id/edit" view=EditPost />
                   <Route path="/announcement/:announcement_id" view=AnnouncementDetails />
                 </Route>
                 <Route path="/class/:class_id/poll" view=LivePoll />
@@ -175,11 +178,17 @@ fn provide_authentication_from_window_context() {
     }
 }
 
+// [Route wrappers] ===============================================
+
 /// Prevent errors due to loading pages that require authentication while logged
 /// out
 #[component]
 pub fn AuthenticatedRoutes() -> impl IntoView {
     let auth_context = expect_auth_context();
+
+    // Start the timer
+    start_timer();
+
     match auth_context.get() {
         Authentication::Authenticated(_) => view! { <Outlet /> }.into_view(),
         Authentication::Unauthenticated => {
@@ -196,4 +205,44 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
 #[component]
 fn UnauthenticatedRoutes() -> impl IntoView {
     view! { <Outlet /> }
+}
+
+// [Application-wide helpers] ===============================================
+
+/// Starts a persistent clock. Configures notifications once, then calls create_push_notification on a loop
+fn start_timer() {
+    #[cfg(target_arch = "wasm32")]
+    {
+        // Timer signals
+        let (tick_counter, set_tick_counter) = create_signal(0);
+
+        // Timer interval
+        let interval = Interval::new(7000, move || {
+            set_tick_counter.update(|v| *v += 1);
+        });
+
+        // Configure push notifications once
+        spawn_local(async {
+            if let Some(window) = window() {
+                if let Err(err) = configure_notifications(&window).await {
+                    logging::log!("Notification handling error: {:?}", err);
+                }
+            }
+        });
+
+        // Listen for timer changes
+        create_effect(move |_| {
+            let tick_value = tick_counter.get();
+
+            // Call the send_newest_announcement_notification function
+            spawn_local(async move {
+                if let Err(err) = send_newest_announcement_notification().await {
+                    logging::log!("Failed to send announcement notification: {:?}", err);
+                }
+            });
+        });
+
+        // Interval will be dropped at the end of this scope, cancelling itself
+        leptos::on_cleanup(move || drop(interval));
+    }
 }

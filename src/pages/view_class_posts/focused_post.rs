@@ -172,7 +172,6 @@ pub fn FocusedPost() -> impl IntoView {
         <Suspense fallback=|| view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }>
           <DarkenedCard class="relative p-5">
             <p class="text-lg font-bold">{move || post().map(|post| post.title)}</p>
-
             <div class="flex gap-5 justify-end">
               <div class="flex items-center cursor-pointer select-none">
                 // Post Dropdown
@@ -197,7 +196,6 @@ pub fn FocusedPost() -> impl IntoView {
                   })}
               </div>
             </div>
-
             <p class="text-sm font-light">
               "Posted by " {move || post().map(|post| post.author_first_name)} " "
               {move || post().map(|post| post.author_last_name)}
@@ -452,7 +450,7 @@ pub fn FocusedDropdown(
         async move {
             match get_post_details(post_id).await {
                 Ok(current_post) => {
-                    if let Ok(_) = remove_post(post_id, user().id).await {
+                    if (remove_post(post_id, user().id).await).is_ok() {
                         posts.update(|posts| {
                             if let Some(index) = posts
                                 .as_mut()
@@ -525,6 +523,19 @@ pub fn FocusedDropdown(
             {move || {
               view! {
                 <div class="p-3 rounded-md w-30">
+                  <button
+                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| {
+                      set_menu_visible(false);
+                      let navigate = leptos_router::use_navigate();
+                      navigate(
+                        format!("/classes/{}/{}/edit", class_id, post.post_id).as_str(),
+                        Default::default(),
+                      );
+                    }
+                  >
+                    <span class="ml-2">Edit</span>
+                  </button>
                   {if post.resolved {
                     view! {
                       <button
@@ -647,7 +658,6 @@ pub fn ReplyDropdown(
                 <div class="p-3 rounded-md w-30">
                   {if is_instructor {
                     if reply.approved {
-
                       view! {
                         <div>
                           <button

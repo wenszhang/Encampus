@@ -278,9 +278,9 @@ pub fn QuestionTile(
                   None
                 }
               }}
-              <TagPill props=TagPillProperties::Custom(CustomTag {
-                title: "HW1".to_string(),
-              }) />
+            // <TagPill props=TagPillProperties::Custom(CustomTag {
+            // title: "HW1".to_string(),
+            // }) />
             </div>
 
             // Card body
