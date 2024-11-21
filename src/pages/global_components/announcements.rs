@@ -75,6 +75,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
             let announcements_clone = sorted_announcements.clone();
             if is_expanded.get() {
               view! {
+                <div style="max-height: 400px; overflow-y: auto; background-color: #EEEEEE;">
                 <ul>
                   {announcements_clone
                     .into_iter()
@@ -100,9 +101,10 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                     })
                     .collect::<Vec<_>>()}
                 </ul>
+                </div>
               }
             } else {
-              view! { <ul></ul> }
+              view! { <div></div> }
             }
           }}
           <Suspense fallback=|| {
