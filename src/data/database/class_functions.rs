@@ -282,7 +282,7 @@ pub async fn get_users_classes(
 
         Ok(classes)
     } else if role == "Instructor" {
-        let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name 
+        let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name, description 
         from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id where instructing.professorid = $1")
             .bind(user_id)
             .fetch_all(&pool)
