@@ -287,7 +287,7 @@ pub async fn get_total_questions(class_id: i32) -> Result<i64, ServerFnError> {
         "Unable to complete Request".to_string(),
     ))?;
 
-    let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM posts WHERE classid = $1")
+    let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM posts WHERE classid = $1 AND removed = false")
         .bind(class_id)
         .fetch_one(&pool)
         .await
@@ -306,7 +306,7 @@ pub async fn get_resolved_questions(class_id: i32) -> Result<i64, ServerFnError>
     ))?;
 
     let count: (i64,) =
-        sqlx::query_as("SELECT COUNT(*) FROM posts WHERE classid = $1 AND resolved = true")
+        sqlx::query_as("SELECT COUNT(*) FROM posts WHERE classid = $1 AND resolved = true AND removed = false")
             .bind(class_id)
             .fetch_one(&pool)
             .await
