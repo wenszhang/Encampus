@@ -1,5 +1,5 @@
-use leptos::logging;
 use plotters::prelude::*;
+use plotters::series::Histogram;
 use plotters_canvas::CanvasBackend;
 use wasm_bindgen::{JsCast, JsValue};
 use web_sys::HtmlCanvasElement;
