@@ -1,0 +1,1 @@
+ps `cat deployment/running_encampus_pid`
