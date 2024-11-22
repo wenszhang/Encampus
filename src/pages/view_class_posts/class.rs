@@ -15,6 +15,7 @@ use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 
 use leptos::*;
+use leptos_dom::logging::console_log;
 use leptos_router::{use_params, Outlet, Params};
 
 #[derive(Params, PartialEq, Clone)]
@@ -52,9 +53,9 @@ pub fn ClassPage() -> impl IntoView {
     let posts = create_resource(
         move || (post_data),
         |post_data| async move {
-            get_posts(post_data.class_id, post_data.user_id)
-                .await
-                .unwrap_or_default()
+            let posts = get_posts(post_data.class_id, post_data.user_id).await;
+            console_log(format!("{:?}", posts).as_str());
+            posts.unwrap_or_else(|_| vec![])
         },
     );
     provide_context(posts);

@@ -2,10 +2,12 @@
 use super::user_functions::UserId;
 use crate::data::database::class_functions::get_class_description;
 use crate::data::database::reply_functions::add_reply;
-use crate::pages::view_class_posts::create_post::AddPostInfo;
 use crate::pages::view_class_posts::focused_post::AddReplyInfo;
+use crate::{
+    data::database::EncampusServerError, pages::view_class_posts::create_post::AddPostInfo,
+};
 use leptos::logging::error;
-use leptos::{server, ServerFnError};
+use leptos::{leptos_dom::logging::console_log, server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
 /**
@@ -35,12 +37,48 @@ pub struct PostFetcher {
  * Get all posts for a class given the class id
  */
 #[server(GetPosts)]
-pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerFnError> {
+pub async fn get_posts(
+    class_id: i32,
+    user_id: i32,
+) -> Result<Vec<Post>, ServerFnError<EncampusServerError>> {
+    console_log("Getting posts");
+    // crate::expect_authenticated_user_or_redirect_to_login!();
+    // match async {
+    //     use crate::Authentication;
+    //     use crate::AuthenticationSession;
+    //     use leptos::expect_context;
+
+    //     let auth = expect_context::<AuthenticationSession>()
+    //         .get_authentication()
+    //         .await;
+    //     match auth {
+    //         Authentication::Unauthenticated => None,
+    //         Authentication::Authenticated(user) => {
+    //             console_log(format!("{:?}", user).as_str());
+    //             Some(user)
+    //         }
+    //     }
+    // }
+    // .await
+    // {
+    //     Some(user) => user,
+    //     None => {
+    //         use leptos::ServerFnError;
+    //         console_log("User is not authenticated");
+    //         leptos_axum::redirect("/login");
+    //         return Err(
+    //             ServerFnError::<crate::data::database::EncampusServerError>::WrappedServerError(
+    //                 crate::data::database::EncampusServerError::AuthenticationError,
+    //             ),
+    //         );
+    //     }
+    // }
+    console_log("User is authenticated");
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
-    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
-        "Unable to complete Request".to_string(),
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::WrappedServerError(
+        EncampusServerError::UnrecoverableServerError,
     ))?;
 
     let rows: Vec<Post> = sqlx::query_as(
