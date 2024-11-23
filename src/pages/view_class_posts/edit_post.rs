@@ -69,7 +69,8 @@ pub fn EditPost() -> impl IntoView {
                 Ok(_) => {
                     let navigate = leptos_router::use_navigate();
                     navigate(
-                        format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
+                        format!("/classes/{}/{}", class_id.get().unwrap().class_id, post_id)
+                            .as_str(),
                         Default::default(),
                     );
                 }
