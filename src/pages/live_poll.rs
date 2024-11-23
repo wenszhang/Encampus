@@ -1,4 +1,5 @@
 use ev::MouseEvent;
+use gloo_timers::callback::Interval;
 use leptos::*;
 use leptos::{create_effect, on_cleanup};
 use leptos_router::use_params;
@@ -18,7 +19,7 @@ pub fn LivePoll() -> impl IntoView {
     let class_id = use_params::<ClassId>();
 
     // Modified polls resource to filter for students
-    let polls = create_resource(class_id, move |class_id| async move {
+    let polls_resource = create_resource(class_id, move |class_id| async move {
         let course_id = class_id.unwrap().class_id;
         // First check if user is instructor
         let is_instructor = check_user_is_instructor(user().id, course_id)
@@ -26,7 +27,7 @@ pub fn LivePoll() -> impl IntoView {
             .unwrap_or(false);
 
         // Then get and filter polls accordingly
-        match get_all_polls(course_id).await {
+        match get_all_polls(course_id, user().id).await {
             Ok(all_polls) => {
                 if is_instructor {
                     all_polls
@@ -34,7 +35,7 @@ pub fn LivePoll() -> impl IntoView {
                     // Only show active polls to students
                     all_polls
                         .into_iter()
-                        .filter(|poll| poll.is_active)
+                        .filter(|poll| poll.poll.is_active)
                         .collect()
                 }
             }
@@ -44,6 +45,15 @@ pub fn LivePoll() -> impl IntoView {
             }
         }
     });
+
+    // Interval callback to fetch poll results every 3 seconds
+    create_effect(move |_| {
+        Interval::new(3000, move || {
+            polls_resource.refetch();
+        })
+    });
+
+    let polls = create_memo(move |_| polls_resource.get());
 
     // Rest of your component remains exactly the same
     let (show_modal, set_show_modal) = create_signal(false);
@@ -61,7 +71,7 @@ pub fn LivePoll() -> impl IntoView {
         spawn_local(async move {
             let course_id = class_id().unwrap().class_id;
             if let Ok(_) = create_poll(question, course_id, answers).await {
-                polls.refetch();
+                polls_resource.refetch();
             }
             set_show_modal.set(false);
         });
@@ -88,7 +98,7 @@ pub fn LivePoll() -> impl IntoView {
               </Show>
             </Suspense>
           </div>
-          <Suspense fallback=move || {
+          <Transition fallback=move || {
             view! { <p>"Loading polls..."</p> }.into_view()
           }>
             {move || {
@@ -97,12 +107,12 @@ pub fn LivePoll() -> impl IntoView {
                 .map(|polls| {
                   polls
                     .iter()
-                    .map(|poll| view! { <PollCard poll_data=poll.clone() /> }.into_view())
+                    .map(|poll| view! { <PollCard poll_data=poll.poll.clone() /> }.into_view())
                     .collect::<Vec<_>>()
                 })
                 .into_view()
             }}
-          </Suspense>
+          </Transition>
           <PollCreationModal
             is_visible=show_modal.into()
             on_close=Box::new(move |_| set_show_modal.update(|v| *v = false))
@@ -144,9 +154,7 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
     let student_answer = create_resource(
         move || (user_id, poll_id),
         move |(user_id, poll_id)| async move {
-            get_student_answer(user_id, poll_id)
-                .await
-                .unwrap_or_else(|_| None)
+            get_student_answer(user_id, poll_id).await.unwrap_or(None)
         },
     );
 
@@ -216,30 +224,20 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
         });
     };
 
-    // Event loop to fetch poll results every 5 seconds
+    // Interval callback to fetch poll results every 2 seconds
     create_effect(move |_| {
         if has_voted() && poll().is_active {
-            let interval_callback = Closure::wrap(Box::new(move || {
+            // creates a new interval, following
+            Some(Interval::new(2000, move || {
                 spawn_local(async move {
                     if let Ok(updated_poll) = get_poll_by_id(poll_id).await {
                         poll.set(updated_poll);
                     }
                     poll_answers.refetch();
                 });
-            }) as Box<dyn Fn()>);
-
-            let interval_id = window()
-                .set_interval_with_callback_and_timeout_and_arguments_0(
-                    interval_callback.as_ref().unchecked_ref(),
-                    Duration::from_secs(5).as_millis() as i32,
-                )
-                .unwrap();
-
-            interval_callback.forget();
-
-            on_cleanup(move || {
-                window().clear_interval_with_handle(interval_id);
-            });
+            }))
+        } else {
+            None
         }
     });
 

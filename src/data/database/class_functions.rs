@@ -337,9 +337,6 @@ pub async fn check_user_is_instructor(user_id: i32, class_id: i32) -> Result<boo
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::postgres::PgPool;
 
-    println!("{} userid", user_id);
-    println!("{} classid", class_id);
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;

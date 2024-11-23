@@ -2,7 +2,7 @@ use crate::data::database::class_functions::check_user_is_instructor;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
-#[derive(Clone, Serialize, Deserialize, Default, Debug)]
+#[derive(Clone, Serialize, Deserialize, Default, Debug, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Poll {
     pub id: i32,
@@ -11,7 +11,14 @@ pub struct Poll {
     pub course_id: i32,
 }
 
-#[derive(Clone, Serialize, Deserialize, Default, Debug)]
+#[derive(Clone, Serialize, Deserialize, Debug, PartialEq)]
+pub struct PollWithAnswers {
+    pub poll: Poll,
+    pub answers: Vec<Answer>,
+    pub voted_for: Option<String>,
+}
+
+#[derive(Clone, Serialize, Deserialize, Default, Debug, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
 pub struct Answer {
     pub pollid: i32,
@@ -108,7 +115,7 @@ pub async fn get_poll_answers(poll_id: i32) -> Result<Vec<Answer>, ServerFnError
     ))?;
 
     let answers: Vec<Answer> = sqlx::query_as::<_, Answer>(
-        "SELECT pollid, answer, voted_count FROM answers WHERE pollid = $1",
+        "SELECT pollid, answer, voted_count FROM answers WHERE pollid = $1 Order by answer",
     )
     .bind(poll_id)
     .fetch_all(&pool)
@@ -358,7 +365,10 @@ pub async fn delete_poll(poll_id: i32) -> Result<(), ServerFnError> {
 // Maybe make an get all polls?? May need other server functions
 
 #[server(GetAllPolls)]
-pub async fn get_all_polls(course_id: i32) -> Result<Vec<Poll>, ServerFnError> {
+pub async fn get_all_polls(
+    course_id: i32,
+    user_id: i32,
+) -> Result<Vec<PollWithAnswers>, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
     use sqlx::{postgres::PgPool, Row};
 
@@ -366,15 +376,30 @@ pub async fn get_all_polls(course_id: i32) -> Result<Vec<Poll>, ServerFnError> {
         "Unable to complete request".to_string(),
     ))?;
 
-    let polls: Vec<Poll> = sqlx::query_as("SELECT * FROM polls WHERE course_id = $1")
-        .bind(course_id)
-        .fetch_all(&pool)
-        .await
-        .map_err(|_| {
-            ServerFnError::<NoCustomError>::ServerError("Unable to delete poll".to_string())
-        })?;
+    let polls: Vec<Poll> =
+        sqlx::query_as("SELECT * FROM polls WHERE course_id = $1 order by created_at DESC")
+            .bind(course_id)
+            .fetch_all(&pool)
+            .await
+            .map_err(|_| {
+                ServerFnError::<NoCustomError>::ServerError("Unable to delete poll".to_string())
+            })?;
 
-    Ok(polls)
+    let polls_with_answers = futures::future::join_all(polls.into_iter().map(|poll| async {
+        let poll_id = poll.id;
+        PollWithAnswers {
+            poll,
+            answers: get_poll_answers(poll_id)
+                .await
+                .expect("All polls are valid when getting answers"),
+            voted_for: get_student_answer(user_id, poll_id)
+                .await
+                .expect("able to get student answer when getting polls"),
+        }
+    }))
+    .await;
+
+    Ok(polls_with_answers)
 }
 
 #[server(SetPollActiveStatus)]
