@@ -1,3 +1,4 @@
+use crate::data::database::class_functions::check_user_is_instructor;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
 
@@ -125,21 +126,33 @@ pub async fn vote_on_poll_answer(
     old_answer: Option<String>,
 ) -> Result<(), ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::{postgres::PgPool, Executor}; // Ensure Executor is imported
+    use sqlx::{postgres::PgPool, Executor};
 
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
+
+    // First check if user is a student (not an instructor)
+    let is_instructor = check_user_is_instructor(user_id, poll_id)
+        .await
+        .unwrap_or(false);
+
+    if is_instructor {
+        return Err(ServerFnError::<NoCustomError>::ServerError(
+            "Instructors are not allowed to vote".to_string(),
+        ));
+    }
 
     let mut tx = pool
         .begin()
         .await
         .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
 
-    // Borrow old_answer to avoid moving it
-    if let Some(ref old_answer_value) = old_answer {
+    // If there was an old answer, decrease its count
+    if let Some(old_answer_value) = old_answer {
         sqlx::query(
-            "UPDATE answers SET voted_count = voted_count - 1
+            "UPDATE answers 
+             SET voted_count = voted_count - 1
              WHERE pollid = $1 AND answer = $2",
         )
         .bind(poll_id)
@@ -149,30 +162,40 @@ pub async fn vote_on_poll_answer(
         .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
     }
 
-    // Now old_answer can still be used here
-    if old_answer.is_some() {
-        sqlx::query(
-            "UPDATE student_answers SET answer = $1
-             WHERE user_id = $2 AND pollid = $3",
-        )
-        .bind(&new_answer)
-        .bind(user_id)
-        .bind(poll_id)
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
-    } else {
-        sqlx::query(
-            "INSERT INTO student_answers (user_id, pollid, answer)
-             VALUES ($1, $2, $3)",
-        )
-        .bind(user_id)
-        .bind(poll_id)
-        .bind(&new_answer)
-        .execute(&mut *tx)
-        .await
-        .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
-    }
+    // Increment the new answer's count
+    sqlx::query(
+        "UPDATE answers 
+         SET voted_count = voted_count + 1
+         WHERE pollid = $1 AND answer = $2",
+    )
+    .bind(poll_id)
+    .bind(&new_answer)
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
+
+    // Delete old student answer if it exists
+    sqlx::query(
+        "DELETE FROM student_answers 
+         WHERE user_id = $1 AND pollid = $2",
+    )
+    .bind(user_id)
+    .bind(poll_id)
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
+
+    // Insert new student answer
+    sqlx::query(
+        "INSERT INTO student_answers (user_id, pollid, answer)
+         VALUES ($1, $2, $3)",
+    )
+    .bind(user_id)
+    .bind(poll_id)
+    .bind(&new_answer)
+    .execute(&mut *tx)
+    .await
+    .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
 
     tx.commit()
         .await
@@ -181,6 +204,7 @@ pub async fn vote_on_poll_answer(
     Ok(())
 }
 
+// Get student's existing answer
 #[server(GetStudentAnswer)]
 pub async fn get_student_answer(
     user_id: i32,
@@ -193,15 +217,16 @@ pub async fn get_student_answer(
         "Unable to complete request".to_string(),
     ))?;
 
-    let result: Option<(String,)> =
-        sqlx::query_as("SELECT answer FROM student_answers WHERE user_id = $1 AND pollid = $2")
-            .bind(user_id)
-            .bind(poll_id)
-            .fetch_optional(&pool)
-            .await
-            .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
+    let result = sqlx::query_scalar::<_, String>(
+        "SELECT answer FROM student_answers WHERE user_id = $1 AND pollid = $2",
+    )
+    .bind(user_id)
+    .bind(poll_id)
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
 
-    Ok(result.map(|(answer,)| answer))
+    Ok(result)
 }
 
 // For student to get the options of the poll. ALso need them to get the question of the poll. get question of the poll and options of the poll in one fucntion.
@@ -352,7 +377,6 @@ pub async fn get_all_polls(course_id: i32) -> Result<Vec<Poll>, ServerFnError> {
     Ok(polls)
 }
 
-// Server function to control setting the boolean is_active in polls table.
 #[server(SetPollActiveStatus)]
 pub async fn set_poll_active_status(poll_id: i32, is_active: bool) -> Result<Poll, ServerFnError> {
     use leptos::{server_fn::error::NoCustomError, use_context};
@@ -362,14 +386,13 @@ pub async fn set_poll_active_status(poll_id: i32, is_active: bool) -> Result<Pol
         "Unable to complete request".to_string(),
     ))?;
 
-    let poll: Poll = sqlx::query_as("UPDATE polls SET is_active = $1 WHERE id = $2 RETURNING *")
-        .bind(is_active)
-        .bind(poll_id)
-        .fetch_one(&pool)
-        .await
-        .map_err(|_| {
-            ServerFnError::<NoCustomError>::ServerError("Unable to update poll status".to_string())
-        })?;
+    let poll =
+        sqlx::query_as::<_, Poll>("UPDATE polls SET is_active = $1 WHERE id = $2 RETURNING *")
+            .bind(is_active)
+            .bind(poll_id)
+            .fetch_one(&pool)
+            .await
+            .map_err(|e| ServerFnError::<NoCustomError>::ServerError(e.to_string()))?;
 
     Ok(poll)
 }

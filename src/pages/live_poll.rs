@@ -17,9 +17,27 @@ pub fn LivePoll() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
     let class_id = use_params::<ClassId>();
 
+    // Modified polls resource to filter for students
     let polls = create_resource(class_id, move |class_id| async move {
-        match get_all_polls(class_id.unwrap().class_id).await {
-            Ok(polls) => polls,
+        let course_id = class_id.unwrap().class_id;
+        // First check if user is instructor
+        let is_instructor = check_user_is_instructor(user().id, course_id)
+            .await
+            .unwrap_or(false);
+
+        // Then get and filter polls accordingly
+        match get_all_polls(course_id).await {
+            Ok(all_polls) => {
+                if is_instructor {
+                    all_polls
+                } else {
+                    // Only show active polls to students
+                    all_polls
+                        .into_iter()
+                        .filter(|poll| poll.is_active)
+                        .collect()
+                }
+            }
             Err(err) => {
                 logging::error!("Failed to fetch polls: {}", err);
                 vec![]
@@ -27,6 +45,7 @@ pub fn LivePoll() -> impl IntoView {
         }
     });
 
+    // Rest of your component remains exactly the same
     let (show_modal, set_show_modal) = create_signal(false);
 
     let is_instructor = create_resource(class_id, move |class_id| {
@@ -42,21 +61,24 @@ pub fn LivePoll() -> impl IntoView {
         spawn_local(async move {
             let course_id = class_id().unwrap().class_id;
             if let Ok(_) = create_poll(question, course_id, answers).await {
-                // Re-fetch the polls instead of updating manually
                 polls.refetch();
             }
             set_show_modal.set(false);
         });
     };
 
+    // Your existing view code remains exactly the same
     view! {
       <div class="flex">
         <Sidebar />
         <div class="container flex-grow p-4 my-8 mx-auto">
           <div class="flex justify-between items-center mb-6">
             <h1 class="text-3xl font-extrabold text-gray-800">"Live Polls"</h1>
-            <Suspense fallback=move || view! { <span>"Loading..."</span> }>
-              <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
+            <Suspense fallback=move || view! { <span>"Loading..."</span> }.into_view()>
+              <Show
+                when=move || is_instructor.get().unwrap_or(false)
+                fallback=|| view! { <div></div> }.into_view()
+              >
                 <button
                   class="py-2 px-4 text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded hover:from-blue-600 hover:to-indigo-700"
                   on:click=move |_| set_show_modal.update(|v| *v = true)
@@ -67,7 +89,7 @@ pub fn LivePoll() -> impl IntoView {
             </Suspense>
           </div>
           <Suspense fallback=move || {
-            view! { <p>"Loading polls..."</p> }
+            view! { <p>"Loading polls..."</p> }.into_view()
           }>
             {move || {
               polls
@@ -75,9 +97,7 @@ pub fn LivePoll() -> impl IntoView {
                 .map(|polls| {
                   polls
                     .iter()
-                    .map(|poll| {
-                      view! { <PollCard poll_data=poll.clone() /> }
-                    })
+                    .map(|poll| view! { <PollCard poll_data=poll.clone() /> }.into_view())
                     .collect::<Vec<_>>()
                 })
                 .into_view()
@@ -103,6 +123,18 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
     let (selected_answer, set_selected_answer) = create_signal(None::<String>);
     let (has_voted, set_has_voted) = create_signal(false);
     let (is_deleted, set_is_deleted) = create_signal(false);
+
+    let is_instructor = create_resource(
+        move || user_id,
+        move |user_id| {
+            let class_id = poll().course_id;
+            async move {
+                check_user_is_instructor(user_id, class_id)
+                    .await
+                    .unwrap_or(false)
+            }
+        },
+    );
 
     let poll_answers = create_resource(
         move || poll_id,
@@ -158,17 +190,21 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
         });
     };
 
-    // Voting function
+    // Updated voting function
     let vote_on_answer = move |answer_text: String| {
-        if !poll().is_active {
-            return; // Prevent voting on inactive polls
+        // Check if poll is inactive or user is instructor - prevent voting in either case
+        if !poll().is_active || is_instructor.get().unwrap_or(false) {
+            return;
         }
 
         let old_answer = selected_answer();
+        // Don't do anything if clicking the same answer
+        if old_answer.as_ref() == Some(&answer_text) {
+            return;
+        }
         let new_answer = answer_text.clone();
         let user_id = user().id;
         let poll_id = poll_id;
-
         spawn_local(async move {
             if let Ok(_) =
                 vote_on_poll_answer(user_id, poll_id, new_answer.clone(), old_answer).await
@@ -206,18 +242,6 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
             });
         }
     });
-
-    let is_instructor = create_resource(
-        move || user_id,
-        move |user_id| {
-            let class_id = poll().course_id;
-            async move {
-                check_user_is_instructor(user_id, class_id)
-                    .await
-                    .unwrap_or(false)
-            }
-        },
-    );
 
     view! {
       <Show when=move || !is_deleted() fallback=|| view! { <div></div> }>
@@ -288,9 +312,17 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
 
           <h2 class="mb-4 text-xl font-semibold text-gray-900">{poll.get().question.clone()}</h2>
 
-          // Show message if student has voted
+          // Updated vote message section with conditional text
           <Show when=move || !is_instructor.get().unwrap_or(false) && has_voted() fallback=|| ()>
-            <p class="mb-4 font-medium text-green-600">"You have voted on this poll"</p>
+            <p class="mb-4 font-medium">
+              {move || {
+                if poll().is_active {
+                  view! { <span class="text-green-600">"You have voted on this poll"</span> }
+                } else {
+                  view! { <span class="text-blue-600">"Voting has ended"</span> }
+                }
+              }}
+            </p>
           </Show>
 
           <div class="space-y-2">
@@ -309,20 +341,21 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
                         class=move || {
                           let base_classes = "px-4 py-2 rounded-md w-full text-left";
                           if selected_answer() == Some(answer_text_for_class.clone()) {
-                            format!("{} bg-indigo-500 text-white", base_classes)
+                            format!("{} bg-customBlue text-white", base_classes)
                           } else {
                             format!("{} bg-gray-200 hover:bg-gray-300", base_classes)
                           }
                         }
                         on:click=move |_| vote_on_answer(answer_text_for_click.clone())
                         disabled=move || {
-                          !poll.get().is_active
-                            || (has_voted() && !is_instructor.get().unwrap_or(false))
+                          !poll.get().is_active || is_instructor.get().unwrap_or(false)
                         }
                       >
                         <div class="flex justify-between items-center">
                           <span>{answer_text.clone()}</span>
-                          <Show when=move || has_voted() || !poll.get().is_active>
+                          <Show when=move || {
+                            !poll.get().is_active || is_instructor.get().unwrap_or(false)
+                          }>
                             <span class="ml-2 text-sm">{format!("{} votes", vote_count)}</span>
                           </Show>
                         </div>
@@ -339,7 +372,6 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
       </Show>
     }
 }
-
 #[derive(Clone)]
 struct AnswerField {
     content: RwSignal<String>,

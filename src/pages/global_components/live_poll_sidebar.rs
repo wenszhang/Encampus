@@ -99,10 +99,12 @@ fn expanded_view(
 
           <ul>
             <li class="flex items-center py-2">
-              <HomeIcon size="2em" />
-              // href=format!("/classes/ {}", class_id_val) // try to get this to work.
-              <A href="/classes" class="block py-2 px-4 text-white rounded-md hover:bg-gray-700">
-                "Back to Home"
+              <A
+                href=move || format!("/classes/{}", class_id_val)
+                class="flex gap-2 items-center py-2 px-4 text-white rounded-md hover:bg-gray-700"
+              >
+                <HomeIcon size="1em" />
+                <span>"Back to Home"</span>
               </A>
             </li>
           // <li class="flex items-center py-2">
