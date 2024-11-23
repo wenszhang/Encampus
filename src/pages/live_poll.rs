@@ -127,17 +127,32 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
     });
 
     // Delete poll action
-    let delete_poll = move |_| {
+    let delete_poll = move |_: MouseEvent| {
         let poll_id = poll_id;
         spawn_local(async move {
             match delete_poll(poll_id).await {
                 Ok(_) => {
                     set_is_deleted(true);
-                    // Optionally show a success notification here
                 }
                 Err(e) => {
                     logging::error!("Failed to delete poll: {}", e);
-                    // Optionally show an error notification here
+                }
+            }
+        });
+    };
+
+    // Toggle poll status action
+    let toggle_poll_status = move |_: MouseEvent| {
+        let poll_id = poll_id;
+        let new_status = !poll().is_active;
+
+        spawn_local(async move {
+            match set_poll_active_status(poll_id, new_status).await {
+                Ok(updated_poll) => {
+                    poll.set(updated_poll);
+                }
+                Err(e) => {
+                    logging::error!("Failed to update poll status: {}", e);
                 }
             }
         });
@@ -145,6 +160,10 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
 
     // Voting function
     let vote_on_answer = move |answer_text: String| {
+        if !poll().is_active {
+            return; // Prevent voting on inactive polls
+        }
+
         let old_answer = selected_answer();
         let new_answer = answer_text.clone();
         let user_id = user().id;
@@ -204,26 +223,76 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
       <Show when=move || !is_deleted() fallback=|| view! { <div></div> }>
         <div class="relative p-6 bg-white rounded-lg border border-gray-200 shadow-lg group">
           <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
-            <button
-              class="absolute top-2 right-2 p-2 text-gray-500 rounded-full opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500 hover:bg-gray-100"
-              on:click=delete_poll
-              title="Delete poll"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="w-5 h-5"
-                viewBox="0 0 20 20"
-                fill="currentColor"
+            <div class="flex absolute top-2 right-2 items-center space-x-2">
+              <span class=move || {
+                if poll().is_active {
+                  "text-green-500 font-medium mr-2"
+                } else {
+                  "text-red-500 font-medium mr-2"
+                }
+              }>{move || if poll().is_active { "Active" } else { "Inactive" }}</span>
+
+              <button
+                class="p-2 text-gray-500 rounded-full opacity-0 transition-opacity group-hover:opacity-100 hover:text-blue-500 hover:bg-gray-100"
+                on:click=toggle_poll_status
+                title=move || if poll().is_active { "End Poll" } else { "Reactivate Poll" }
               >
-                <path
-                  fill-rule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clip-rule="evenodd"
-                />
-              </svg>
-            </button>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  {move || {
+                    if poll().is_active {
+                      view! {
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1zm4 0a1 1 0 00-1 1v4a1 1 0 002 0V8a1 1 0 00-1-1z"
+                          clip-rule="evenodd"
+                        />
+                      }
+                    } else {
+                      view! {
+                        <path
+                          fill-rule="evenodd"
+                          d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z"
+                          clip-rule="evenodd"
+                        />
+                      }
+                    }
+                  }}
+                </svg>
+              </button>
+
+              <button
+                class="p-2 text-gray-500 rounded-full opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500 hover:bg-gray-100"
+                on:click=delete_poll
+                title="Delete poll"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  class="w-5 h-5"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fill-rule="evenodd"
+                    d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                    clip-rule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
           </Show>
+
           <h2 class="mb-4 text-xl font-semibold text-gray-900">{poll.get().question.clone()}</h2>
+
+          // Show message if student has voted
+          <Show when=move || !is_instructor.get().unwrap_or(false) && has_voted() fallback=|| ()>
+            <p class="mb-4 font-medium text-green-600">"You have voted on this poll"</p>
+          </Show>
+
           <div class="space-y-2">
             {move || match poll_answers.get() {
               Some(answers) => {
@@ -246,16 +315,17 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
                           }
                         }
                         on:click=move |_| vote_on_answer(answer_text_for_click.clone())
-                        disabled=move || !poll.get().is_active
+                        disabled=move || {
+                          !poll.get().is_active
+                            || (has_voted() && !is_instructor.get().unwrap_or(false))
+                        }
                       >
-                        {answer_text.clone()}
-                        {move || {
-                          if !poll.get().is_active {
-                            format!(" - {} votes", vote_count)
-                          } else {
-                            "".to_string()
-                          }
-                        }}
+                        <div class="flex justify-between items-center">
+                          <span>{answer_text.clone()}</span>
+                          <Show when=move || has_voted() || !poll.get().is_active>
+                            <span class="ml-2 text-sm">{format!("{} votes", vote_count)}</span>
+                          </Show>
+                        </div>
                       </button>
                     }
                   })
@@ -268,7 +338,6 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
         </div>
       </Show>
     }
-    .into_view()
 }
 
 #[derive(Clone)]

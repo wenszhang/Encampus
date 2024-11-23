@@ -351,3 +351,25 @@ pub async fn get_all_polls(course_id: i32) -> Result<Vec<Poll>, ServerFnError> {
 
     Ok(polls)
 }
+
+// Server function to control setting the boolean is_active in polls table.
+#[server(SetPollActiveStatus)]
+pub async fn set_poll_active_status(poll_id: i32, is_active: bool) -> Result<Poll, ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete request".to_string(),
+    ))?;
+
+    let poll: Poll = sqlx::query_as("UPDATE polls SET is_active = $1 WHERE id = $2 RETURNING *")
+        .bind(is_active)
+        .bind(poll_id)
+        .fetch_one(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Unable to update poll status".to_string())
+        })?;
+
+    Ok(poll)
+}
