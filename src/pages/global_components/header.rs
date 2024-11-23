@@ -9,7 +9,7 @@ use crate::{
     app::expect_auth_context, data::database::announcement_functions::get_announcement_list,
 };
 use leptos::*;
-use leptos_router::ActionForm;
+use leptos_router::{ActionForm, A};
 
 #[component]
 pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
@@ -18,18 +18,23 @@ pub fn AnnouncementInfo(class_id: impl Fn() -> i32 + 'static) -> impl IntoView {
     });
 
     view! {
-      <ul class="py-1 mx-1 w-40 text-lg text-left text-gray-700">
+      <ul class="py-1 mx-1 w-40 z-[9999] text-lg text-left text-gray-700" style="position: relative;">
         <Suspense fallback=move || {
           view! { <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">"Loading..."</li> }
         }>
           {announcements()
             .map(|announcement_info_vec| {
               announcement_info_vec
-                .into_iter()
+                .into_iter().rev().take(3)
                 .map(|announcement_info| {
                   view! {
                     <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
+                      <A href=format!(
+                              "/classes/{}/announcement/{}",
+                              announcement_info.class_id,
+                              announcement_info.announcement_id,)class="block">
                       {announcement_info.title}
+                      </A>
                     </li>
                   }
                 })
@@ -99,7 +104,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                         <AnnouncementBell size="1.3rem" />
                       </button>
                     </span>
-                    <div class="absolute right-0 top-full invisible bg-white rounded-lg shadow-md group-hover:visible group-hover:opacity-100 group-hover:scale-100 mt-[-0.1rem]">
+                    <div class=" z-[9999] absolute right-0 top-full invisible bg-white rounded-lg shadow-md group-hover:visible group-hover:opacity-100 group-hover:scale-100 mt-[-0.1rem]">
                       <AnnouncementInfo class_id=move || class_id />
                     </div>
                   </div>
