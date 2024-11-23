@@ -21,6 +21,9 @@ pub fn Home() -> impl IntoView {
             >
               "Login to your account"
             </A>
+            <p class="mt-4 text-center">
+              <a href="/about-us">"About Us"</a>
+            </p>
           </main>
           <footer class="pt-8 mt-auto">
             <p class="text-center">"© 2024 Encampus"</p>
