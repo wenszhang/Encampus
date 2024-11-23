@@ -79,34 +79,42 @@ fn expanded_view(
         </Suspense>
 
         <div class="overflow-y-auto flex-grow px-4 mt-6 custom-scrollbar">
-            <h2 class="mb-2 text-sm tracking-widest text-gray-400 uppercase">"Fall 24 Courses"</h2> // EDIT THIS TO DISPLAY WHATEVER COURSE YOU ARE IN
-            <Suspense fallback=move || view! { <p>"Loading courses..."</p> }>
-                <ul>
-                    <For each=move || courses().unwrap_or_default() key=|class| class.id let:class>
-                        <li class="py-2">
-                            <A
-                                href=format!("/classes/{}", class.id)
-                                target="_self"
-                                class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
-                            >
-                                {class.name}
-                            </A>
-                        </li>
-                    </For>
-                </ul>
-            </Suspense>
-
+          // EDIT THIS TO DISPLAY WHATEVER COURSE YOU ARE IN
+          <h2 class="mb-2 text-sm tracking-widest text-gray-400 uppercase">"Fall 24 Courses"</h2>
+          <Suspense fallback=move || view! { <p>"Loading courses..."</p> }>
             <ul>
-                <li class="py-2 flex items-center">
-                    <HomeIcon size="2em" />
-                    <A href="/" class="block py-2 px-4 text-white rounded-md hover:bg-gray-700">"Back to Home"</A>
+              <For each=move || courses().unwrap_or_default() key=|class| class.id let:class>
+                <li class="py-2">
+                  <A
+                    href=format!("/classes/{}", class.id)
+                    target="_self"
+                    class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                  >
+                    {class.name}
+                  </A>
                 </li>
-                <li class="py-2 flex items-center">
-                    <PollingIcon  size="2em" />
-                    <A href=format!("/class/{}/poll", class_id_val) class="block py-2 px-4 text-white rounded-md hover:bg-gray-700">"My Polls"</A>
-                </li>
-              
+              </For>
             </ul>
+          </Suspense>
+
+          <ul>
+            <li class="flex items-center py-2">
+              <HomeIcon size="2em" />
+              // href=format!("/classes/ {}", class_id_val) // try to get this to work.
+              <A href="/classes" class="block py-2 px-4 text-white rounded-md hover:bg-gray-700">
+                "Back to Home"
+              </A>
+            </li>
+          // <li class="flex items-center py-2">
+          // <PollingIcon size="2em" />
+          // <A
+          // href=format!("/class/{}/poll", class_id_val)
+          // class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+          // >
+          // "My Polls"
+          // </A>
+          // </li>
+          </ul>
         </div>
       </div>
     }.into_view()

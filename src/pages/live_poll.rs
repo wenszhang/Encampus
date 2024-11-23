@@ -1,11 +1,8 @@
-use std::time::Duration;
-
-use chrono::NaiveDateTime;
 use ev::MouseEvent;
 use leptos::*;
-use leptos::{create_effect, on_cleanup, set_interval};
+use leptos::{create_effect, on_cleanup};
 use leptos_router::use_params;
-use serde::{Deserialize, Serialize};
+use std::time::Duration;
 use wasm_bindgen::prelude::Closure;
 use wasm_bindgen::JsCast;
 
@@ -53,36 +50,46 @@ pub fn LivePoll() -> impl IntoView {
     };
 
     view! {
-        <div class="flex">
-            <Sidebar />
-            <div class="container mx-auto my-8 p-4 flex-grow">
-                <div class="flex justify-between items-center mb-6">
-                    <h1 class="text-3xl font-extrabold text-gray-800">"Live Polls"</h1>
-                    <Suspense fallback=move || view! { <span>"Loading..."</span> }>
-                        <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
-                            <button
-                                class="py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded hover:from-blue-600 hover:to-indigo-700"
-                                on:click=move |_| set_show_modal.update(|v| *v = true)
-                            >
-                                "+ Create Poll"
-                            </button>
-                        </Show>
-                    </Suspense>
-                </div>
-                <Suspense fallback=move || view! { <p>"Loading polls..."</p> }>
-                    {move || polls.read().map(|polls| {
-                        polls.iter().map(|poll| {
-                            view! { <PollCard poll_data=poll.clone() /> }
-                        }).collect::<Vec<_>>()
-                    }).into_view()}
-                </Suspense>
-                <PollCreationModal
-                    is_visible=show_modal.into()
-                    on_close=Box::new(move |_| set_show_modal.update(|v| *v = false))
-                    on_create=Box::new(create_new_poll)
-                />
-            </div>
+      <div class="flex">
+        <Sidebar />
+        <div class="container flex-grow p-4 my-8 mx-auto">
+          <div class="flex justify-between items-center mb-6">
+            <h1 class="text-3xl font-extrabold text-gray-800">"Live Polls"</h1>
+            <Suspense fallback=move || view! { <span>"Loading..."</span> }>
+              <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
+                <button
+                  class="py-2 px-4 text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded hover:from-blue-600 hover:to-indigo-700"
+                  on:click=move |_| set_show_modal.update(|v| *v = true)
+                >
+                  "+ Create Poll"
+                </button>
+              </Show>
+            </Suspense>
+          </div>
+          <Suspense fallback=move || {
+            view! { <p>"Loading polls..."</p> }
+          }>
+            {move || {
+              polls
+                .get()
+                .map(|polls| {
+                  polls
+                    .iter()
+                    .map(|poll| {
+                      view! { <PollCard poll_data=poll.clone() /> }
+                    })
+                    .collect::<Vec<_>>()
+                })
+                .into_view()
+            }}
+          </Suspense>
+          <PollCreationModal
+            is_visible=show_modal.into()
+            on_close=Box::new(move |_| set_show_modal.update(|v| *v = false))
+            on_create=Box::new(create_new_poll)
+          />
         </div>
+      </div>
     }.into_view()
 }
 
@@ -95,6 +102,7 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
 
     let (selected_answer, set_selected_answer) = create_signal(None::<String>);
     let (has_voted, set_has_voted) = create_signal(false);
+    let (is_deleted, set_is_deleted) = create_signal(false);
 
     let poll_answers = create_resource(
         move || poll_id,
@@ -117,6 +125,23 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
             set_has_voted(true);
         }
     });
+
+    // Delete poll action
+    let delete_poll = move |_| {
+        let poll_id = poll_id;
+        spawn_local(async move {
+            match delete_poll(poll_id).await {
+                Ok(_) => {
+                    set_is_deleted(true);
+                    // Optionally show a success notification here
+                }
+                Err(e) => {
+                    logging::error!("Failed to delete poll: {}", e);
+                    // Optionally show an error notification here
+                }
+            }
+        });
+    };
 
     // Voting function
     let vote_on_answer = move |answer_text: String| {
@@ -141,7 +166,6 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
         if has_voted() && poll().is_active {
             let interval_callback = Closure::wrap(Box::new(move || {
                 spawn_local(async move {
-                    // Refetch poll data to update `poll.is_active`
                     if let Ok(updated_poll) = get_poll_by_id(poll_id).await {
                         poll.set(updated_poll);
                     }
@@ -156,58 +180,103 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
                 )
                 .unwrap();
 
-            // Prevent the closure from being dropped
             interval_callback.forget();
 
-            // Cleanup interval on effect teardown
             on_cleanup(move || {
                 window().clear_interval_with_handle(interval_id);
             });
         }
     });
 
+    let is_instructor = create_resource(
+        move || user_id,
+        move |user_id| {
+            let class_id = poll().course_id;
+            async move {
+                check_user_is_instructor(user_id, class_id)
+                    .await
+                    .unwrap_or(false)
+            }
+        },
+    );
+
     view! {
-        <div class="p-6 bg-white rounded-lg shadow-lg border border-gray-200">
-            <h2 class="mb-4 text-xl font-semibold text-gray-900">{poll.get().question.clone()}</h2>
-            <div class="space-y-2">
-                {move || match poll_answers.get() {
-                    Some(answers) => answers.iter().map(|answer| {
-                        let answer_text = answer.answer.clone();
-                        let vote_count = answer.voted_count;
+      <Show when=move || !is_deleted() fallback=|| view! { <div></div> }>
+        <div class="relative p-6 bg-white rounded-lg border border-gray-200 shadow-lg group">
+          <Show when=move || is_instructor.get().unwrap_or(false) fallback=|| ()>
+            <button
+              class="absolute top-2 right-2 p-2 text-gray-500 rounded-full opacity-0 transition-opacity group-hover:opacity-100 hover:text-red-500 hover:bg-gray-100"
+              on:click=delete_poll
+              title="Delete poll"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="w-5 h-5"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </Show>
+          <h2 class="mb-4 text-xl font-semibold text-gray-900">{poll.get().question.clone()}</h2>
+          <div class="space-y-2">
+            {move || match poll_answers.get() {
+              Some(answers) => {
+                answers
+                  .iter()
+                  .map(|answer| {
+                    let answer_text = answer.answer.clone();
+                    let vote_count = answer.voted_count;
+                    let answer_text_for_class = answer_text.clone();
+                    let answer_text_for_click = answer_text.clone();
 
-                        // Clone `answer_text` for closures
-                        let answer_text_for_class = answer_text.clone();
-                        let answer_text_for_click = answer_text.clone();
-
-                        view! {
-                            <button
-                                class=move || {
-                                    let base_classes = "px-4 py-2 rounded-md w-full text-left";
-                                    if selected_answer() == Some(answer_text_for_class.clone()) {
-                                        format!("{} bg-indigo-500 text-white", base_classes)
-                                    } else {
-                                        format!("{} bg-gray-200 hover:bg-gray-300", base_classes)
-                                    }
-                                }
-                                on:click=move |_| vote_on_answer(answer_text_for_click.clone())
-                                disabled=move || !poll.get().is_active
-                            >
-                                {answer_text.clone()}
-                                {move || if !poll.get().is_active {
-                                    format!(" - {} votes", vote_count)
-                                } else {
-                                    "".to_string()
-                                }}
-                            </button>
+                    view! {
+                      <button
+                        class=move || {
+                          let base_classes = "px-4 py-2 rounded-md w-full text-left";
+                          if selected_answer() == Some(answer_text_for_class.clone()) {
+                            format!("{} bg-indigo-500 text-white", base_classes)
+                          } else {
+                            format!("{} bg-gray-200 hover:bg-gray-300", base_classes)
+                          }
                         }
-                    }).collect::<Vec<_>>().into_view(),
-                    None => view! { <p>"Loading options..."</p> }.into_view(),
-                }}
-            </div>
+                        on:click=move |_| vote_on_answer(answer_text_for_click.clone())
+                        disabled=move || !poll.get().is_active
+                      >
+                        {answer_text.clone()}
+                        {move || {
+                          if !poll.get().is_active {
+                            format!(" - {} votes", vote_count)
+                          } else {
+                            "".to_string()
+                          }
+                        }}
+                      </button>
+                    }
+                  })
+                  .collect::<Vec<_>>()
+                  .into_view()
+              }
+              None => view! { <p>"Loading options..."</p> }.into_view(),
+            }}
+          </div>
         </div>
+      </Show>
     }
     .into_view()
 }
+
+#[derive(Clone)]
+struct AnswerField {
+    content: RwSignal<String>,
+    key: i32,
+}
+
 #[component]
 pub fn PollCreationModal(
     is_visible: Signal<bool>,
@@ -215,12 +284,27 @@ pub fn PollCreationModal(
     on_create: Box<dyn Fn(String, Vec<String>) + 'static>,
 ) -> impl IntoView {
     let (question, set_question) = create_signal(String::new());
-    let (answers, set_answers) = create_signal(vec![String::new()]);
+    let (counter, set_counter) = create_signal(0);
+    let (answers, set_answers) = create_signal(vec![AnswerField {
+        content: RwSignal::new(String::new()),
+        key: {
+            let key = counter.get_untracked();
+            set_counter.update(|i| *i += 1);
+            key
+        },
+    }]);
 
     // Function to add a new answer field
     let add_answer_field = move |_| {
         set_answers.update(|ans| {
-            ans.push(String::new());
+            ans.push(AnswerField {
+                content: RwSignal::new(String::new()),
+                key: {
+                    let key = counter.get_untracked();
+                    set_counter.update(|i| *i += 1);
+                    key
+                },
+            });
         });
     };
 
@@ -228,74 +312,82 @@ pub fn PollCreationModal(
         let question_text = question();
         let answers_list = answers()
             .iter()
+            .map(|answer_signal| answer_signal.content.get_untracked())
             .filter(|a| !a.trim().is_empty())
-            .cloned()
             .collect::<Vec<_>>();
         if !question_text.is_empty() && !answers_list.is_empty() {
             on_create(question_text, answers_list);
             set_question.set(String::new());
-            set_answers.set(vec![String::new()]);
+            set_answers.set(vec![AnswerField {
+                content: RwSignal::new(String::new()),
+                key: {
+                    let key = counter.get_untracked();
+                    set_counter.update(|i| *i += 1);
+                    key
+                },
+            }]);
         }
     };
 
     view! {
-        <div class=move || {
-            if is_visible() { "fixed z-40 inset-0 bg-black bg-opacity-50" } else { "hidden" }
-        }></div>
-        <div class=move || {
-            if is_visible() { "fixed z-50 inset-0 flex items-center justify-center" } else { "hidden" }
-        }>
-            <div class="bg-white rounded-lg shadow-xl max-w-lg w-full p-6">
-                <h3 class="text-lg font-bold text-gray-900 mb-4">"Create a new poll"</h3>
-                <input
-                    type="text"
-                    class="w-full rounded-lg border-gray-300 shadow-sm p-3 mb-4 focus:border-indigo-500 focus:ring-indigo-500"
-                    placeholder="Enter your poll question"
-                    prop:value=question
-                    on:input=move |ev| {
-                        set_question.set(event_target_value(&ev));
-                    }
-                />
-      {move || {
-        let answers_vec = answers().clone();
-        answers_vec.into_iter().enumerate().map(move |(index, answer)| {
-            view! {
-                <input
-                    type="text"
-                    class="w-full rounded-lg border-gray-300 shadow-sm p-2 mb-2 focus:border-indigo-500 focus:ring-indigo-500"
-                    placeholder=format!("Answer option {}", index + 1)
-                    value=answer
-                    on:input=move |ev| {
-                        let value = event_target_value(&ev);
-                        set_answers.update(move |ans| {
-                            let mut new_answers = ans.clone();
-                            new_answers[index] = value;
-                            *ans = new_answers;
-                        });
-                    }
-                />
+      <div class=move || {
+        if is_visible() { "fixed z-40 inset-0 bg-black bg-opacity-50" } else { "hidden" }
+      }></div>
+      <div class=move || {
+        if is_visible() { "fixed z-50 inset-0 flex items-center justify-center" } else { "hidden" }
+      }>
+        <div class="p-6 w-full max-w-lg bg-white rounded-lg shadow-xl">
+          <h3 class="mb-4 text-lg font-bold text-gray-900">"Create a new poll"</h3>
+          <input
+            type="text"
+            class="p-3 mb-4 w-full rounded-lg shadow-sm border-customBlue focus:border-customBlue-HOVER focus:ring-customBlue-HOVER"
+            placeholder="Enter your poll question"
+            prop:value=question
+            on:input=move |ev| {
+              set_question.set(event_target_value(&ev));
             }
-        }).collect::<Vec<_>>()
-    }}
-                <button on:click=add_answer_field class="py-2 px-4 bg-gray-300 rounded-lg hover:bg-gray-400">
-                    "+ Add Answer Option"
-                </button>
-                <div class="flex justify-end space-x-4 mt-4">
-                    <button
-                        class="py-2 px-4 bg-gray-300 rounded-lg hover:bg-gray-400"
-                        on:click=on_close
-                    >
-                        "Cancel"
-                    </button>
-                    <button
-                        class="py-2 px-4 bg-gradient-to-r from-blue-500 to-indigo-600 text-white rounded hover:from-blue-600 hover:to-indigo-700"
-                        on:click=create_poll
-                        prop:disabled=move || question().trim().is_empty() || answers().iter().all(|a| a.trim().is_empty())
-                    >
-                        "+ Create"
-                    </button>
-                </div>
-            </div>
+          />
+
+          <For
+            each=answers
+            key=|answer| answer.key
+            children=|answer| {
+              view! {
+                <input
+                  type="text"
+                  class="p-2 mb-2 w-full rounded-lg border-gray-300 shadow-sm border-customBlue focus:border-customBlue-HOVER focus:ring-customBlue-HOVER"
+                  placeholder="Answer option"
+                  value=answer.content
+                  on:input=move |ev| {
+                    let value = event_target_value(&ev);
+                    answer.content.set(value);
+                  }
+                />
+              }
+            }
+          />
+          <button
+            on:click=add_answer_field
+            class="py-2 px-4 bg-gray-300 rounded-lg hover:bg-gray-400"
+          >
+            "+ Add Answer Option"
+          </button>
+          <div class="flex justify-end mt-4 space-x-4">
+            <button class="py-2 px-4 bg-gray-300 rounded-lg hover:bg-gray-400" on:click=on_close>
+              "Cancel"
+            </button>
+            <button
+              class="py-2 px-4 text-white bg-gradient-to-r from-blue-500 to-indigo-600 rounded hover:from-blue-600 hover:to-indigo-700"
+              on:click=create_poll
+              prop:disabled=move || {
+                question().trim().is_empty()
+                  || answers().iter().any(|a| a.content.get().trim().is_empty())
+              }
+            >
+              "+ Create"
+            </button>
+          </div>
         </div>
+      </div>
     }
 }
