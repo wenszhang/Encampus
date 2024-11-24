@@ -126,7 +126,7 @@ fn expanded_view(
 
           <ul>
             <li class="py-2">
-              {class_id_val.map(|class_id|  
+              {class_id_val.map(|class_id|
                 view! {
                   <A href=format!("/class/{class_id}/poll")>"Live Polling"</A>
                 })
