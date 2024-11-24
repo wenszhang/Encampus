@@ -57,8 +57,11 @@ pub fn Sidebar() -> impl IntoView {
 // Collapsed view for the sidebar
 fn collapsed_view(set_collapsed: WriteSignal<bool>) -> View {
     view! {
-      <button class="text-2xl text-white" on:click=move |_| set_collapsed.update(|c| *c = !*c)>
-        "→"
+      <button
+        class="flex justify-center items-center w-full h-full text-2xl text-white"
+        on:click=move |_| set_collapsed.update(|c| *c = !*c)
+      >
+        "⮞"
       </button>
     }
     .into_view()
@@ -141,7 +144,7 @@ fn expanded_view(
           class="absolute top-4 right-4 text-white"
           on:click=move |_| set_collapsed.update(|c| *c = !*c)
         >
-          "←"
+          "✕"
         </button>
       </div>
     }
