@@ -12,11 +12,13 @@ use crate::pages::global_components::notification::{
 use crate::pages::view_class_posts::class::ClassId;
 use crate::pages::view_class_posts::focused_post::get_post_details;
 use crate::resources::images::svgs::bump_icon::BumpIcon;
+use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
+
 use ev::MouseEvent;
 use leptos::*;
 use leptos_dom::logging::console_debug_warn;
@@ -29,6 +31,8 @@ use leptos_router::{use_params, A};
 enum TagPillProperties {
     Unresolved,
     Private,
+    Endorsed,
+    Resolved,
     // Custom(CustomTag),
 }
 
@@ -262,7 +266,7 @@ pub fn QuestionTile(
           >
 
             // Card header
-            <div class="flex top-0 left-0 z-10 gap-2 items-center pl-6 w-full h-12 text-xs rounded-t-lg shadow-md bg-card-header">
+            <div class="flex top-0 left-0 z-10 gap-2 items-center pl-2 w-full h-12 text-xs rounded-t-lg shadow-md bg-card-header">
               {move || {
                 if is_resolved() {
                   Some(view! { <TagPill props=TagPillProperties::Unresolved /> })
@@ -277,6 +281,22 @@ pub fn QuestionTile(
                   None
                 }
               }}
+              {move || {
+                if is_endorsed() {
+                  Some(view! { <TagPill props=TagPillProperties::Endorsed /> })
+                } else {
+                  None
+                }
+              }}
+              {move || {
+                if !is_resolved() {
+                  Some(view! { <TagPill props=TagPillProperties::Resolved /> })
+                } else {
+                  None
+                }
+              }}
+
+
             // <TagPill props=TagPillProperties::Custom(CustomTag {
             // title: "HW1".to_string(),
             // }) />
@@ -315,23 +335,45 @@ pub fn QuestionTile(
 
 #[component]
 fn TagPill(props: TagPillProperties) -> impl IntoView {
-    let sharedClassesAll = "px-2 py-1 rounded-full ";
+    let sharedClassesAll = "px-2 py-1 rounded-full";
     let sharedClassesWithIcon = "flex gap-2";
 
     match props {
         TagPillProperties::Unresolved => view! {
           <div class=[sharedClassesAll, sharedClassesWithIcon, "bg-customRed text-red-600"]
             .join(" ")>
-            <UnresolvedIcon size="1em" />
-            Unresolved
+              <span class="relative top-[2px]">
+                <UnresolvedIcon size="1em" />
+              </span>
+            "Unresolved"
           </div>
         },
         TagPillProperties::Private => view! {
           <div class=[sharedClassesAll, sharedClassesWithIcon, "bg-customPurple text-purple-600"]
             .join(" ")>
-            <LockIcon size="1em" />
-            Private
+              <span class="relative top-[2px]">
+                <LockIcon size="1em" />
+              </span>
+              "Private"
           </div>
+        },
+        TagPillProperties::Endorsed => view! {
+            <div class=[sharedClassesAll, sharedClassesWithIcon, "bg-customYellow text-customYellow-details"]
+                .join(" ")>
+                <span class="relative top-[2px]">
+                  <EndorsedIcon size="1em" />
+                </span>
+                "Instructor Approved"
+            </div>
+        },
+        TagPillProperties::Resolved => view! {
+            <div class=[sharedClassesAll, sharedClassesWithIcon, "bg-customGreen text-customGreen-details"]
+                .join(" ")>
+                <span class="relative top-[2px]">
+                  <CheckIcon size="1em" />
+                </span>
+                "Resolved"
+            </div>
         },
         // TagPillProperties::Custom(CustomTag { title }) => {
         //     view! { <div class=[sharedClassesAll, "bg-white text-gray-600"].join(" ")>{title}</div> }

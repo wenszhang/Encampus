@@ -5,6 +5,8 @@ use crate::data::database::user_functions::Logout;
 use crate::data::global_state::{Authentication, User};
 use crate::resources::images::svgs::dashboard_icon::DashboardIcon;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
+use crate::resources::images::svgs::drop_down_bars_close::DropDownBarsCloseIcon;
+
 use crate::resources::images::svgs::logout_icon::LogoutIcon;
 use crate::resources::images::svgs::profile_icon::ProfileIcon;
 use crate::resources::images::svgs::settings_icon::SettingsIcon;
@@ -113,10 +115,17 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                 }
               })
           }} <span class="flex items-center mr-4 text-xl font-bold">{first_name}</span>
-          <div class="flex relative items-center group">
-            <button on:click=move |_| set_dropdown_visible(!dropdown_visible())>
-              <DropDownBars size="1.3rem" />
-            </button>
+          <div class="flex relative items-center group  ">
+          <button class="p-2 rounded-md bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300"
+              on:click=move |_| set_dropdown_visible(!dropdown_visible())>
+              {move || {
+                if dropdown_visible() {
+                  view! { <DropDownBarsCloseIcon size="5rem" /> }
+                } else {
+                  view! { <DropDownBars size="1.3rem" /> }
+                }
+              }}
+          </button>
             <div class=move || {
               let visibility_classes = if dropdown_visible.get() {
                 "visible opacity-100 scale-100"
@@ -125,7 +134,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
               };
               format!("{} {}", base_classes, visibility_classes)
             }>
-            <ul class="py-1 w-36 text-lg text-gray-700">
+            <ul class="py-1 w-36 text-lg text-gray-700 rounded-md">
               <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
                 <a href="/profile" class="flex items-center gap-2 w-full h-full">
                     <ProfileIcon size="1em"/>

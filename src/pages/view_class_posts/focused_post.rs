@@ -310,7 +310,7 @@ pub fn FocusedPost() -> impl IntoView {
             </div>
             <div class="flex gap-5 justify-end">
               <label for="anonymousToggle" class="flex items-center cursor-pointer select-none">
-                <span class="mx-2">"Anonymous:"</span>
+                <span class="mx-2">"Reply Anonymously:"</span>
                 <div class="relative">
                   <input
                     type="checkbox"
@@ -320,15 +320,15 @@ pub fn FocusedPost() -> impl IntoView {
                     on:change=move |_| set_reply_anonymous_state(!reply_anonymous_state())
                   />
                   <div class="flex justify-evenly items-center w-16 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-green-500">
-                    <span class="[&:not(:peer-checked)]:invisible">"On"</span>
-                    <span class="peer-checked:invisible">"Off"</span>
+                    <span class="[&:not(:peer-checked)]:invisible text-white">"On"</span>
+                    <span class="peer-checked:invisible text-white">"Off"</span>
                   </div>
                   <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-8 peer-checked:bg-primary"></div>
 
                 </div>
               </label>
               <button
-                class="p-2 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
+                class="py-2 px-6 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
                 on:click=move |_| {
                   if reply_contents().is_empty() {
                     set_notification_details(
