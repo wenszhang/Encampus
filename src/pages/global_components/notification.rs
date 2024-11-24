@@ -55,7 +55,7 @@ pub fn NotificationComponent(
         </div>
         <span class=message_class>{&notification_details.message}</span>
         <button class=button_class on:click=move |_| on_close()>
-          <span class="font-bold size-40">"x"</span>
+          <span class="font-bold size-40 ml-auto pl-4">"x"</span>
         </button>
 
       </div>

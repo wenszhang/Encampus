@@ -5,6 +5,7 @@ use crate::data::database::user_functions::Logout;
 use crate::data::global_state::{Authentication, User};
 use crate::resources::images::svgs::dashboard_icon::DashboardIcon;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
+use crate::resources::images::svgs::logout_icon::LogoutIcon;
 use crate::resources::images::svgs::profile_icon::ProfileIcon;
 use crate::resources::images::svgs::settings_icon::SettingsIcon;
 use crate::{
@@ -124,7 +125,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
               };
               format!("{} {}", base_classes, visibility_classes)
             }>
-              <ul class="py-1 w-36 text-lg text-gray-700">
+            <ul class="py-1 w-36 text-lg text-gray-700">
               <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
                 <a href="/profile" class="flex items-center gap-2 w-full h-full">
                     <ProfileIcon size="1em"/>
@@ -144,13 +145,20 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                     aria-current="page"
                     style="all: unset; display: flex; align-items: center; gap: 0.5rem;"
                     >
-                  <DashboardIcon size="2em"/>
+                  <DashboardIcon size="1em"/>
                     Dashboard
                   </a>
                 </li>
-                <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <ActionForm action=logout_action>
-                    <input class="block w-full h-full text-left" type="submit" value="Logout" />
+                <li class="py-1 px-4 cursor-pointer hover:bg-gray-100">
+                  <ActionForm action=logout_action class="w-full">
+                    <div class="flex items-center gap-2">
+                        <LogoutIcon size="1em"/>
+                        <input
+                            class="cursor-pointer text-left bg-transparent border-none p-0 m-0 hover:bg-transparent focus:outline-none"
+                            type="submit"
+                            value="Logout"
+                        />
+                      </div>
                   </ActionForm>
                 </li>
               </ul>

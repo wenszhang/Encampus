@@ -10,6 +10,7 @@ use crate::pages::global_components::announcements::Announcements;
 use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::pages::view_class_posts::create_post::CreatePost;
+use crate::resources::images::svgs::cancel_icon::CancelIcon;
 use crate::resources::images::svgs::filter_icon::FilterIcon;
 use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
@@ -158,11 +159,30 @@ pub fn ClassPage() -> impl IntoView {
               </div>
             </div>
             <button
-            class="ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            class=move || {
+                if is_visible() {
+                    "ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-red-500 hover:bg-red-600 focus:ring-offset-red-500 flex items-center gap-2"
+                } else {
+                    "ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue gap-2"
+                }
+            }
             on:click=move |_| set_is_visible(!is_visible())
-          >
-              {move || if is_visible() { "Cancel" } else { "Post +" }}
-            </button>
+        >
+            {move || if is_visible() {
+                view! {
+                    <div class="flex items-center gap-2">
+                        <CancelIcon size="1em"/>
+                        "Cancel"
+                    </div>
+                }
+            } else {
+                view! {
+                    <div class="flex items-center gap-2">
+                        "Post +"
+                    </div>
+                }
+            }}
+        </button>
           </div>
           <div class="flex flex-col gap-4 my-10 mx-20 align">
             <Show when=is_visible fallback=|| ()>

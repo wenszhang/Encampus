@@ -347,7 +347,7 @@ pub fn FocusedPost() -> impl IntoView {
                     })
                 }
               >
-                "Post Response"
+                "Post Response +"
               </button>
               {notification_view}
             </div>

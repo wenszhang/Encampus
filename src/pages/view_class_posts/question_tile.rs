@@ -284,11 +284,11 @@ pub fn QuestionTile(
 
             // Card body
             <div class="flex justify-center items-center p-4 w-full h-full text-center sm:p-6 md:p-8 lg:p-12">
-              <p class="text-base">{post.title}</p>
+              <p class="text-base font-bold">{post.title}</p>
             </div>
           </div>
         </A>
-        <div class="flex absolute top-0 right-2 z-20 items-center">
+        <div class="flex absolute top-1 right-2 z-20 items-center">
           <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
             <DotsIcon size="36px" />
           </button>

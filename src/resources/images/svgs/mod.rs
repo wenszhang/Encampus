@@ -2,6 +2,7 @@ pub mod announcement_bell;
 pub mod announcement_mic;
 pub mod bump_icon;
 pub mod cancel_icon;
+pub mod create_post_icon;
 pub mod dashboard_icon;
 pub mod dots_icon;
 pub mod drop_down_bars;

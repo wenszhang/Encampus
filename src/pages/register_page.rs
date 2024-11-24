@@ -105,11 +105,13 @@ pub fn RegisterPage() -> impl IntoView {
     let notification_view = move || {
         login_error.get().map(|details| {
             view! {
+            <div class="w-full">  // Add a full-width container
               <NotificationComponent
                 notification_details=details.clone()
                 on_close=move || set_login_error(None)
               />
-            }
+            </div>
+                }
         })
     };
 

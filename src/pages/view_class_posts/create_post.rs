@@ -3,6 +3,7 @@
  * users to create a new post.
  */
 use super::class::ClassId;
+use crate::resources::images::svgs::create_post_icon::CreatePostIcon;
 use crate::{
     data::database::post_functions::{add_post, Post, PostFetcher},
     expect_logged_in_user,
@@ -70,8 +71,11 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
 
     view! {
       <DarkenedCard class="flex flex-col gap-2 p-5">
+      <div class="flex items-center gap-2">
         <p>"Create New Post"</p>
-        <div class="p-3 bg-white rounded-t-lg">
+        <CreatePostIcon size="1.3em"/>
+      </div>
+      <div class="p-3 bg-white rounded-t-lg">
           // Inner border
           <p>"Title:"</p>
           <textarea
@@ -131,7 +135,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
           </label>
           <button
             type="submit"
-            class="p-2 text-white bg-gray-500 rounded-full hover:bg-gray-600"
+            class="py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
               if post_title().is_empty() || post_contents().is_empty() {
                 return;
@@ -149,7 +153,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
               on_new_post();
             }
           >
-            "Post"
+            "Post +"
           </button>
         </div>
       </DarkenedCard>
