@@ -215,7 +215,7 @@ fn start_timer() {
         let (tick_counter, set_tick_counter) = create_signal(0);
 
         // Timer interval
-        let interval = Interval::new(7000, move || {
+        let interval = Interval::new(3000, move || {
             set_tick_counter.update(|v| *v += 1);
         });
 
