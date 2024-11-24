@@ -497,6 +497,9 @@ pub fn FocusedDropdown(
                             }
                         }
                     });
+                    // Reload to show updated status
+                    let window = web_sys::window().expect("should have a Window");
+                    window.location().reload().expect("failed to reload page");
                 }
             }
         }
