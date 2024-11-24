@@ -158,9 +158,9 @@ pub fn ClassPage() -> impl IntoView {
               </div>
             </div>
             <button
-              class="py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
-              on:click=move |_| set_is_visible(!is_visible())
-            >
+            class="ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
+            on:click=move |_| set_is_visible(!is_visible())
+          >
               {move || if is_visible() { "Cancel" } else { "Post +" }}
             </button>
           </div>
