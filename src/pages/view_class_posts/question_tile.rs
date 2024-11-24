@@ -30,7 +30,6 @@ struct CustomTag {
 enum TagPillProperties {
     Unresolved,
     Private,
-    Custom(CustomTag),
 }
 
 #[component]
@@ -278,9 +277,7 @@ pub fn QuestionTile(
                   None
                 }
               }}
-            // <TagPill props=TagPillProperties::Custom(CustomTag {
-            // title: "HW1".to_string(),
-            // }) />
+
             </div>
 
             // Card body
@@ -334,14 +331,5 @@ fn TagPill(props: TagPillProperties) -> impl IntoView {
             Private
           </div>
         },
-        TagPillProperties::Custom(CustomTag { title }) => {
-            view! {
-              <div class=[sharedClassesAll, "bg-customOrange text-white flex items-center "]
-                .join(" ")>
-                <PaperIcon size="1em" />
-                {title}
-              </div>
-            }
-        }
     }
 }

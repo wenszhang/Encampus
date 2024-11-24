@@ -3,7 +3,6 @@ use crate::data::database::class_functions::ClassInfo;
 use crate::expect_logged_in_user;
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::home_icon::HomeIcon;
-use crate::resources::images::svgs::polling_icon::PollingIcon;
 use leptos::*;
 use leptos_router::{use_params, A};
 
@@ -11,7 +10,6 @@ use leptos_router::{use_params, A};
 pub fn Sidebar() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
     let (collapsed, set_collapsed) = create_signal(false);
-    let user_role = move || user().role;
     let curr_class_id = use_params::<ClassId>();
     let class_id_val = curr_class_id.get_untracked().unwrap().class_id;
 
@@ -107,15 +105,6 @@ fn expanded_view(
                 <span>"Back to Class Page"</span>
               </A>
             </li>
-          // <li class="flex items-center py-2">
-          // <PollingIcon size="2em" />
-          // <A
-          // href=format!("/class/{}/poll", class_id_val)
-          // class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
-          // >
-          // "My Polls"
-          // </A>
-          // </li>
           </ul>
         </div>
       </div>
