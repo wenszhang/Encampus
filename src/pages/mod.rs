@@ -1,4 +1,5 @@
 // pages/mod.rs
+pub mod about_us;
 pub mod admin_pages;
 pub mod dev_pages;
 pub mod global_components;
