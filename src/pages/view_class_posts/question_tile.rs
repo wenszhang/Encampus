@@ -23,10 +23,6 @@ use leptos::*;
 use leptos_dom::logging::console_debug_warn;
 use leptos_router::{use_params, A};
 
-struct CustomTag {
-    title: String,
-}
-
 enum TagPillProperties {
     Unresolved,
     Private,
