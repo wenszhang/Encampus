@@ -17,7 +17,7 @@ use crate::data::{
 static CUTOFF_TIME: Lazy<Mutex<Option<NaiveDateTime>>> = Lazy::new(|| Mutex::new(None));
 
 /// Helper function to check if the user is authenticated, returning a Result instead of a view
-fn get_authenticated_user() -> Result<User, JsValue> {
+pub fn get_authenticated_user() -> Result<User, JsValue> {
     let auth_context = crate::app::expect_auth_context();
     if auth_context.get_untracked().is_unauthenticated() {
         Err(JsValue::from_str("User not authenticated"))
