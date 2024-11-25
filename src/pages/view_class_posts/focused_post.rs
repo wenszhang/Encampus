@@ -10,9 +10,12 @@ use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 use crate::pages::view_class_posts::class::ClassId;
+use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
+use crate::resources::images::svgs::edit_post_icon::EditPostIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::text_area_icon::TextAreaIcon;
+use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 use chrono::FixedOffset;
 use chrono::NaiveDateTime;
 use leptos::*;
@@ -511,7 +514,7 @@ pub fn FocusedDropdown(
     let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
 
     view! {
-      <div class="flex absolute top-0 right-2 z-20 items-center">
+      <div class="flex absolute top-1 right-2 z-20 items-center">
         <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
           <DotsIcon size="36px" />
         </button>
@@ -528,7 +531,7 @@ pub fn FocusedDropdown(
               view! {
                 <div class="p-3 rounded-md w-30">
                   <button
-                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    class="inline-flex items-center p-1 w-full text-left leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
                     on:click=move |_| {
                       set_menu_visible(false);
                       let navigate = leptos_router::use_navigate();
@@ -538,35 +541,38 @@ pub fn FocusedDropdown(
                       );
                     }
                   >
+                    <EditPostIcon size="20px" />
                     <span class="ml-2">Edit</span>
                   </button>
                   {if post.resolved {
                     view! {
                       <button
-                        class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                        class="inline-flex items-center p-1 w-full text-left leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
                         on:click=move |_| {
                           resolve_action.dispatch(PostId { post_id: post.post_id });
                           set_menu_visible(false);
                         }
                       >
+                        <UnresolvedIcon size="20px" />
                         <span class="ml-2">Unresolve</span>
                       </button>
                     }
                   } else {
                     view! {
                       <button
-                        class="inline-flex items-center p-1 w-full text-sm leading-tight text-customGreen rounded-md hover:text-black hover:bg-gray-100"
+                        class="inline-flex items-center p-1 w-full text-sm leading-tight text-customGreen-details rounded-md hover:bg-gray-100"
                         on:click=move |_| {
                           resolve_action.dispatch(PostId { post_id: post.post_id });
                           set_menu_visible(false);
                         }
                       >
+                        <CheckIcon size="20px"/>
                         <span class="ml-2">Resolve</span>
                       </button>
                     }
                   }}
                   <button
-                    class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:text-black hover:bg-gray-100"
+                    class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:bg-gray-100"
                     on:click=move |_| {
                       remove_action.dispatch(PostId { post_id: post.post_id });
                       set_menu_visible(false);
