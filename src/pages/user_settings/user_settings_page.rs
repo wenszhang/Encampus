@@ -67,8 +67,8 @@ pub fn UserSettings() -> impl IntoView {
     create_effect(move |_| match update_user_action.value()() {
         None => {
             set_update_error(Some(NotificationDetails {
-                message: "An error occurred. Please try again".to_string(),
-                notification_type: NotificationType::Error,
+                message: "Password is blank".to_string(),
+                notification_type: NotificationType::Warning,
             }));
         }
         Some(Err(message)) => {
