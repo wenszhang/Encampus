@@ -209,7 +209,7 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
 #[component]
 fn UnauthenticatedRoutes() -> impl IntoView {
     view! {
-      <div class="w-auto h-auto bg-cover bg-[url('/images/pattern_bg.png')]">
+      <div class="w-auto h-auto bg-cover bg-[url('/images/pattern_bg.jpg')]">
         <Outlet />
       </div>
     }
