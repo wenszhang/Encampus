@@ -15,6 +15,8 @@ use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
+use crate::resources::images::svgs::graduation_cap_icon::GraduationCapIcon;
+use crate::resources::images::svgs::instructor_icon::InstructorIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
 use crate::resources::images::svgs::paper_icon::PaperIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
