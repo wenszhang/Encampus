@@ -26,9 +26,6 @@ module.exports = {
         customOrange: { 
           DEFAULT: '#FFB74D',
         },
-        customGreen: { 
-          DEFAULT: '#4CAF50',
-        },
         warningNotification: {
           bg: '#FFEDB4',
           details: '#B47E29',

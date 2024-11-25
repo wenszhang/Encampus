@@ -8,6 +8,7 @@ pub mod dashboard_icon;
 pub mod dots_icon;
 pub mod drop_down_bars;
 pub mod drop_down_bars_close;
+pub mod edit_post_icon;
 pub mod endorsed_icon;
 pub mod error_icon;
 pub mod filter_icon;
