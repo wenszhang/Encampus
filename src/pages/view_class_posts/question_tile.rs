@@ -22,6 +22,8 @@ use crate::resources::images::svgs::paper_icon::PaperIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 
+use crate::data::database::post_functions::get_reply_counts;
+
 use ev::MouseEvent;
 use leptos::*;
 use leptos_dom::logging::console_debug_warn;
@@ -243,6 +245,24 @@ pub fn QuestionTile(
     let (is_endorsed, set_endorsed) = create_signal(post.endorsed);
     // let (is_pinned, set_is_pinned) = create_signal(!post.pinned); // Retrieve pin state from post data
 
+    // Create resource for reply counts
+    let reply_counts = create_resource(
+        move || post.post_id,
+        move |post_id| async move { get_reply_counts(post_id).await.unwrap_or_default() },
+    );
+
+    let format_time_ago = move || {
+        let now = chrono::Utc::now().naive_utc();
+        let duration = now.signed_duration_since(post.created_at);
+        let days = duration.num_days();
+
+        match days {
+            0 => "Posted today".to_string(),
+            1 => "Posted yesterday".to_string(),
+            n => format!("Posted {} days ago", n),
+        }
+    };
+
     let toggle_menu = move |e: MouseEvent| {
         e.stop_propagation();
         set_menu_invisible.update(|visible| *visible = !*visible);
@@ -303,8 +323,42 @@ pub fn QuestionTile(
             </div>
 
             // Card body
-            <div class="flex justify-center items-center p-4 w-full h-full text-center sm:p-6 md:p-8 lg:p-12">
-              <p class="text-base font-bold">{post.title}</p>
+            <div class="flex flex-col justify-between w-full h-full">
+              // Title
+              <div class="flex justify-center items-center p-4 w-full text-center">
+                <p class="text-base font-bold">{post.title}</p>
+              </div>
+
+              // Post info footer
+              <div class="flex flex-col gap-1 px-2 pb-2 text-sm text-gray-600">
+                // Time ago
+                <div class="text-left">{format_time_ago}</div>
+
+                // Reply counts with icons
+                <div class="flex gap-4 justify-end">
+                  // Student replies
+                  <span class="flex gap-1 items-center">
+                    <GraduationCapIcon size="1.2em" />
+                    {move || {
+                      reply_counts
+                        .get()
+                        .map(|counts| counts.student_replies.to_string())
+                        .unwrap_or_default()
+                    }}
+                  </span>
+
+                  // Instructor replies
+                  <span class="flex gap-1 items-center">
+                    <InstructorIcon size="1.2em" />
+                    {move || {
+                      reply_counts
+                        .get()
+                        .map(|counts| counts.instructor_replies.to_string())
+                        .unwrap_or_default()
+                    }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </A>
