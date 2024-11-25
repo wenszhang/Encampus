@@ -23,6 +23,12 @@ module.exports = {
           DEFAULT: '#F9EBAF',
           details: '#B47E29'
         },
+        customOrange: { 
+          DEFAULT: '#FFB74D',
+        },
+        customGreen: { 
+          DEFAULT: '#4CAF50',
+        },
         warningNotification: {
           bg: '#FFEDB4',
           details: '#B47E29',
@@ -35,6 +41,7 @@ module.exports = {
           bg: "#F8C1C0",
           header: "#EEEEEE",
         },
+       
         plugins: [],
       },
       textColor: {

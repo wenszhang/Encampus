@@ -16,6 +16,7 @@ use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
+use crate::resources::images::svgs::paper_icon::PaperIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 
@@ -24,16 +25,11 @@ use leptos::*;
 use leptos_dom::logging::console_debug_warn;
 use leptos_router::{use_params, A};
 
-// struct CustomTag {
-//     title: String,
-// }
-
 enum TagPillProperties {
     Unresolved,
     Private,
     Endorsed,
     Resolved,
-    // Custom(CustomTag),
 }
 
 #[component]
@@ -295,11 +291,6 @@ pub fn QuestionTile(
                   None
                 }
               }}
-
-
-            // <TagPill props=TagPillProperties::Custom(CustomTag {
-            // title: "HW1".to_string(),
-            // }) />
             </div>
 
             // Card body

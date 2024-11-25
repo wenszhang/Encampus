@@ -6,7 +6,6 @@ use crate::data::global_state::{Authentication, User};
 use crate::resources::images::svgs::dashboard_icon::DashboardIcon;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
 use crate::resources::images::svgs::drop_down_bars_close::DropDownBarsCloseIcon;
-
 use crate::resources::images::svgs::logout_icon::LogoutIcon;
 use crate::resources::images::svgs::profile_icon::ProfileIcon;
 use crate::resources::images::svgs::settings_icon::SettingsIcon;
