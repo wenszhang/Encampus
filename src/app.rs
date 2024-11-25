@@ -56,6 +56,10 @@ pub fn App() -> impl IntoView {
           )
         })}
 
+      // tiptap.js files
+      <Script type_="module" src="/js/tiptap-bundle.min.js" />
+      <Script type_="module" src="/js/tiptap.js" />
+
       // injects a stylesheet into the document <head>
       // id=leptos means cargo-leptos will hot-reload this stylesheet
       <Stylesheet id="leptos" href="/pkg/encampus.css" />
@@ -189,7 +193,7 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
     // Start the timer
     start_timer();
 
-    match auth_context.get() {
+    move || match auth_context.get() {
         Authentication::Authenticated(_) => view! { <Outlet /> }.into_view(),
         Authentication::Unauthenticated => {
             create_render_effect(|_| {

@@ -726,6 +726,7 @@ dependencies = [
  "http 1.1.0",
  "js-sys",
  "leptos",
+ "leptos-tiptap",
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
@@ -1547,6 +1548,20 @@ dependencies = [
  "typed-builder-macro",
  "wasm-bindgen",
  "web-sys",
+]
+
+[[package]]
+name = "leptos-tiptap"
+version = "0.7.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "24d02d5628ce1e60cb3c6553d2b456979e988fbb6ffe5f90c0601ea82b53d292"
+dependencies = [
+ "cfg-if",
+ "leptos",
+ "serde",
+ "serde-wasm-bindgen",
+ "tracing",
+ "wasm-bindgen",
 ]
 
 [[package]]

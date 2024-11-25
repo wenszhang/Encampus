@@ -8,6 +8,7 @@ use crate::resources::images::svgs::create_post_icon::CreatePostIcon;
 use crate::{
     data::database::post_functions::{add_post, Post, PostFetcher},
     expect_logged_in_user,
+    pages::global_components::rich_text_box::RichTextBox,
 };
 use leptos::*;
 use leptos_router::use_params;
@@ -79,17 +80,21 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
       <div class="p-3 bg-white rounded-t-lg">
           // Inner border
           <p>"Title:"</p>
-          <textarea
-            class="p-2 w-full h-12 rounded-t-lg border border-gray-300 resize-none"
-            on:input=on_input(set_post_title)
-            prop:value=post_title
-          ></textarea>
+          <div class="p-2">
+            <textarea
+              class="p-2 w-full h-12 rounded-lg border border-slate-400 resize-none"
+              on:input=on_input(set_post_title)
+              prop:value=post_title
+            ></textarea>
+          </div>
           <p>"Contents:"</p>
-          <textarea
-            class="p-2 w-full h-96 rounded-b-lg border border-gray-300 resize-none"
-            on:input=on_input(set_post_contents)
-            prop:value=post_contents
-          ></textarea>
+          <div class="p-2 h-96">
+            <RichTextBox
+              id="create_post_rich_text_box"
+              set_value=set_post_contents
+              value=post_contents
+            />
+          </div>
         </div>
         // AI assistant
         <div class="flex gap-5 justify-end">
