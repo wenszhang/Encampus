@@ -727,7 +727,6 @@ dependencies = [
  "js-sys",
  "leptos",
  "leptos-tiptap",
- "leptos-tiptap-build",
  "leptos_axum",
  "leptos_meta",
  "leptos_router",
@@ -1564,12 +1563,6 @@ dependencies = [
  "tracing",
  "wasm-bindgen",
 ]
-
-[[package]]
-name = "leptos-tiptap-build"
-version = "0.2.6"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "34344ffac31f60ebe96de99dff5e9b3371f63c50186f7e065032b11660bab944"
 
 [[package]]
 name = "leptos_axum"

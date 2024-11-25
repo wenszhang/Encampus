@@ -9,7 +9,6 @@ use crate::{
             error_template::{AppError, ErrorTemplate},
             page::Page,
             push_notifications::{configure_notifications, send_newest_announcement_notification},
-            rich_text_box::RichTextBox,
         },
         home::Home,
         live_poll::LivePoll,
@@ -77,7 +76,6 @@ pub fn App() -> impl IntoView {
         <main>
           <Routes>
             <Route path="" view=Page>
-              <Route path="dev" view=RichTextBox />
               // Only accessible when logged in
               <Route path="" view=AuthenticatedRoutes>
                 <Route path="/AdminHomePage" view=AdminHomePage />
@@ -195,7 +193,7 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
     // Start the timer
     start_timer();
 
-    match auth_context.get() {
+    move || match auth_context.get() {
         Authentication::Authenticated(_) => view! { <Outlet /> }.into_view(),
         Authentication::Unauthenticated => {
             create_render_effect(|_| {

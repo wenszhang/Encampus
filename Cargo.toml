@@ -2,13 +2,9 @@
 name = "encampus"
 version = "0.1.0"
 edition = "2021"
-build = "build.rs"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
-
-[build-dependencies]
-leptos-tiptap-build = { version = "0.2.6" }
 
 [dependencies]
 axum = { version = "0.7", features=["macros"], optional = true }

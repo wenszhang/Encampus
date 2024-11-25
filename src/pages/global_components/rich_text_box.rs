@@ -10,15 +10,14 @@ use leptos_tiptap::*;
 
 #[component]
 fn StyleButton(
-    icon: &'static str,
-    label: &'static str,
     msg: TiptapInstanceMsg,
     set_msg: impl Fn(TiptapInstanceMsg) + Clone + 'static,
     selection_has_set: impl Fn() -> bool + Clone + 'static,
+    children: Children,
 ) -> impl IntoView {
     view! {
       <button
-        class="rounded border"
+        class="rounded border self-center flex justify-center"
         class=(
           "shadow-lg",
           {
@@ -30,118 +29,92 @@ fn StyleButton(
         class=("bg-slate-400", selection_has_set)
         on:click=move |_| set_msg(msg.clone())
       >
-        {label}
-        {icon}
+        {children()}
       </button>
     }
 }
 
 #[component]
-pub fn RichTextBox() -> impl IntoView {
+pub fn RichTextBox(
+    id: &'static str,
+    value: ReadSignal<String>,
+    set_value: WriteSignal<String>,
+) -> impl IntoView {
     let (msg, set_msg) = create_signal(TiptapInstanceMsg::Noop);
-    let (value, set_value) = create_signal(r#"<h1>This is a simple <em><s>paragraph</s></em> ... <strong>H1</strong>!</h1><p style="text-align: center"><strong>Lorem ipsum dolor sit amet, consetetur sadipscing elitr, <mark>sed diam nonumy</mark> eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua.</strong></p><p style="text-align: justify">Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.</p>"#.to_owned());
     let (selection, set_selection) = create_signal(TiptapSelectionState::default());
 
     let spacer = view! { <div class="w-3" /> };
 
     view! {
-      <div class="bg-white rounded-lg border border-slate-400">
+      <div class="bg-white rounded-lg border border-slate-400 h-full flex flex-col">
         <div class="flex flex-row flex-wrap gap-1 p-2 border-b border-slate-400">
           <StyleButton
-            label="H1"
-            icon=|| view! { <EnlargeTextIcon size="2em" /> }
             msg=TiptapInstanceMsg::H1
             set_msg=set_msg
             selection_has_set=move || selection().h1
-          />
+          ><EnlargeTextIcon size="2em" /></StyleButton>
 
            // Bold
           <StyleButton
-            label="Bold"
-            icon=|| view! { <BoldIcon size="2em"/> }
             msg=TiptapInstanceMsg::Bold
             set_msg=set_msg
-            selection_has_set=move || selection().h1
-          />
+            selection_has_set=move || selection().bold
+          ><BoldIcon size="2em"/></StyleButton>
 
           // Italic
           <StyleButton
-            label="Italic"
-            icon=|| view! { <ItalicIcon size="2em"/>}
             msg=TiptapInstanceMsg::Italic
             set_msg=set_msg
             selection_has_set=move || selection().italic
-          />
+          ><ItalicIcon size="2em"/></StyleButton>
 
           // Strikethrough
           <StyleButton
-            label="Strike"
-            icon=|| view! { <StrikethroughIcon size="2em"/>}
             msg=TiptapInstanceMsg::Strike
             set_msg=set_msg
             selection_has_set=move || selection().strike
-          />
-
-          // Blockquote
-          {spacer.clone()}
-          <StyleButton
-            label="Blockquote"
-            icon=|| view! { <BlockquoteIcon size="2em"/>}
-            msg=TiptapInstanceMsg::Blockquote
-            set_msg=set_msg
-            selection_has_set=move || selection().blockquote
-          />
+          ><StrikethroughIcon size="2em"/></StyleButton>
 
           // Highlight
           <StyleButton
-            label="Highlight"
-            icon=|| view! { <HighlighterIcon size="2em"/>}
             msg=TiptapInstanceMsg::Highlight
             set_msg=set_msg
             selection_has_set=move || selection().highlight
-          />
+          ><HighlighterIcon size="2em"/></StyleButton>
 
           // Align Left
           {spacer}
           <StyleButton
-            label="Align left"
-            icon=|| view! {   <AlignLeftIcon size="2em"/>}
             msg=TiptapInstanceMsg::AlignLeft
             set_msg=set_msg
             selection_has_set=move || selection().align_left
-          />
+          ><AlignLeftIcon size="2em"/></StyleButton>
 
           // Align Center
           <StyleButton
-            label="Align center"
-            icon=|| view! {<AlignCenterIcon size="2em"/>}
             msg=TiptapInstanceMsg::AlignCenter
             set_msg=set_msg
             selection_has_set=move || selection().align_center
-          />
+          ><AlignCenterIcon size="2em"/></StyleButton>
 
           // Align Right
           <StyleButton
-            label="Align right"
-            icon=|| view! {<AlignRightIcon size="2em"/>}
             msg=TiptapInstanceMsg::AlignRight
             set_msg=set_msg
             selection_has_set=move || selection().align_right
-          />
+          ><AlignRightIcon size="2em"/></StyleButton>
 
           // Align Justify
           <StyleButton
-            label="Align justify"
-            icon=|| view! { <AlignJustifyIcon size="2em"/>}
             msg=TiptapInstanceMsg::AlignJustify
             set_msg=set_msg
             selection_has_set=move || selection().align_justify
-          />
+          ><AlignJustifyIcon size="2em"/></StyleButton>
 
         </div>
 
         <TiptapInstance
-          id="id"
+          id=id
           msg=msg
           disabled=false
           value=value
@@ -155,8 +128,16 @@ pub fn RichTextBox() -> impl IntoView {
               )
           }
           on_selection_change=move |state| set_selection.set(state)
-          class="block px-2 pb-2 w-auto h-auto whitespace-pre-wrap"
+          class="flex flex-1 flex-col p-1"
         />
+      </div>
+    }
+}
+
+#[component]
+pub fn TiptapContentWrapper(raw_html: String) -> impl IntoView {
+    view! {
+      <div class="tiptap" inner_html=raw_html>
       </div>
     }
 }
