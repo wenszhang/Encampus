@@ -4,6 +4,7 @@ use crate::data::database::class_functions::get_users_classes;
  */
 use crate::data::database::user_functions::Logout;
 use crate::data::global_state::{Authentication, User};
+use crate::resources::images::svgs::announcement_bell::AnnouncementBell;
 use crate::resources::images::svgs::dashboard_icon::DashboardIcon;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
 use crate::resources::images::svgs::drop_down_bars_close::DropDownBarsCloseIcon;
@@ -13,7 +14,6 @@ use crate::resources::images::svgs::settings_icon::SettingsIcon;
 use crate::{
     app::expect_auth_context, data::database::announcement_functions::get_announcement_list,
 };
-use chrono::NaiveDateTime;
 use leptos::*;
 use leptos_router::{ActionForm, A};
 
@@ -67,22 +67,23 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
         </div>
 
         <div class="flex items-center">
+          <span class="flex items-center mr-4 text-xl font-bold">{first_name}</span>
           {move || {
             class_id()
-              .map(|class_id: i32| {
+              .map(|_| {
                 view! {
                   <div class="relative group">
-                    // <button class="pr-2">
-                    // <AnnouncementBell size="1.3rem" />
-                    // </button>
+                    <button class="pr-2">
+                      <AnnouncementBell size="1.3rem" />
+                    </button>
                     <span class="inline-flex items-baseline"></span>
                     <div class="absolute right-0 top-full invisible bg-white rounded-lg shadow-md group-hover:visible group-hover:opacity-100 group-hover:scale-100 z-[9999] mt-[-0.1rem]">
-                      <AnnouncementInfo class_id=move || class_id />
+                      <AnnouncementInfo />
                     </div>
                   </div>
                 }
               })
-          }} <span class="flex items-center mr-4 text-xl font-bold">{first_name}</span>
+          }}
           <div class="flex relative items-center group">
             <button
               class="p-2 bg-white rounded-md hover:bg-gray-100 focus:ring-2 focus:ring-gray-300 focus:outline-none"
@@ -179,12 +180,12 @@ pub fn AnnouncementInfo() -> impl IntoView {
                       <A
                         href=format!(
                           "/classes/{}/announcement/{}",
-                          announcement_info.class_id,
-                          announcement_info.announcement_id,
+                          announcement_info.0,
+                          announcement_info.1,
                         )
                         class="block"
                       >
-                        {announcement_info.title}
+                        {announcement_info.2}
                       </A>
                     </li>
                   }
@@ -197,8 +198,8 @@ pub fn AnnouncementInfo() -> impl IntoView {
 }
 
 /// Function to get the x newest announcement titles and contents from all classes a user is enrolled in
-pub async fn get_x_newest_announcements_for_user(
-) -> Result<Vec<(NaiveDateTime, String, String)>, ServerFnError> {
+pub async fn get_x_newest_announcements_for_user() -> Result<Vec<(i32, i32, String)>, ServerFnError>
+{
     // Get authenticated user
     let user = match get_authenticated_user() {
         Ok(user) => user,
@@ -213,22 +214,22 @@ pub async fn get_x_newest_announcements_for_user(
 
     let count = 3;
     let classes = get_users_classes(user.id, user.role.clone()).await?;
-    let mut all_announcements: Vec<(NaiveDateTime, String, String)> = Vec::new();
+    let mut all_announcements: Vec<(i32, i32, String)> = Vec::new();
 
     for class in classes {
         let announcements = get_announcement_list(class.id).await?;
 
         for announcement in announcements {
             all_announcements.push((
-                announcement.time,
+                class.id,
+                announcement.announcement_id,
                 announcement.title.clone(),
-                announcement.contents.clone(),
             ));
         }
     }
 
     // Sort all announcements by time in descending order
-    all_announcements.sort_by(|a, b| b.0.cmp(&a.0));
+    all_announcements.sort_by(|a, b| b.1.cmp(&a.1));
 
     // Take the top x newest announcements
     let newest_announcements = all_announcements.into_iter().take(count).collect();
