@@ -1,3 +1,4 @@
+use crate::resources::images::svgs::cancel_icon::CancelIcon;
 use crate::resources::images::svgs::error_icon::ErrorIcon;
 use crate::resources::images::svgs::warning_icon::WarningIcon;
 
@@ -53,9 +54,11 @@ pub fn NotificationComponent(
             NotificationType::Warning => view! { <WarningIcon size="20px" /> }.into_view(),
           }}
         </div>
-        <span class=message_class>{&notification_details.message}</span>
+        <span class=message_class>{&notification_details.message} </span>
+         // Space
+         <span class="grow"> </span>
         <button class=button_class on:click=move |_| on_close()>
-          <span class="font-bold size-40">"x"</span>
+            <div class="top-1"> <CancelIcon size="1.3em"/> </div>
         </button>
 
       </div>

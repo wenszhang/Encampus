@@ -1,4 +1,4 @@
-use crate::data::database::user_functions::update_user_without_password;
+use crate::data::database::user_functions::{update_user_password, update_user_without_password};
 use crate::data::global_state::User;
 use crate::expect_logged_in_user;
 use crate::pages::global_components::header::Header;
@@ -19,40 +19,56 @@ use web_sys::HtmlInputElement;
 #[component]
 pub fn UserSettings() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
-    let user_id = user().id;
     let (user_name, set_user_name) = create_signal(user.get_untracked().user_name);
     let (password, set_password) = create_signal(String::new());
     let (confirm_password, set_confirm_password) = create_signal(String::new());
     let (update_error, set_update_error) = create_signal(None::<NotificationDetails>);
 
-    let update_user_action = create_action(move |updated_user: &User| {
-        let updated_user = updated_user.clone();
-        async move {
-            update_user_without_password(updated_user)
-                .await
-                .map(|dbUser| User {
-                    id: dbUser.id,
-                    first_name: dbUser.firstname,
-                    last_name: dbUser.lastname,
-                    user_name: dbUser.username,
-                    role: dbUser.role,
-                })
-                .map_err(|_server_fn_err| "An error occurred. Please try again")
-        }
-    });
+    let update_user_action = create_action(
+        move |(updated_user, new_password): &(User, Option<String>)| {
+            let updated_user = updated_user.clone();
+            let new_password = new_password.clone();
+            async move {
+                if let Some(password) = new_password {
+                    update_user_password(updated_user.id, password)
+                        .await
+                        .map_err(|_| {
+                            "An error occurred while updating the password. Please try again"
+                        })
+                } else {
+                    update_user_without_password(updated_user)
+                        .await
+                        .map(|_| ())
+                        .map_err(|_server_fn_err| "An error occurred. Please try again")
+                }
+            }
+        },
+    );
 
     let on_submit = move |event: SubmitEvent| {
         event.prevent_default();
         let mut user = user.get_untracked();
         user.user_name = user_name.get_untracked().clone();
-        update_user_action.dispatch(user);
+        if password.get_untracked() == confirm_password.get_untracked() {
+            let new_password = if password.get_untracked().is_empty() {
+                None
+            } else {
+                Some(password.get_untracked().clone())
+            };
+            update_user_action.dispatch((user, new_password));
+        } else {
+            set_update_error(Some(NotificationDetails {
+                message: "Passwords do not match".to_string(),
+                notification_type: NotificationType::Error,
+            }));
+        }
     };
 
     create_effect(move |_| match update_user_action.value()() {
         None => {
             set_update_error(Some(NotificationDetails {
-                message: "An error occurred. Please try again".to_string(),
-                notification_type: NotificationType::Error,
+                message: "Password is blank".to_string(),
+                notification_type: NotificationType::Warning,
             }));
         }
         Some(Err(message)) => {

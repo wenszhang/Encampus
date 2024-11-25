@@ -9,7 +9,7 @@ use leptos_router::A;
 pub fn Home() -> impl IntoView {
     view! {
       <div class="flex flex-col justify-center items-center h-screen">
-        <div class="container flex flex-col items-center px-4 mx-auto">
+        <div class="container flex flex-col items-center py-8 px-4 max-w-2xl bg-white rounded-lg shadow-md">
           <header class="flex justify-between items-center py-4">
             <h1 class="text-4xl font-bold">"Welcome to Encampus"</h1>
           </header>
@@ -17,7 +17,7 @@ pub fn Home() -> impl IntoView {
             <p class="mb-4 text-xl">"Making Learning Accessible and Engaging for Everyone."</p>
             <A
               href="/login"
-              class="py-2 px-4 font-bold text-white bg-blue-500 rounded hover:bg-blue-700"
+              class="py-2 px-4 font-bold text-white rounded bg-customBlue hover:bg-customBlue-HOVER"
             >
               "Login to your account"
             </A>
@@ -25,7 +25,7 @@ pub fn Home() -> impl IntoView {
               <a href="/about-us">"About Us"</a>
             </p>
           </main>
-          <footer class="py-8 mt-auto">
+          <footer class="pt-8 mt-auto">
             <p class="text-center">"© 2024 Encampus"</p>
           </footer>
         </div>

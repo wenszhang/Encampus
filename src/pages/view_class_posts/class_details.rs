@@ -50,39 +50,46 @@ pub fn ClassDetails() -> impl IntoView {
     });
 
     view! {
-        <div class="class-details p-8 space-y-8 bg-gray-100 min-h-screen relative">
-            // Close Button
-            <button
-                class="absolute top-4 right-4 text-gray-600 hover:text-gray-800"
-                on:click=move |_| {
-                    if let Ok(class_id) = class_id_result.get() {
-                        navigate(&format!("/classes/{}", class_id.class_id), Default::default());
-                    }
-                }>
-                <span class="text-xl font-bold">"X"</span>
-            </button>
+      <div class="relative p-8 space-y-8 min-h-screen bg-gray-100 class-details">
+        // Close Button
+        <button
+          class="absolute top-4 right-4 text-gray-600 hover:text-gray-800"
+          on:click=move |_| {
+            if let Ok(class_id) = class_id_result.get() {
+              navigate(&format!("/classes/{}", class_id.class_id), Default::default());
+            }
+          }
+        >
+          <span class="text-xl font-bold">"X"</span>
+        </button>
 
-            <Suspense fallback=|| view! { <p>"Loading class name..."</p> }>
-                <div class="header bg-customBlue text-white text-center py-4 rounded shadow-md">
-                    <h1 class="text-3xl font-bold">{class_name().unwrap_or("Class not found".to_string())}</h1>
-                </div>
+        <Suspense fallback=|| view! { <p>"Loading class name..."</p> }>
+          <div class="py-4 text-center text-white rounded shadow-md header bg-customBlue">
+            <h1 class="text-3xl font-bold">
+              {class_name().unwrap_or("Class not found".to_string())}
+            </h1>
+          </div>
+        </Suspense>
+
+        <div class="space-y-8 content">
+          <div class="p-6 bg-white rounded-lg shadow-md course-info">
+            <h2 class="mb-4 text-2xl font-semibold text-customBlue">"Course Information"</h2>
+
+            <Suspense fallback=|| view! { <p>"Loading enrolled users..."</p> }>
+              <ul class="mt-4 space-y-2">
+                <For
+                  each=move || enrolled_users().unwrap_or_default()
+                  key=|user| user.user_id
+                  let:user
+                >
+                  <li class="flex justify-between items-center p-2 bg-gray-100 rounded shadow-sm">
+                    <span class="font-medium text-gray-800">{&user.full_name}</span>
+                    <span class="italic text-gray-500">{&user.role}</span>
+                  </li>
+                </For>
+              </ul>
             </Suspense>
-
-            <div class="content space-y-8">
-                <div class="course-info bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4 text-customBlue">"Course Information"</h2>
-
-                    <Suspense fallback=|| view! { <p>"Loading enrolled users..."</p> }>
-                        <ul class="mt-4 space-y-2">
-                            <For each=move || enrolled_users().unwrap_or_default() key=|user| user.user_id let:user>
-                                <li class="flex justify-between items-center bg-gray-100 p-2 rounded shadow-sm">
-                                    <span class="text-gray-800 font-medium">{&user.full_name}</span>
-                                    <span class="text-gray-500 italic">{&user.role}</span>
-                                </li>
-                            </For>
-                        </ul>
-                    </Suspense>
-                </div>
+          </div>
 
                 <div class="course-stats bg-white p-6 rounded-lg shadow-md">
                     <h2 class="text-2xl font-semibold mb-4 text-customBlue">"Course Statistics"</h2>

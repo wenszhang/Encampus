@@ -12,6 +12,7 @@ use crate::{
             push_notifications::{configure_notifications, send_newest_announcement_notification},
         },
         home::Home,
+        live_poll::LivePoll,
         login_page::LoginPage,
         register_page::RegisterPage,
         user_profile::user_profile_page::UserProfile,
@@ -56,6 +57,10 @@ pub fn App() -> impl IntoView {
           )
         })}
 
+      // tiptap.js files
+      <Script type_="module" src="/js/tiptap-bundle.min.js" />
+      <Script type_="module" src="/js/tiptap.js" />
+
       // injects a stylesheet into the document <head>
       // id=leptos means cargo-leptos will hot-reload this stylesheet
       <Stylesheet id="leptos" href="/pkg/encampus.css" />
@@ -83,6 +88,7 @@ pub fn App() -> impl IntoView {
                   <Route path="/:post_id/edit" view=EditPost />
                   <Route path="/announcement/:announcement_id" view=AnnouncementDetails />
                 </Route>
+                <Route path="/class/:class_id/poll" view=LivePoll />
                 <Route path="/settings" view=UserSettings />
                 <Route path="/profile" view=UserProfile />
               </Route>
@@ -189,7 +195,7 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
     // Start the timer
     start_timer();
 
-    match auth_context.get() {
+    move || match auth_context.get() {
         Authentication::Authenticated(_) => view! { <Outlet /> }.into_view(),
         Authentication::Unauthenticated => {
             create_render_effect(|_| {
@@ -204,7 +210,11 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
 /// General route wrapping
 #[component]
 fn UnauthenticatedRoutes() -> impl IntoView {
-    view! { <Outlet /> }
+    view! {
+      <div class="w-auto h-auto bg-cover bg-[url('/images/pattern_bg.jpg')]">
+        <Outlet />
+      </div>
+    }
 }
 
 // [Application-wide helpers] ===============================================
@@ -217,7 +227,7 @@ fn start_timer() {
         let (tick_counter, set_tick_counter) = create_signal(0);
 
         // Timer interval
-        let interval = Interval::new(7000, move || {
+        let interval = Interval::new(3000, move || {
             set_tick_counter.update(|v| *v += 1);
         });
 

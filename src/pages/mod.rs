@@ -4,6 +4,7 @@ pub mod admin_pages;
 pub mod dev_pages;
 pub mod global_components;
 pub mod home;
+pub mod live_poll;
 pub mod login_page;
 pub mod register_page;
 pub mod user_profile;
