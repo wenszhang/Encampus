@@ -1,5 +1,5 @@
+use crate::data::database::class_functions::get_users_classes;
 use crate::data::database::class_functions::ClassInfo;
-use crate::data::database::class_functions::{get_students_classes, get_users_classes};
 use crate::expect_logged_in_user;
 use crate::pages::view_class_posts::class::ClassId;
 use leptos::*;
@@ -32,18 +32,22 @@ pub fn Sidebar() -> impl IntoView {
         },
     );
 
-    let class = if collapsed.get() {
-        "sticky top-0 h-screen w-8 bg-gray-800 text-white flex items-center justify-center"
-    } else {
-        "sticky top-0 h-screen w-64 bg-gray-800 text-white"
+    let collapse_class = move || {
+        if collapsed.get() {
+            "sticky top-0 h-screen w-8 bg-gray-800 text-white flex items-center justify-center"
+        } else {
+            "sticky top-0 h-screen w-64 bg-gray-800 text-white"
+        }
     };
 
     view! {
-      <div class=class>
-        {if collapsed.get() {
-          collapsed_view(set_collapsed).into_view()
-        } else {
-          expanded_view(set_collapsed, courses, valid_class_id_val).into_view()
+      <div class=collapse_class>
+        {move || {
+          if collapsed.get() {
+            collapsed_view(set_collapsed).into_view()
+          } else {
+            expanded_view(set_collapsed, courses, valid_class_id_val).into_view()
+          }
         }}
       </div>
     }
@@ -53,8 +57,11 @@ pub fn Sidebar() -> impl IntoView {
 // Collapsed view for the sidebar
 fn collapsed_view(set_collapsed: WriteSignal<bool>) -> View {
     view! {
-      <button class="text-2xl text-white" on:click=move |_| set_collapsed.update(|c| *c = !*c)>
-        "→"
+      <button
+        class="flex justify-center items-center w-full h-full text-2xl text-white"
+        on:click=move |_| set_collapsed.update(|c| *c = !*c)
+      >
+        "⮞"
       </button>
     }
     .into_view()
@@ -147,7 +154,7 @@ fn expanded_view(
           class="absolute top-4 right-4 text-white"
           on:click=move |_| set_collapsed.update(|c| *c = !*c)
         >
-          "←"
+          "✕"
         </button>
       </div>
     }
