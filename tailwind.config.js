@@ -15,8 +15,13 @@ module.exports = {
         customPurple: {
           DEFAULT: "#D8C4F7",
         },
+        customGreen: {
+          DEFAULT: '#EFF6EC',
+          details: '#5D993E',
+        },
         customYellow: { 
           DEFAULT: '#F9EBAF',
+          details: '#B47E29'
         },
         customOrange: { 
           DEFAULT: '#FFB74D',

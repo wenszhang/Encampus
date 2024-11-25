@@ -64,10 +64,12 @@ pub fn UserProfile() -> impl IntoView {
     let notification_view = move || {
         update_error().map(|details| {
             view! {
-              <NotificationComponent
-                notification_details=details.clone()
-                on_close=move || set_update_error(None)
-              />
+                <div class="w-full mt-4">
+                    <NotificationComponent
+                        notification_details=details.clone()
+                        on_close=move || set_update_error(None)
+                    />
+                </div>
             }
         })
     };

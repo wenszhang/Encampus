@@ -3,6 +3,8 @@
  * users to create a new post.
  */
 use super::class::ClassId;
+use crate::resources::images::svgs::create_post_icon::CreatePostIcon;
+
 use crate::{
     data::database::post_functions::{add_post, Post, PostFetcher},
     expect_logged_in_user,
@@ -70,8 +72,11 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
 
     view! {
       <DarkenedCard class="flex flex-col gap-2 p-5">
-        <p>"Create New Post"</p>
-        <div class="p-3 bg-white rounded-t-lg">
+      <div class="flex items-center gap-2 px-3">
+      <CreatePostIcon size="1.3em"/>
+        <p class="pt-1">"Create New Post"</p>
+      </div>
+      <div class="p-3 bg-white rounded-t-lg">
           // Inner border
           <p>"Title:"</p>
           <textarea
@@ -86,6 +91,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
             prop:value=post_contents
           ></textarea>
         </div>
+        // AI assistant
         <div class="flex gap-5 justify-end">
           <label for="assistantToggle" class="flex items-center cursor-pointer select-none">
             <span class="mx-2">"Encampus Assistant:"</span>
@@ -101,8 +107,9 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
               <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
             </div>
           </label>
+          // Private
           <label for="privateToggle" class="flex items-center cursor-pointer select-none">
-            <span class="mx-2">"Private:"</span>
+            <span class="mx-2">"Private to Instructors:"</span>
             <div class="relative">
               <input
                 type="checkbox"
@@ -111,12 +118,16 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                 prop:checked=private_state
                 on:change=move |_| set_private_state(!private_state())
               />
-              <div class="block w-14 h-8 bg-gray-500 rounded-full"></div>
+              <div class="flex justify-evenly items-center w-14 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-purple-500">
+                <span class="[&:not(:peer-checked)]:invisible text-white">"On"</span>
+                <span class="peer-checked:invisible text-white">"Off"</span>
+              </div>
               <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
             </div>
           </label>
+          // Anonymous
           <label for="anonymousToggle" class="flex items-center cursor-pointer select-none">
-            <span class="mx-2">"Anonymous:"</span>
+            <span class="mx-2">"Post Anonymously:"</span>
             <div class="relative">
               <input
                 type="checkbox"
@@ -125,13 +136,16 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                 prop:checked=anonymous_state
                 on:change=move |_| set_anonymous_state(!anonymous_state())
               />
-              <div class="block w-14 h-8 bg-gray-500 rounded-full"></div>
-              <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
+              <div class="flex justify-evenly items-center w-14 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-green-500">
+                <span class="[&:not(:peer-checked)]:invisible text-white">"On"</span>
+                <span class="peer-checked:invisible text-white">"Off"</span>
+              </div>
+             <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
             </div>
           </label>
           <button
             type="submit"
-            class="p-2 text-white bg-gray-500 rounded-full hover:bg-gray-600"
+            class="py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue"
             on:click=move |_| {
               if post_title().is_empty() || post_contents().is_empty() {
                 return;
@@ -148,8 +162,9 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                 });
               on_new_post();
             }
+
           >
-            "Post"
+            "Post +"
           </button>
         </div>
       </DarkenedCard>

@@ -1,5 +1,5 @@
 /**
- * Announcement icon component, used in announcement bar above question tiles
+ * Cancel icon component, used in announcement bar above question tiles
  */
 use leptos::{component, view, IntoView};
 
