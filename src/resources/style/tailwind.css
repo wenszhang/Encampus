@@ -30,7 +30,7 @@ a[href="/classes"] {
 }
 
 .tiptap > * {
-    all: revert !important;
+    all: revert;
 }
 
 leptos-tiptap-instance > .tiptap {
