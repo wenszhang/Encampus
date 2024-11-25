@@ -76,28 +76,35 @@ pub fn DropDownMenu(
         async move {
             if let Err(e) = bump_post(post_id).await {
                 eprintln!("Failed to bump post: {:?}", e);
+                set_notification_details(Some(NotificationDetails {
+                    message: "Failed to bump post. Please try again.".to_string(),
+                    notification_type: NotificationType::Error,
+                }));
                 return;
             }
+
             posts.update(|posts| {
-                if let Some(index) = posts
-                    .as_mut()
-                    .unwrap()
-                    .iter()
-                    .position(|post| post.post_id == post_id)
-                {
-                    let bumped_post = posts.as_mut().unwrap().remove(index);
+                if let Some(posts_mut) = posts.as_mut() {
+                    // Find and remove the post to be bumped
+                    if let Some(index) = posts_mut.iter().position(|post| post.post_id == post_id) {
+                        let mut bumped_post = posts_mut.remove(index);
 
-                    let insert_position = posts
-                        .as_mut()
-                        .unwrap()
-                        .iter()
-                        .position(|post| post.post_id == post_id)
-                        .unwrap_or(posts.as_ref().unwrap().len());
+                        // Update the last_bumped timestamp to current time
+                        bumped_post.last_bumped = Some(chrono::Utc::now().naive_utc());
 
-                    posts.as_mut().unwrap().insert(insert_position, bumped_post);
+                        // Find the correct position based on last_bumped timestamps
+                        let insert_position = posts_mut
+                            .iter()
+                            .position(|post| match (post.last_bumped, bumped_post.last_bumped) {
+                                (Some(post_time), Some(bumped_time)) => post_time < bumped_time,
+                                (None, Some(_)) => true,
+                                (Some(_), None) => false,
+                                (None, None) => false,
+                            })
+                            .unwrap_or(posts_mut.len());
 
-                    if insert_position > 0 {
-                        posts.as_mut().unwrap().swap(insert_position, 0);
+                        // Insert the bumped post at the correct position
+                        posts_mut.insert(insert_position, bumped_post);
                     }
                 }
             });
@@ -333,38 +340,46 @@ fn TagPill(props: TagPillProperties) -> impl IntoView {
         TagPillProperties::Unresolved => view! {
           <div class=[sharedClassesAll, sharedClassesWithIcon, "bg-customRed text-red-600"]
             .join(" ")>
-              <span class="relative top-[2px]">
-                <UnresolvedIcon size="1em" />
-              </span>
+            <span class="relative top-[2px]">
+              <UnresolvedIcon size="1em" />
+            </span>
             "Unresolved"
           </div>
         },
         TagPillProperties::Private => view! {
           <div class=[sharedClassesAll, sharedClassesWithIcon, "bg-customPurple text-purple-600"]
             .join(" ")>
-              <span class="relative top-[2px]">
-                <LockIcon size="1em" />
-              </span>
-              "Private"
+            <span class="relative top-[2px]">
+              <LockIcon size="1em" />
+            </span>
+            "Private"
           </div>
         },
         TagPillProperties::Endorsed => view! {
-            <div class=[sharedClassesAll, sharedClassesWithIcon, "bg-customYellow text-customYellow-details"]
-                .join(" ")>
-                <span class="relative top-[2px]">
-                  <EndorsedIcon size="1em" />
-                </span>
-                "Instructor Approved"
-            </div>
+          <div class=[
+            sharedClassesAll,
+            sharedClassesWithIcon,
+            "bg-customYellow text-customYellow-details",
+          ]
+            .join(" ")>
+            <span class="relative top-[2px]">
+              <EndorsedIcon size="1em" />
+            </span>
+            "Instructor Approved"
+          </div>
         },
         TagPillProperties::Resolved => view! {
-            <div class=[sharedClassesAll, sharedClassesWithIcon, "bg-customGreen text-customGreen-details"]
-                .join(" ")>
-                <span class="relative top-[2px]">
-                  <CheckIcon size="1em" />
-                </span>
-                "Resolved"
-            </div>
+          <div class=[
+            sharedClassesAll,
+            sharedClassesWithIcon,
+            "bg-customGreen text-customGreen-details",
+          ]
+            .join(" ")>
+            <span class="relative top-[2px]">
+              <CheckIcon size="1em" />
+            </span>
+            "Resolved"
+          </div>
         },
         // TagPillProperties::Custom(CustomTag { title }) => {
         //     view! { <div class=[sharedClassesAll, "bg-white text-gray-600"].join(" ")>{title}</div> }
