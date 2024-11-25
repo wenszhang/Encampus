@@ -257,9 +257,9 @@ pub fn QuestionTile(
         let days = duration.num_days();
 
         match days {
-            0 => "Posted today".to_string(),
-            1 => "Posted yesterday".to_string(),
-            n => format!("Posted {} days ago", n),
+            0 => "Posted today, ".to_string(),
+            1 => "Posted yesterday, ".to_string(),
+            n => format!("Posted {} days ago", n,),
         }
     };
 
@@ -322,23 +322,28 @@ pub fn QuestionTile(
               }}
             </div>
 
-            // Card body
+            // Card body with title and info string
             <div class="flex flex-col justify-between w-full h-full">
               // Title
               <div class="flex justify-center items-center p-4 w-full text-center">
                 <p class="text-base font-bold">{post.title}</p>
               </div>
 
-              // Post info footer
-              <div class="flex flex-col gap-1 px-2 pb-2 text-sm text-gray-600">
-                // Time ago
-                <div class="text-left">{format_time_ago}</div>
+              // Spacer to push content to bottom
+              <div class="flex-grow"></div>
 
-                // Reply counts with icons
-                <div class="flex gap-4 justify-end">
-                  // Student replies
+              // Info string with circle-backed icons
+              <div class="flex justify-between items-center px-2 pb-2 text-sm text-gray-600">
+                <span>{format_time_ago()}</span>
+                <div class="flex gap-4">
+                  // Student count with circle-backed grad cap
                   <span class="flex gap-1 items-center">
-                    <GraduationCapIcon size="1.2em" />
+                    <div class="inline-flex relative justify-center items-center">
+                      <div class="w-6 h-6 rounded-full bg-[#3256BE]"></div>
+                      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <GraduationCapIcon size="1.2em" />
+                      </div>
+                    </div>
                     {move || {
                       reply_counts
                         .get()
@@ -347,9 +352,14 @@ pub fn QuestionTile(
                     }}
                   </span>
 
-                  // Instructor replies
+                  // Instructor count with circle-backed instructor icon
                   <span class="flex gap-1 items-center">
-                    <InstructorIcon size="1.2em" />
+                    <div class="inline-flex relative justify-center items-center">
+                      <div class="w-6 h-6 rounded-full bg-[#F09636]"></div>
+                      <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                        <InstructorIcon size="1.2em" />
+                      </div>
+                    </div>
                     {move || {
                       reply_counts
                         .get()
