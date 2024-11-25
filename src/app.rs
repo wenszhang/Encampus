@@ -204,7 +204,11 @@ pub fn AuthenticatedRoutes() -> impl IntoView {
 /// General route wrapping
 #[component]
 fn UnauthenticatedRoutes() -> impl IntoView {
-    view! { <Outlet /> }
+    view! {
+      <div class="w-auto h-auto bg-cover bg-[url('/images/pattern_bg.png')]">
+        <Outlet />
+      </div>
+    }
 }
 
 // [Application-wide helpers] ===============================================
