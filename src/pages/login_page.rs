@@ -109,7 +109,7 @@ pub fn LoginPage() -> impl IntoView {
             <div class="flex justify-center items-center">
               <img src=format!("/{}", "images/logo.png") alt="Logo" class="h-16" />
             </div>
-            <h1 class="mb-4 text-2xl font-semibold text-center">Login</h1>
+            <h1 class="mb-4 text-2xl font-semibold text-center">ENCAMPUS</h1>
             {notification_view}
             <div class="mb-4">
               <label for="username" class="block mb-2 font-bold text-gray-700">
@@ -145,9 +145,7 @@ pub fn LoginPage() -> impl IntoView {
             </button>
             <div class="mt-4 text-sm text-center text-gray-600">Please enter your username.</div>
             <div class="mt-1 text-sm text-center text-gray-600">
-              Click here to <a href="/register" class="text-blue-500">
-                register
-              </a>.
+              Click here to <a href="/register" class="text-blue-500">register</a>.
             </div>
           </div>
         </div>
