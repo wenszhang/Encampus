@@ -1,10 +1,10 @@
 /**
- * Cancel icon component, used in announcement bar above question tiles
+ * Peper icon component, used in Custom post tag.
  */
 use leptos::{component, view, IntoView};
 
 #[component]
-pub fn CancelIcon(
+pub fn PaperIcon(
     /// css style size (E.g. sized="20px")
     /// (Note: Currently only supports static strings.
     ///  If you require dynamic sizing edit this component to take in a closure instead.)
@@ -14,7 +14,7 @@ pub fn CancelIcon(
       <svg xmlns="http://www.w3.org/2000/svg" width=size height=size viewBox="0 0 24 24">
         <path
           fill="currentColor"
-          d="M12 2C6.47 2 2 6.47 2 12s4.47 10 10 10s10-4.47 10-10S17.53 2 12 2m5 13.59L15.59 17L12 13.41L8.41 17L7 15.59L10.59 12L7 8.41L8.41 7L12 10.59L15.59 7L17 8.41L13.41 12z"
+          d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8zm4 18H6V4h7v5h5z"
         />
       </svg>
     }

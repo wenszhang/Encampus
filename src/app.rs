@@ -11,6 +11,7 @@ use crate::{
             push_notifications::{configure_notifications, send_newest_announcement_notification},
         },
         home::Home,
+        live_poll::LivePoll,
         login_page::LoginPage,
         register_page::RegisterPage,
         user_profile::user_profile_page::UserProfile,
@@ -82,6 +83,7 @@ pub fn App() -> impl IntoView {
                   <Route path="/:post_id/edit" view=EditPost />
                   <Route path="/announcement/:announcement_id" view=AnnouncementDetails />
                 </Route>
+                <Route path="/class/:class_id/poll" view=LivePoll />
                 <Route path="/settings" view=UserSettings />
                 <Route path="/profile" view=UserProfile />
               </Route>

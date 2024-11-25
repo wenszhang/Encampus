@@ -130,6 +130,16 @@ fn expanded_view(
               }}
             </li>
           </ul>
+
+          <ul>
+            <li class="py-2">
+              {class_id_val.map(|class_id|
+                view! {
+                  <A href=format!("/class/{class_id}/poll")>"Live Polling"</A>
+                })
+              }
+            </li>
+          </ul>
         </div>
 
         // Account Settings Button

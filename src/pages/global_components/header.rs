@@ -3,8 +3,12 @@
  */
 use crate::data::database::user_functions::Logout;
 use crate::data::global_state::{Authentication, User};
-use crate::resources::images::svgs::announcement_bell::AnnouncementBell;
+use crate::resources::images::svgs::dashboard_icon::DashboardIcon;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
+use crate::resources::images::svgs::drop_down_bars_close::DropDownBarsCloseIcon;
+use crate::resources::images::svgs::logout_icon::LogoutIcon;
+use crate::resources::images::svgs::profile_icon::ProfileIcon;
+use crate::resources::images::svgs::settings_icon::SettingsIcon;
 use crate::{
     app::expect_auth_context, data::database::announcement_functions::get_announcement_list,
 };
@@ -108,10 +112,9 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                 view! {
                   <div class="relative group">
                     <span class="inline-flex items-baseline">
-                      <h3 class="px-2">"Notifications"</h3>
-                      <button class="pr-2">
-                        <AnnouncementBell size="1.3rem" />
-                      </button>
+                      // <button class="pr-2">
+                      //   <AnnouncementBell size="1.3rem" />
+                      // </button>
                     </span>
                     <div class="absolute right-0 top-full invisible bg-white rounded-lg shadow-md group-hover:visible group-hover:opacity-100 group-hover:scale-100 z-[9999] mt-[-0.1rem]">
                       <AnnouncementInfo class_id=move || class_id />
@@ -120,10 +123,17 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
                 }
               })
           }} <span class="flex items-center mr-4 text-xl font-bold">{first_name}</span>
-          <div class="flex relative items-center group">
-            <button on:click=move |_| set_dropdown_visible(!dropdown_visible())>
-              <DropDownBars size="1.3rem" />
-            </button>
+          <div class="flex relative items-center group  ">
+          <button class="p-2 rounded-md bg-white hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-300"
+              on:click=move |_| set_dropdown_visible(!dropdown_visible())>
+              {move || {
+                if dropdown_visible() {
+                  view! { <DropDownBarsCloseIcon size="5rem" /> }
+                } else {
+                  view! { <DropDownBars size="1.3rem" /> }
+                }
+              }}
+          </button>
             <div class=move || {
               let visibility_classes = if dropdown_visible.get() {
                 "visible opacity-100 scale-100"
@@ -132,35 +142,40 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
               };
               format!("{} {}", base_classes, visibility_classes)
             }>
-              <ul class="py-1 w-36 text-lg text-gray-700">
-                <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <a href="/profile" class="block w-full h-full">
+            <ul class="py-1 w-36 text-lg text-gray-700 rounded-md">
+              <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
+                <a href="/profile" class="flex items-center gap-2 w-full h-full">
+                    <ProfileIcon size="1em"/>
                     Profile
-                  </a>
-                </li>
+                </a>
+              </li>
                 <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <a href="/settings" class="block w-full h-full">
+                  <a href="/settings" class="flex items-center gap-2 w-full h-full">
+                  <SettingsIcon size="1em"/>
                     Settings
                   </a>
                 </li>
                 <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
                   <a
                     href="/classes"
-                    class="block w-full h-full"
+                    class="flex items-center gap-2 w-full h-full"
                     aria-current="page"
-                    style="all: unset; display: block; text-align: left; color: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;"
-                  >
+                    style="all: unset; display: flex; align-items: center; gap: 0.5rem;"
+                    >
+                  <DashboardIcon size="1em"/>
                     Dashboard
                   </a>
                 </li>
-                <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
-                  <ActionForm action=logout_action>
-                    <input
-                      class="block w-full h-full"
-                      type="submit"
-                      value="Logout"
-                      style="all: unset; display: block; text-align: left; color: inherit; font-size: inherit; font-weight: inherit; line-height: inherit;"
-                    />
+                <li class="py-1 px-4 cursor-pointer hover:bg-gray-100">
+                  <ActionForm action=logout_action class="w-full">
+                    <div class="flex items-center gap-2">
+                        <LogoutIcon size="1em"/>
+                        <input
+                            class="cursor-pointer text-left bg-transparent border-none p-0 m-0 hover:bg-transparent focus:outline-none"
+                            type="submit"
+                            value="Logout"
+                        />
+                      </div>
                   </ActionForm>
                 </li>
               </ul>
