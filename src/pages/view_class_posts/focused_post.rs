@@ -185,6 +185,7 @@ fn QuestionContent(post: PostDetails, class_id: i32, is_instructor: bool) -> imp
                                 />
                             }
                         })}
+
                 </div>
             </div>
             <p class="text-sm font-light">
@@ -198,7 +199,7 @@ fn QuestionContent(post: PostDetails, class_id: i32, is_instructor: bool) -> imp
 
             </p>
             <br/>
-            <TiptapContentWrapper raw_html=post.contents />
+            <TiptapContentWrapper raw_html=post.contents/>
         // TODO use the post's timestamp
         </DarkenedCard>
     }
@@ -215,6 +216,8 @@ where
 
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
+
+    let (editor_count, set_editor_count) = create_signal(0);
 
     let notification_view = move || {
         notification_details.get().map(|details| {
@@ -233,6 +236,7 @@ where
             match add_reply(reply_info, user().user_name).await {
                 Ok(reply) => {
                     set_reply_contents(String::default());
+                    set_editor_count.update(|x| *x += 1);
                     add_reply_callback(reply);
                 }
                 Err(_) => {
@@ -250,11 +254,16 @@ where
         <DarkenedCard class="flex flex-col gap-2 p-5">
             <p>"Answer this post:"</p>
             <div class="p-3 h-96 bg-white rounded-t-lg">
-                <RichTextBox
-                    id="reply_rich_text_box"
-                    set_value=set_reply_contents
-                    value=reply_contents
-                />
+                {move || {
+                    view! {
+                        <RichTextBox
+                            id=format!("reply_rich_text_box_{}", editor_count())
+                            set_value=set_reply_contents
+                            value=reply_contents
+                        />
+                    }
+                }}
+
             </div>
             <div class="flex gap-5 justify-end">
                 <label for="anonymousToggle" class="flex items-center cursor-pointer select-none">
@@ -459,8 +468,8 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                                     }
                                 >
 
-                                    <EditPostIcon size="20px" />
-                    <span class="ml-2">Edit</span>
+                                    <EditPostIcon size="20px"/>
+                                    <span class="ml-2">Edit</span>
                                 </button>
                                 {if post_is_resolved {
                                     view! {
@@ -472,8 +481,8 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                                             }
                                         >
 
-                                            <UnresolvedIcon size="20px" />
-                        <span class="ml-2">Unresolve</span>
+                                            <UnresolvedIcon size="20px"/>
+                                            <span class="ml-2">Unresolve</span>
                                         </button>
                                     }
                                 } else {
@@ -487,7 +496,7 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                                         >
 
                                             <CheckIcon size="20px"/>
-                        <span class="ml-2">Resolve</span>
+                                            <span class="ml-2">Resolve</span>
                                         </button>
                                     }
                                 }}
@@ -500,8 +509,8 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                                     }
                                 >
 
-                                    <RemoveIcon size="20px" />
-                    <span class="ml-2">Remove</span>
+                                    <RemoveIcon size="20px"/>
+                                    <span class="ml-2">Remove</span>
                                 </button>
                             </div>
                         }
@@ -672,76 +681,83 @@ where
     };
 
     view! {
-      <div>
-          {move || {
-              if sorted_replies().is_empty() {
-                  view! {
-                      <span>
-                          <b>"No Replies Yet"</b>
-                      </span>
-                  }
-                      .into_view()
-              } else {
-                  view! {
-                      <div class="flex justify-between">
-                          <b class="inline-block">"Replies:"</b>
-                          <span class="inline-block">
-                              <select on:change=move |ev| {
-                                  let new_value = event_target_value(&ev);
-                                  set_order_option(new_value);
-                              }>
-                                  <SelectOrderOption selected=true value_and_label="Newest First"/>
-                                  <SelectOrderOption value_and_label="Oldest First"/>
-                              // <SelectOrderOption value_and_label="By Rating"/>
-                              </select>
-                          </span>
-                      </div>
-                  }
-                      .into_view()
-              }
-          }}
+        <div>
+            {move || {
+                if sorted_replies().is_empty() {
+                    view! {
+                        <span>
+                            <b>"No Replies Yet"</b>
+                        </span>
+                    }
+                        .into_view()
+                } else {
+                    view! {
+                        <div class="flex justify-between">
+                            <b class="inline-block">"Replies:"</b>
+                            <span class="inline-block">
+                                <select on:change=move |ev| {
+                                    let new_value = event_target_value(&ev);
+                                    set_order_option(new_value);
+                                }>
+                                    <SelectOrderOption
+                                        selected=true
+                                        value_and_label="Newest First"
+                                    />
+                                    <SelectOrderOption value_and_label="Oldest First"/>
+                                // <SelectOrderOption value_and_label="By Rating"/>
+                                </select>
+                            </span>
+                        </div>
+                    }
+                        .into_view()
+                }
+            }}
 
-      </div>
-      <For each=sorted_replies key=|reply| reply.reply_id let:reply>
-          <div>
-              <DarkenedCard class="relative p-5">
-                  <p class="font-bold">
-                      "Answered by " {reply.author_name}
-                      {reply
-                          .time
-                          .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
-                          .unwrap()
-                          .format(" at %l %p on %b %-d")
-                          .to_string()} ":"
-                  </p>
-                  <div class="flex gap-5 justify-end">
-                      <div class="flex items-center cursor-pointer select-none">
-                          {(reply.author_id == user().id || is_instructor)
-                              .then(move || {
-                                  view! {
-                                      <div>
-                                          <ReplyDropdown
-                                              remove_reply_callback
-                                              reply_id=reply.reply_id
-                                              reply_approved=reply.approved
-                                              is_instructor=is_instructor
-                                          />
-                                      </div>
-                                  }
-                              })}
+        </div>
+        <For each=sorted_replies key=|reply| reply.reply_id let:reply>
+            <div>
+                <DarkenedCard class="relative p-5">
+                    <p class="font-bold">
+                        "Answered by " {reply.author_name}
+                        {reply
+                            .time
+                            .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
+                            .unwrap()
+                            .format(" at %l %p on %b %-d")
+                            .to_string()} ":"
+                    </p>
+                    <div class="flex gap-5 justify-end">
+                        <div class="flex items-center cursor-pointer select-none">
+                            {(reply.author_id == user().id || is_instructor)
+                                .then(move || {
+                                    view! {
+                                        <div>
+                                            <ReplyDropdown
+                                                remove_reply_callback
+                                                reply_id=reply.reply_id
+                                                reply_approved=reply.approved
+                                                is_instructor=is_instructor
+                                            />
+                                        </div>
+                                    }
+                                })}
 
-                      </div>
-                  </div>
-                  <br/>
-                  <TiptapContentWrapper raw_html=reply.contents />
-                  {reply
-                      .approved
-                      .then_some(
-                          view! { <p class="text-sm font-light">"Instructor Approved Response"</p> },
-                      )}
-              // TODO use the reply's timestamp, author's name and anonymous info
-              </DarkenedCard>
-          </div>
-      </For>
-  }.into_view()
+                        </div>
+                    </div>
+                    <br/>
+                    <TiptapContentWrapper raw_html=reply.contents/>
+                    {reply
+                        .approved
+                        .then_some(
+                            view! {
+                                <p class="text-sm font-light">"Instructor Approved Response"</p>
+                            },
+                        )}
+
+                // TODO use the reply's timestamp, author's name and anonymous info
+                </DarkenedCard>
+            </div>
+        </For>
+    }
+    .into_view()
 }
