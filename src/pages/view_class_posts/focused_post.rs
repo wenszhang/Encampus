@@ -11,6 +11,7 @@ use crate::pages::global_components::notification::{
 };
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
+use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::text_area_icon::TextAreaIcon;
 use chrono::FixedOffset;
 use chrono::NaiveDateTime;
@@ -554,7 +555,7 @@ pub fn FocusedDropdown(
                   } else {
                     view! {
                       <button
-                        class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                        class="inline-flex items-center p-1 w-full text-sm leading-tight text-customGreen rounded-md hover:text-black hover:bg-gray-100"
                         on:click=move |_| {
                           resolve_action.dispatch(PostId { post_id: post.post_id });
                           set_menu_visible(false);
@@ -565,12 +566,13 @@ pub fn FocusedDropdown(
                     }
                   }}
                   <button
-                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:text-black hover:bg-gray-100"
                     on:click=move |_| {
                       remove_action.dispatch(PostId { post_id: post.post_id });
                       set_menu_visible(false);
                     }
                   >
+                    <RemoveIcon size="20px" />
                     <span class="ml-2">Remove</span>
                   </button>
                 </div>
