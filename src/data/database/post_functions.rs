@@ -193,7 +193,7 @@ pub async fn get_search_posts(
         "Unable to complete Request".to_string(),
     ))?;
 
-    let posts: Vec<Post> = sqlx::query_as("select title, postid as post_id, resolved, private, authorid as author_id, endorsed from posts where to_tsvector(title || ' ' || contents) @@ to_tsquery($3) and classid = $1 and removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp desc")
+    let posts: Vec<Post> = sqlx::query_as("select title, postid as post_id, resolved, private, authorid as author_id, endorsed, last_bumped, created_at from posts where to_tsvector(title || ' ' || contents) @@ to_tsquery($3) and classid = $1 and removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp desc")
         .bind(class_id)
         .bind(user_id)
         .bind(filter_keyword)

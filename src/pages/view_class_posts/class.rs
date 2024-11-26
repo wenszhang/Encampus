@@ -61,6 +61,10 @@ pub fn ClassPage() -> impl IntoView {
     provide_context(posts);
 
     let filtered_posts_action = create_action(move |_| async move {
+        if filter_keywords.get() == "" {
+            set_posts(posts.get().unwrap());
+            return;
+        }
         if let Ok(new_posts) = get_search_posts(
             class_id.get().unwrap().class_id,
             user().id,
