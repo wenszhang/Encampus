@@ -104,7 +104,7 @@ pub fn LoginPage() -> impl IntoView {
 
     view! {
       <form on:submit=on_submit>
-        <div class="flex flex-col justify-center items-center h-screen">
+        <div class="flex flex-col justify-center items-center h-screen opacity-95">
           <div class="p-20 w-96 bg-white rounded-lg shadow-md">
             <div class="flex justify-center items-center">
               <img src=format!("/{}", "images/logo.png") alt="Logo" class="h-16" />
