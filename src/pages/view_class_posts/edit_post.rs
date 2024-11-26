@@ -3,6 +3,7 @@ use crate::{
     data::database::post_functions::edit_post,
     expect_logged_in_user,
     pages::view_class_posts::focused_post::{get_post_details, PostId},
+    resources::images::svgs::{cancel_icon::CancelIcon, save_icon::SaveIcon},
 };
 use leptos::*;
 use leptos_router::use_params;
@@ -105,60 +106,71 @@ pub fn EditPost() -> impl IntoView {
             prop:value=move || post().map(|post| post.contents)
           ></textarea>
         </div>
-        <div class="flex gap-5 justify-end">
-          <button
-            class="p-2 ml-1 text-white bg-gray-500 rounded-full hover:bg-gray-600"
-            type="button"
-            on:click=move |_| {
-              let navigate = leptos_router::use_navigate();
-              navigate(
-                format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
-                Default::default(),
-              );
-            }
-          >
-            "Cancel"
-          </button>
+
           <div class="flex gap-5 justify-end">
-            <label for="privateToggle" class="flex items-center cursor-pointer select-none">
-              <span class="mx-2">"Private:"</span>
-              <div class="relative">
-                <input
-                  type="checkbox"
-                  id="privateToggle"
-                  class="sr-only peer"
-                  prop:checked=move || post().map(|post| post.private)
-                  on:change=move |_| set_private_state(true)
-                />
-                <div class="block w-14 h-8 bg-gray-500 rounded-full"></div>
-                <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
-              </div>
-            </label>
-            <label for="anonymousToggle" class="flex items-center cursor-pointer select-none">
-              <span class="mx-2">"Anonymous:"</span>
-              <div class="relative">
-                <input
-                  type="checkbox"
-                  id="anonymousToggle"
-                  class="sr-only peer"
-                  prop:checked=move || post().map(|post| post.anonymous)
-                  on:change=move |_| set_anonymous_state(true)
-                />
-                <div class="block w-14 h-8 bg-gray-500 rounded-full"></div>
-                <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
-              </div>
-            </label>
-            <button
-              type="submit"
-              class="p-2 ml-auto text-white bg-gray-500 rounded-full hover:bg-gray-600"
-              on:click=move |_| {
-                edit_post_action.dispatch(());
-              }
-            >
-              "Save"
-            </button>
+          <label for="privateToggle" class="flex items-center cursor-pointer select-none">
+          <span class="mx-2">"Private to Instructors:"</span>
+          <div class="relative">
+            <input
+              type="checkbox"
+              id="privateToggle"
+              class="sr-only peer"
+              prop:checked=private_state
+              on:change=move |_| set_private_state(!private_state())
+            />
+            <div class="flex justify-evenly items-center w-14 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-purple-500">
+              <span class="[&:not(:peer-checked)]:invisible text-white">"On"</span>
+              <span class="peer-checked:invisible text-white">"Off"</span>
+            </div>
+            <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
           </div>
+        </label>
+        <label for="anonymousToggle" class="flex items-center cursor-pointer select-none">
+        <span class="mx-2">"Post Anonymously:"</span>
+        <div class="relative">
+          <input
+            type="checkbox"
+            id="anonymousToggle"
+            class="sr-only peer"
+            prop:checked=anonymous_state
+            on:change=move |_| set_anonymous_state(!anonymous_state())
+          />
+          <div class="flex justify-evenly items-center w-14 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-green-500">
+            <span class="[&:not(:peer-checked)]:invisible text-white">"On"</span>
+            <span class="peer-checked:invisible text-white">"Off"</span>
+          </div>
+         <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-full peer-checked:bg-primary"></div>
         </div>
+      </label>
+      <div class="flex gap-5 justify-end">
+      <button
+        class="ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-red-500 hover:bg-red-600 focus:ring-offset-red-500 flex items-center gap-2"
+        type="button"
+        on:click=move |_| {
+          let navigate = leptos_router::use_navigate();
+          navigate(
+            format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
+            Default::default(),
+          );
+        }
+      >
+      <CancelIcon size="1em"/>
+        "Cancel"
+      </button>
+    </div>
+      <button
+      type="submit"
+        class="py-3 px-4 text-white rounded-full focus:ring-2 focus:ring-2 focus:ring-offset-2 focus:ring-offset-coolBlue bg-coolBlue hover:bg-coolBlue-HOVER focus:outline-none inline-flex items-center gap-2"
+        on:click=move |_| {
+          edit_post_action.dispatch(());
+        }
+      >
+        Save Changes
+        <SaveIcon size="1.5em"/>
+      </button>
+          </div>
+
+
       </DarkenedCard>
     }
 }

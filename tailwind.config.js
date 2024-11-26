@@ -8,6 +8,10 @@ module.exports = {
           DEFAULT: "#101930",
           HOVER: "#213873",
         },
+        coolBlue: {
+          DEFAULT: '#1879BD',
+          HOVER: "#1260A4",
+        },
         customRed: {
           DEFAULT: "#FFDADA",
           HOVER: "#FFABAB",

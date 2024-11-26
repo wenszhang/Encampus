@@ -31,6 +31,7 @@ pub mod pin_icon;
 pub mod polling_icon;
 pub mod profile_icon;
 pub mod remove_icon;
+pub mod save_icon;
 pub mod settings_icon;
 pub mod strikethrough_icon;
 pub mod text_area_icon;
