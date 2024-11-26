@@ -11,18 +11,32 @@ pub fn AboutUs() -> impl IntoView {
           <main class="my-8 text-left">
             <h1 class="mb-4 text-xl">"Project Overview:"</h1>
             <p class="mb-4 text-xl">
-              "Encampus is a classroom assistance tool with the purpose of streamlining communication within classes,
-              enabling students to ask both public and private questions outside of regular hours. Additionally, Encampus 
-              acts as a forum for students to help share insights and answer each other's questions. Another option for 
-              in-person meetings, catering to the busy schedules of diverse students on college campuses and making getting 
-              help on assignments convenient. Encampus distinguishes itself by building upon and refining the core functionalities 
-              found in similar software offering familiar tools such as Q&A forums, student participation tracking, AI responses, and live notifications."
+              "Encampus is a modern classroom assistance platform designed to streamline communication and foster
+              collaboration within academic environments. Built with Leptos, a framework powered by Rust for exceptional 
+              performance and reliability, Encampus enables students to ask public and private questions beyond regular hours, 
+              bridging the gap between traditional interactions and digital convenience. It acts as a dynamic forum where 
+              students can share insights, answer each other's questions, and access AI-powered responses, all while benefiting 
+              from real-time notifications and participation tracking. Designed to accommodate the busy schedules of diverse college 
+              students, Encampus enhances in-person and remote interactions by refining the core functionalities of similar tools, 
+              providing a seamless, efficient, and innovative solution for academic success."
             </p>
             <h1 class="mb-4 text-xl">"Team Members:"</h1>
             <div class="grid grid-cols-2 gap-4">
               <img src="/images/placeholder.png" alt="Gabe" class="w-32 h-32 rounded-full" />
-              <p>"Gabe is awesome"</p>
-              <p>"Jack is awesome"</p>
+              <div>
+                <div class="border-b border-b-black">
+                  <p class="text-xl">"Gabriel Famodu"</p>
+                  <p>"Contact Info"</p>
+                </div>
+                <p>"Bio Here"</p>
+              </div>
+              <div>
+                <div class="border-b border-b-black">
+                  <p class="text-xl">"Jack Shunn"</p>
+                  <p>"Contact Info"</p>
+                </div>
+                <p>"Bio Here"</p>
+              </div>
               <img src="/images/placeholder.png" alt="Jack" class="w-32 h-32 rounded-full" />
             </div>
           </main>
