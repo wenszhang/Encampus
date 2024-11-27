@@ -78,9 +78,9 @@ pub fn AboutUs() -> impl IntoView {
                 class="object-cover overflow-hidden rounded-lg w-45 h-75"
               />
               <img
-                src="/images/placeholder.png"
+                src="/images/about_us_headshots/Matthew.jpg"
                 alt="Matthew"
-                class="object-cover overflow-hidden w-32 h-32 rounded-full"
+                class="object-cover overflow-hidden rounded-lg w-45 h-75"
               />
               <div>
                 <div class="mb-4 border-b border-black">
@@ -120,12 +120,12 @@ pub fn AboutUs() -> impl IntoView {
               <img
                 src="/images/placeholder.png"
                 alt="Wensen"
-                class="object-cover overflow-hidden w-32 h-32 rounded-full"
+                class="object-cover overflow-hidden rounded-lg w-45 h-75"
               />
               <img
                 src="/images/about_us_headshots/Wentao"
                 alt="Wentao"
-                class="object-cover overflow-hidden w-32 h-32 rounded-full"
+                class="object-cover overflow-hidden rounded-lg w-45 h-75"
               />
               <div>
                 <div class="mb-4 border-b border-black">
