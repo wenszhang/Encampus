@@ -34,9 +34,9 @@ pub fn AddAnnouncementModal(
                             </svg>
                         </button>
 
-                        // Modal content
+                        // Create announcement pop up
                         <div class="mt-4">
-                            <h2 class="text-2xl font-bold mb-6">"Add New Announcement "</h2>
+                            <h2 class="text-2xl font-bold mb-6">"Add New Announcement"</h2>
                             <div class="flex flex-col gap-4">
                                 <div>
                                     <label class="block text-sm font-medium text-gray-700 mb-1">"Title"</label>
@@ -78,7 +78,7 @@ pub fn AddAnnouncementModal(
                                             set_contents.set(String::new());
                                         }
                                     >
-                                        "Post Announcement"
+                                        "Post Announcement +"
                                     </button>
                                 </div>
                             </div>
@@ -170,7 +170,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                                 }
                             }}
                         </Suspense>
-                        <div class="h-[350px] overflow-y-auto">
+                        <div class="h-[370px] overflow-y-auto">
                             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-white">
                                 {announcements_clone
                                     .into_iter()
