@@ -73,10 +73,10 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
               .map(|_| {
                 view! {
                   <div class="relative group">
-                    <button class="pr-2 mt-1">
-                      <AnnouncementBell size="1.3rem" />
-                    </button>
-                    <span class="inline-flex items-baseline"></span>
+                    // <button class="pr-2">
+                    //   <AnnouncementBell size="1.3rem" />
+                    // </button>
+                    // <span class="inline-flex items-baseline"></span>
                     <div class="absolute right-0 top-full invisible bg-white rounded-lg shadow-md group-hover:visible group-hover:opacity-100 group-hover:scale-100 z-[9999] mt-[-0.1rem]">
                       <AnnouncementInfo />
                     </div>

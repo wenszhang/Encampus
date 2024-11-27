@@ -22,6 +22,7 @@ pub mod filter_icon;
 pub mod highlighter_icon;
 pub mod home_icon;
 pub mod information_icon;
+pub mod instructor_endorsed_icon;
 pub mod italic_icon;
 pub mod lock_icon;
 pub mod logout_icon;

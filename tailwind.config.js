@@ -34,6 +34,10 @@ module.exports = {
           bg: '#FFEDB4',
           details: '#B47E29',
         },
+        instructorYellow: {
+          DEFAULT: '#F9EBAF',
+          details: '#B47E29'
+        },
         errorNotification: {
           bg: '#FDDFDD',
           details: '#F23B2F',
