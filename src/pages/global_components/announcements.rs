@@ -294,8 +294,11 @@ pub fn ViewAnnouncementModal(
                     <div class="relative bg-white rounded-xl shadow-2xl max-w-3xl w-full m-4">
                         // Header section with title and close button
                         <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
-                            <h2 class="text-2xl font-bold text-gray-800">Announcement</h2>
-                            <button
+                        <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
+                          <AnnouncementMic size="1em" />
+                            <span>Announcement</span>
+                        </h2>
+                        <button
                                 class="p-2 hover:bg-gray-100 rounded-full transition-colors"
                                 on:click=move |_| set_show.set(false)
                             >
