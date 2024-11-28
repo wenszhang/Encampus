@@ -668,7 +668,7 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
     let instructors = create_resource(
         || {},
         |_| async {
-            get_users_by_role("instructor".to_string())
+            get_users_by_role("Instructor".to_string())
                 .await
                 .unwrap_or_default()
         },

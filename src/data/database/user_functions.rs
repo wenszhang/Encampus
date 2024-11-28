@@ -92,6 +92,17 @@ pub async fn add_user(new_user: NewUser, login_new_user: bool) -> Result<DbUser,
         "Unable to complete Request".to_string(),
     ))?;
 
+    // let new_student = new_user.clone();
+
+    if new_user.clone().user.role == "Student" {
+        sqlx::query("insert into students(id, name) values($1, $2)")
+            .bind(new_user.clone().user.id)
+            .bind(new_user.clone().user.user_name)
+            .execute(&pool)
+            .await
+            .expect("no users found");
+    }
+
     let user: DbUser = sqlx::query_as(
         "insert into users(username, firstname, lastname, role, password) values($1, $2, $3, $4, $5) 
         returning username,
@@ -100,7 +111,7 @@ pub async fn add_user(new_user: NewUser, login_new_user: bool) -> Result<DbUser,
         id,
         role",
     )
-    .bind(new_user.user.user_name)
+    .bind(new_user.clone().user.user_name)
     .bind(new_user.user.first_name)
     .bind(new_user.user.last_name)
     .bind(new_user.user.role)

@@ -4,6 +4,7 @@
 use crate::{
     data::global_state::{AuthContext, Authentication},
     pages::{
+        about_us_pages::{about_us::AboutUs, tutorial::Tutorial},
         admin_pages::admin_homepage::AdminHomePage,
         global_components::{
             error_template::{AppError, ErrorTemplate},
@@ -94,6 +95,8 @@ pub fn App() -> impl IntoView {
               // Accessible when logged out
               <Route path="" view=UnauthenticatedRoutes>
                 <Route path="" view=Home />
+                <Route path="/about-us" view=AboutUs />
+                <Route path="/tutorial" view=Tutorial />
                 <Route path="/login" view=LoginPage />
                 <Route path="/register" view=RegisterPage />
               </Route>
