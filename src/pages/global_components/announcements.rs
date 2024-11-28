@@ -5,6 +5,8 @@ use crate::data::database::class_functions::check_user_is_instructor;
 use crate::expect_logged_in_user;
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
+use crate::resources::images::svgs::announcement_mic_2::AnnouncementMicAlt;
+
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use leptos::*;
@@ -110,7 +112,7 @@ pub fn AnnouncementDropDownMenu(
                     view! {
                         <div class="p-1">
                             <button
-                                class="inline-flex items-center p-2 w-full text-sm leading-tight text-red-500 rounded-md hover:text-black hover:bg-gray-100"
+                                class="inline-flex items-center p-2 w-full text-sm leading-tight text-red-500 rounded-md hover:text-red-500 hover:bg-gray-100"
                                 on:click=move |_| delete_action.dispatch(announcement_id)
                             >
                                 <RemoveIcon size="20px" />
@@ -155,7 +157,6 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let (is_expanded, set_is_expanded) = create_signal(true);
     let (title, set_title) = create_signal(String::new());
     let (contents, set_contents) = create_signal(String::new());
-
     let (viewing_announcement, set_viewing_announcement) = create_signal(false);
     let (selected_announcement, set_selected_announcement) =
         create_signal(None::<AnnouncementInfo>);
@@ -163,12 +164,12 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let mut sorted_announcements = announcements.clone();
     sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
 
-    let add_announcement_action = create_action(move |announcementInfo: &AddAnnouncementInfo| {
-        let announcementInfo = announcementInfo.clone();
+    let add_announcement_action = create_action(move |announcement_info: &AddAnnouncementInfo| {
+        let announcement_info = announcement_info.clone();
         async move {
-            match post_announcement(announcementInfo, user().id).await {
-                Ok(_announcement) => {}
-                Err(_) => logging::error!("Attempt to post post failed. Please try again"),
+            match post_announcement(announcement_info, user().id).await {
+                Ok(_) => {}
+                Err(_) => logging::error!("Failed to post announcement. Please try again"),
             }
         }
     });
@@ -197,9 +198,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                 if is_expanded.get() {
                     view! {
                         <>
-                            <Suspense fallback=|| {
-                                view! { <p>{"Loading ..."}</p> }
-                            }>
+                            <Suspense fallback=move || view! { <p>"Loading ..."</p> }>
                                 {move || {
                                     if is_instructor().unwrap_or_default() {
                                         view! {
@@ -223,22 +222,63 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                                         .into_iter()
                                         .map(|announcement| {
                                             let announcement_clone = announcement.clone();
+                                            let (menu_visible, set_menu_visible) = create_signal(false);
+                                            let is_author = user().id == announcement.author_id;
+
                                             view! {
-                                                <div
-                                                    class="cursor-pointer"
-                                                    on:click=move |_| {
-                                                        set_selected_announcement.set(Some(announcement_clone.clone()));
-                                                        set_viewing_announcement.set(true);
-                                                    }
-                                                >
-                                                    <div class="flex overflow-hidden relative flex-col justify-between p-6 h-60 bg-card-header rounded-lg shadow-lg transition-transform duration-300 hover:bg-gray-100 hover:shadow-xl hover:scale-105">
-                                                        <div class="flex-1">
-                                                            <h4 class="text-lg font-semibold mb-2">{announcement.title.clone()}</h4>
-                                                            <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
+                                                <div class="relative">
+                                                    <div
+                                                        class="cursor-pointer"
+                                                        on:click=move |_| {
+                                                            set_selected_announcement.set(Some(announcement_clone.clone()));
+                                                            set_viewing_announcement.set(true);
+                                                        }
+                                                    >
+                                                        <div class="flex overflow-hidden relative flex-col justify-between p-6 h-60 bg-card-header rounded-lg shadow-lg transition-transform duration-300 hover:bg-gray-100 hover:shadow-xl hover:scale-105">
+                                                        //<div class="flex overflow-hidden relative flex-col justify-between p-6 h-60 bg-blue-50 rounded-lg shadow-sm transition-all duration-300 hover:bg-blue-100 hover:shadow-md hover:scale-105">
+                                                            {move || if is_author {
+                                                                view! {
+                                                                    <div class="flex absolute top-1 right-2 z-20 items-center">
+                                                                        <button
+                                                                           class="rounded-lg bg-card-header hover:shadow-customInset"
+                                                                            // class="rounded-lg bg-blue-50 hover:shadow-customInset"
+                                                                            on:click=move |e| {
+                                                                                e.stop_propagation();
+                                                                                set_menu_visible.update(|value| *value = !*value);
+                                                                              }
+                                                                        >
+                                                                            <DotsIcon size="36px"/>
+                                                                        </button>
+                                                                        {move || if menu_visible.get() {
+                                                                            view! {
+                                                                                <div class="absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                                                                    <AnnouncementDropDownMenu
+                                                                                        announcement_id=announcement.announcement_id
+                                                                                        announcement_author_id=announcement.author_id
+                                                                                        delete_action=delete_announcement_action
+                                                                                    />
+                                                                                </div>
+                                                                            }.into_view()
+                                                                        } else {
+                                                                            view! { <div></div> }.into_view()
+                                                                        }}
+                                                                    </div>
+                                                                }.into_view()
+                                                            } else {
+                                                                view! { <div></div> }.into_view()
+                                                            }}
+
+                                                            <div class="flex-1">
+                                                                <div class="flex items-center mb-2">
+                                                                    <AnnouncementMicAlt size="1.3em" />
+                                                                <h4 class="text-lg font-semibold pl-2">{announcement.title.clone()}</h4>
+                                                            </div>
+                                                                <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
+                                                            </div>
+                                                            <p class="text-xs text-gray-500 mt-2 pl-2">
+                                                                {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
+                                                            </p>
                                                         </div>
-                                                        <p class="text-xs text-gray-500 mt-2">
-                                                            {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
-                                                        </p>
                                                     </div>
                                                 </div>
                                             }
@@ -295,7 +335,7 @@ pub fn ViewAnnouncementModal(
                         // Header section with title and close button
                         <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
                         <h2 class="text-2xl font-bold text-gray-800 flex items-center gap-2">
-                          <AnnouncementMic size="1em" />
+                          <AnnouncementMicAlt size="1em" />
                             <span>Announcement</span>
                         </h2>
                         <button

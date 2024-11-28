@@ -4,6 +4,7 @@ pub mod alignleft_icon;
 pub mod alignright_icon;
 pub mod announcement_bell;
 pub mod announcement_mic;
+pub mod announcement_mic_2;
 pub mod blockquote_icon;
 pub mod bold_icon;
 pub mod bump_icon;

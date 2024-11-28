@@ -12,7 +12,7 @@ use leptos_router::use_params;
 pub fn EditPost() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
     let post_id = use_params::<PostId>();
-    let class_id = use_params::<ClassId>();
+    let class_id: Memo<Result<ClassId, leptos_router::ParamsError>> = use_params::<ClassId>();
 
     let post_and_replies = create_resource(post_id, |post_id| async {
         if let Ok(post_id) = post_id {
