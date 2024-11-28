@@ -1,32 +1,90 @@
-use leptos::{component, view, IntoView};
+use leptos::{component, create_signal, view, IntoView, SignalGet};
 
 use crate::pages::about_us_pages::{
-    gabe::Gabe, jack::Jack, matt::Matt, wensen::Wensen, wentao::Wentao,
+    gabe::Gabe, jack::Jack, matt::Matt, team::Team, tutorial::Tutorial, wensen::Wensen,
+    wentao::Wentao,
 };
 
 #[component]
 pub fn AboutUs() -> impl IntoView {
+    let (active_tab, set_active_tab) = create_signal("Team".to_string());
+
     view! {
       <div class="flex overflow-y-auto flex-col justify-center items-center min-h-screen bg-gray-100">
         <div class="container flex flex-col items-center py-6 px-6 mx-auto max-w-4xl bg-white rounded-lg">
           <header class="flex sticky top-0 z-10 justify-between items-center py-4 w-full bg-white">
             <h1 class="text-4xl font-bold">"About Us"</h1>
           </header>
-          <main class="my-8 leading-relaxed text-left">
-            <h1 class="mb-4 text-xl font-bold">"Project Overview:"</h1>
-            <p class="mb-6 text-lg">
-              "Encampus is a modern classroom assistance platform designed to streamline communication and foster
-              collaboration within academic environments. Built with Leptos, a framework powered by Rust for exceptional 
-              performance and reliability, Encampus enables students to ask public and private questions beyond regular hours, 
-              bridging the gap between traditional interactions and digital convenience. It acts as a dynamic forum where 
-              students can share insights, answer each other's questions, and access AI-powered responses, all while benefiting 
-              from real-time notifications and participation tracking. Designed to accommodate the busy schedules of diverse college 
-              students, Encampus enhances in-person and remote interactions by refining the core functionalities of similar tools, 
-              providing a seamless, efficient, and innovative solution for academic success."
-            </p>
-            <h1 class="mb-4 text-xl font-bold">"Team Members:"</h1>
-            <div class="grid grid-cols-1 gap-6 sm:grid-cols-1 md:grid-cols-2">
-              {Gabe()} {Jack()} {Matt()} {Wensen()} {Wentao()}
+          <main class="my-8 w-full leading-relaxed text-left">
+            <div class="flex mb-6 space-x-4">
+              <button
+                class=move || {
+                  format!("tab {}", if active_tab.get() == "$1" { "active" } else { "" })
+                }
+                on:click=move |_| set_active_tab("Team".to_string())
+              >
+                "Team"
+              </button>
+              <button
+                class=move || {
+                  format!("tab {}", if active_tab.get().as_str() == "Gabe" { "active" } else { "" })
+                }
+                on:click=move |_| set_active_tab("Gabe".to_string())
+              >
+                "Gabe"
+              </button>
+              <button
+                class=move || {
+                  format!("tab {}", if *active_tab.get() == "Jack" { "active" } else { "" })
+                }
+                on:click=move |_| set_active_tab("Jack".to_string())
+              >
+                "Jack"
+              </button>
+              <button
+                class=move || {
+                  format!("tab {}", if *active_tab.get() == "Matt" { "active" } else { "" })
+                }
+                on:click=move |_| set_active_tab("Matt".to_string())
+              >
+                "Matt"
+              </button>
+              <button
+                class=move || {
+                  format!("tab {}", if *active_tab.get() == "Wensen" { "active" } else { "" })
+                }
+                on:click=move |_| set_active_tab("Wensen".to_string())
+              >
+                "Wensen"
+              </button>
+              <button
+                class=move || {
+                  format!("tab {}", if *active_tab.get() == "Wentao" { "active" } else { "" })
+                }
+                on:click=move |_| set_active_tab("Wentao".to_string())
+              >
+                "Wentao"
+              </button>
+              <button
+                class=move || {
+                  format!("tab {}", if *active_tab.get() == "Tutorial" { "active" } else { "" })
+                }
+                on:click=move |_| set_active_tab("Tutorial".to_string())
+              >
+                "Tutorial"
+              </button>
+            </div>
+            <div class="tab-content">
+              {move || match active_tab.get().as_str() {
+                "Team" => Team().into_view(),
+                "Gabe" => Gabe().into_view(),
+                "Jack" => Jack().into_view(),
+                "Matt" => Matt().into_view(),
+                "Wensen" => Wensen().into_view(),
+                "Wentao" => Wentao().into_view(),
+                "Tutorial" => Tutorial().into_view(),
+                _ => view! { "" }.into_view(),
+              }}
             </div>
           </main>
           <footer class="py-8 mt-auto">
