@@ -4,7 +4,7 @@
 use crate::{
     data::global_state::{AuthContext, Authentication},
     pages::{
-        about_us::AboutUs,
+        about_us_pages::{about_us::AboutUs, tutorial::Tutorial},
         admin_pages::admin_homepage::AdminHomePage,
         global_components::{
             error_template::{AppError, ErrorTemplate},
@@ -15,7 +15,6 @@ use crate::{
         live_poll::LivePoll,
         login_page::LoginPage,
         register_page::RegisterPage,
-        tutorial::Tutorial,
         user_profile::user_profile_page::UserProfile,
         user_settings::user_settings_page::UserSettings,
         view_class_posts::{
