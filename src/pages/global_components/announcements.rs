@@ -175,7 +175,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     });
 
     view! {
-        <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg bg-white">
+        <div class="flex overflow-hidden relative flex-col w-full rounded-lg shadow-lg bg-white">
             <div class="flex flex-col w-full bg-customBlue rounded-t-lg">
                 <div class="flex justify-between items-center px-3 h-7">
                     <div class="flex items-center text-white">
@@ -217,7 +217,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                                 }}
                             </Suspense>
                             <div class="h-[300px] overflow-y-auto">
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-white">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white">
                                     {announcements_clone
                                         .into_iter()
                                         .map(|announcement| {
@@ -271,7 +271,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                                                             <div class="flex-1">
                                                                 <div class="flex items-center mb-2">
                                                                     <AnnouncementMicAlt size="1.3em" />
-                                                                <h4 class="text-lg font-semibold pl-2">{announcement.title.clone()}</h4>
+                                                                <h4 class="text-lg font-semibold pl-2 text-customBlue">{announcement.title.clone()}</h4>
                                                             </div>
                                                                 <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
                                                             </div>
