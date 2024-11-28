@@ -15,6 +15,7 @@ use crate::{
         live_poll::LivePoll,
         login_page::LoginPage,
         register_page::RegisterPage,
+        tutorial::Tutorial,
         user_profile::user_profile_page::UserProfile,
         user_settings::user_settings_page::UserSettings,
         view_class_posts::{
@@ -96,6 +97,7 @@ pub fn App() -> impl IntoView {
               <Route path="" view=UnauthenticatedRoutes>
                 <Route path="" view=Home />
                 <Route path="/about-us" view=AboutUs />
+                <Route path="/tutorial" view=Tutorial />
                 <Route path="/login" view=LoginPage />
                 <Route path="/register" view=RegisterPage />
               </Route>
