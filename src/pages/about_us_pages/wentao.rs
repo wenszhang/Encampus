@@ -4,7 +4,7 @@ use leptos::{component, view, IntoView};
 pub fn Wentao() -> impl IntoView {
     view! {
       <img
-        src="/images/about_us_headshots/Wentao"
+        src="/images/about_us_headshots/Wentao.png"
         alt="Wentao"
         class="object-cover overflow-hidden rounded-lg w-45 h-75"
       />
