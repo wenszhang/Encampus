@@ -1,10 +1,12 @@
 use crate::data::database::announcement_functions::{
-    post_announcement, AddAnnouncementInfo, AnnouncementInfo,
+    delete_announcement, post_announcement, AddAnnouncementInfo, AnnouncementInfo,
 };
 use crate::data::database::class_functions::check_user_is_instructor;
 use crate::expect_logged_in_user;
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
+use crate::resources::images::svgs::dots_icon::DotsIcon;
+use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use leptos::*;
 use leptos_router::{use_params, A};
 
@@ -93,6 +95,38 @@ pub fn AddAnnouncementModal(
 }
 
 #[component]
+pub fn AnnouncementDropDownMenu(
+    announcement_id: i32,
+    announcement_author_id: i32,
+    delete_action: Action<i32, ()>,
+) -> impl IntoView {
+    let (user, _) = expect_logged_in_user!();
+    let is_author = move || user().id == announcement_author_id;
+
+    view! {
+        <div class="py-1">
+            {move || {
+                if is_author() {
+                    view! {
+                        <div class="p-1">
+                            <button
+                                class="inline-flex items-center p-2 w-full text-sm leading-tight text-red-500 rounded-md hover:text-black hover:bg-gray-100"
+                                on:click=move |_| delete_action.dispatch(announcement_id)
+                            >
+                                <RemoveIcon size="20px" />
+                                <span class="ml-2">Remove</span>
+                            </button>
+                        </div>
+                    }.into_view()
+                } else {
+                    view! { <div></div> }.into_view()
+                }
+            }}
+        </div>
+    }.into_view()
+}
+
+#[component]
 pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
     let class_id = use_params::<ClassId>();
@@ -107,10 +141,24 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
         }
     });
 
+    let delete_announcement_action = create_action(move |announcement_id: &i32| {
+        let announcement_id = *announcement_id;
+        async move {
+            match delete_announcement(announcement_id).await {
+                Ok(_) => {}
+                Err(_) => logging::error!("Failed to delete announcement"),
+            }
+        }
+    });
+
     let (is_adding_post, set_is_adding_post) = create_signal(false);
     let (is_expanded, set_is_expanded) = create_signal(true);
     let (title, set_title) = create_signal(String::new());
     let (contents, set_contents) = create_signal(String::new());
+
+    let (viewing_announcement, set_viewing_announcement) = create_signal(false);
+    let (selected_announcement, set_selected_announcement) =
+        create_signal(None::<AnnouncementInfo>);
 
     let mut sorted_announcements = announcements.clone();
     sorted_announcements.sort_by(|a, b| b.time.cmp(&a.time));
@@ -126,98 +174,183 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
     });
 
     view! {
-      <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg bg-white">
-          // Announcement header
-          <div class="flex flex-col w-full bg-customBlue rounded-t-lg">
-              <div class="flex justify-between items-center px-3 h-7">
-                  <div class="flex items-center text-white">
-                      <AnnouncementMic size="5em" />
-                      <h3 class="px-2">"RECENT ANNOUNCEMENTS"</h3>
-                  </div>
+        <div class="flex overflow-hidden relative flex-col rounded-lg shadow-lg bg-white">
+            <div class="flex flex-col w-full bg-customBlue rounded-t-lg">
+                <div class="flex justify-between items-center px-3 h-7">
+                    <div class="flex items-center text-white">
+                        <AnnouncementMic size="5em" />
+                        <h3 class="px-2">"RECENT ANNOUNCEMENTS"</h3>
+                    </div>
 
-                  <div class="flex items-center text-white hover:text-gray-400">
-                      <button on:click=move |_| set_is_expanded.update(|v| *v = !*v)>
-                          <details open=is_expanded.get()>
-                              <summary>{move || if is_expanded.get() { "COLLAPSE" } else { "EXPAND" }}</summary>
-                          </details>
-                      </button>
-                  </div>
-              </div>
-          </div>
+                    <div class="flex items-center text-white hover:text-gray-400">
+                        <button on:click=move |_| set_is_expanded.update(|v| *v = !*v)>
+                            <details open=is_expanded.get()>
+                                <summary>{move || if is_expanded.get() { "COLLAPSE" } else { "EXPAND" }}</summary>
+                            </details>
+                        </button>
+                    </div>
+                </div>
+            </div>
 
-          {move || {
-            let announcements_clone = sorted_announcements.clone();
-            if is_expanded.get() {
-                view! {
-                    <>
-                        <Suspense fallback=|| {
-                            view! { <p>{"Loading ..."}</p> }
-                        }>
-                            {move || {
-                                if is_instructor().unwrap_or_default() {
-                                    view! {
-                                        <div class="flex justify-end px-4 pt-2">
-                                            <button
-                                                class="px-3 py-1 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
-                                                on:click=move |_| set_is_adding_post.set(true)
-                                            >
-                                                "Add New Announcement +"
-                                            </button>
-                                        </div>
-                                    }
-                                } else {
-                                    view! { <div></div> }
-                                }
-                            }}
-                        </Suspense>
-                        <div class="h-[370px] overflow-y-auto">
-                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-white">
-                                {announcements_clone
-                                    .into_iter()
-                                    .map(|announcement| {
+            {move || {
+                let announcements_clone = sorted_announcements.clone();
+                if is_expanded.get() {
+                    view! {
+                        <>
+                            <Suspense fallback=|| {
+                                view! { <p>{"Loading ..."}</p> }
+                            }>
+                                {move || {
+                                    if is_instructor().unwrap_or_default() {
                                         view! {
-                                            <A
-                                                href=format!(
-                                                    "/classes/{}/announcement/{}",
-                                                    class_id_val,
-                                                    announcement.announcement_id,
-                                                )
-                                            >
-                                                <div class="flex overflow-hidden relative flex-col justify-between p-6 h-60 bg-card-header rounded-lg shadow-lg transition-transform duration-300 hover:bg-gray-100 hover:shadow-xl hover:scale-105">
-                                                    <div class="flex-1">
-                                                        <h4 class="text-lg font-semibold mb-2">{announcement.title.clone()}</h4>
-                                                        <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
+                                            <div class="flex justify-end px-4 pt-2">
+                                                <button
+                                                    class="px-3 py-1 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
+                                                    on:click=move |_| set_is_adding_post.set(true)
+                                                >
+                                                    "Add New Announcement +"
+                                                </button>
+                                            </div>
+                                        }.into_view()
+                                    } else {
+                                        view! { <div></div> }.into_view()
+                                    }
+                                }}
+                            </Suspense>
+                            <div class="h-[300px] overflow-y-auto">
+                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4 bg-white">
+                                    {announcements_clone
+                                        .into_iter()
+                                        .map(|announcement| {
+                                            let announcement_clone = announcement.clone();
+                                            view! {
+                                                <div
+                                                    class="cursor-pointer"
+                                                    on:click=move |_| {
+                                                        set_selected_announcement.set(Some(announcement_clone.clone()));
+                                                        set_viewing_announcement.set(true);
+                                                    }
+                                                >
+                                                    <div class="flex overflow-hidden relative flex-col justify-between p-6 h-60 bg-card-header rounded-lg shadow-lg transition-transform duration-300 hover:bg-gray-100 hover:shadow-xl hover:scale-105">
+                                                        <div class="flex-1">
+                                                            <h4 class="text-lg font-semibold mb-2">{announcement.title.clone()}</h4>
+                                                            <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
+                                                        </div>
+                                                        <p class="text-xs text-gray-500 mt-2">
+                                                            {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
+                                                        </p>
                                                     </div>
-                                                    <p class="text-xs text-gray-500 mt-2">
-                                                        {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
-                                                    </p>
                                                 </div>
-                                            </A>
-                                        }
-                                    })
-                                    .collect::<Vec<_>>()}
+                                            }
+                                        })
+                                        .collect::<Vec<_>>()}
+                                </div>
+                            </div>
+                        </>
+                    }.into_view()
+                } else {
+                    view! { <div></div> }.into_view()
+                }
+            }}
+
+            <AddAnnouncementModal
+                show=is_adding_post
+                set_show=set_is_adding_post
+                title=title
+                set_title=set_title
+                contents=contents
+                set_contents=set_contents
+                on_submit=add_announcement_action
+                class_id=class_id_val
+            />
+
+            {move || {
+                if let Some(announcement) = selected_announcement.get() {
+                    view! {
+                        <ViewAnnouncementModal
+                            show=viewing_announcement
+                            set_show=set_viewing_announcement
+                            announcement=announcement
+                        />
+                    }.into_view()
+                } else {
+                    view! { <div></div> }.into_view()
+                }
+            }}
+        </div>
+    }.into_view()
+}
+
+#[component]
+pub fn ViewAnnouncementModal(
+    show: ReadSignal<bool>,
+    set_show: WriteSignal<bool>,
+    announcement: AnnouncementInfo,
+) -> impl IntoView {
+    view! {
+        {move || if show.get() {
+            view! {
+                <div class="fixed inset-0 z-50 overflow-auto bg-black/50 flex items-center justify-center">
+                    <div class="relative bg-white rounded-xl shadow-2xl max-w-3xl w-full m-4">
+                        // Header section with title and close button
+                        <div class="flex items-center justify-between border-b border-gray-200 px-6 py-4">
+                            <h2 class="text-2xl font-bold text-gray-800">Announcement</h2>
+                            <button
+                                class="p-2 hover:bg-gray-100 rounded-full transition-colors"
+                                on:click=move |_| set_show.set(false)
+                            >
+                                <svg class="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                                </svg>
+                            </button>
+                        </div>
+
+                        // Main content section
+                        <div class="px-6 py-4">
+                            // Announcement title with indicator
+                            <div class="flex items-center gap-3 mb-4">
+                                <div class="w-2 h-2 bg-customBlue rounded-full"></div>
+                                <h3 class="text-xl font-semibold text-gray-800">
+                                    {announcement.title.clone()}
+                                </h3>
+                            </div>
+
+                            // Metadata (timestamp)
+                            <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                          d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                                </svg>
+                                <span>
+                                    {"Posted on "}
+                                    {announcement.time.format("%B %d, %Y at %I:%M %p").to_string()}
+                                </span>
+                            </div>
+
+                            // Content
+                            <div class="bg-gray-50 rounded-lg p-6">
+                                <div class="prose max-w-none">
+                                    <p class="whitespace-pre-wrap text-gray-700 leading-relaxed">
+                                        {announcement.contents.clone()}
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </>
-                }
-            } else {
-                view! {
-                    <>
-                        <div></div>
-                    </>
-                }
+
+                        // Footer
+                        <div class="border-t border-gray-200 px-6 py-4 bg-gray-50 rounded-b-xl">
+                            <button
+                                class="w-full px-4 py-2 bg-customBlue hover:bg-customBlue-HOVER text-white rounded-lg transition-colors text-sm font-medium"
+                                on:click=move |_| set_show.set(false)
+                            >
+                                "Close Announcement"
+                            </button>
+                        </div>
+                    </div>
+                </div>
             }
+        } else {
+            view! { <div></div> }
         }}
-              <AddAnnouncementModal
-                  show=is_adding_post
-                  set_show=set_is_adding_post
-                  title=title
-                  set_title=set_title
-                  contents=contents
-                  set_contents=set_contents
-                  on_submit=add_announcement_action
-                  class_id=class_id_val
-              />
-          </div>
-  }.into_view()
+    }
 }

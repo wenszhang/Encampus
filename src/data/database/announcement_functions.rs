@@ -106,3 +106,25 @@ pub async fn get_announcement_by_id(
 
     Ok(announcement)
 }
+
+#[server(DeleteAnnouncement)]
+pub async fn delete_announcement(announcement_id: i32) -> Result<(), ServerFnError> {
+    use leptos::{server_fn::error::NoCustomError, use_context};
+    use sqlx::postgres::PgPool;
+
+    // Access the database connection pool
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    // Delete the announcement with the given ID
+    sqlx::query("DELETE FROM announcements WHERE announcementid = $1")
+        .bind(announcement_id)
+        .execute(&pool)
+        .await
+        .map_err(|_| {
+            ServerFnError::<NoCustomError>::ServerError("Failed to delete announcement".to_string())
+        })?;
+
+    Ok(())
+}
