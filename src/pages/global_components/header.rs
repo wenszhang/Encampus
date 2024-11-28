@@ -1,9 +1,11 @@
-use crate::data::database::class_functions::get_users_classes;
+use super::push_notifications::get_authenticated_user;
+use crate::data::database::class_functions::{get_class_name, get_users_classes};
 /**
  * Component view and logic for the header at the top of the page of the site
  */
 use crate::data::database::user_functions::Logout;
 use crate::data::global_state::{Authentication, User};
+use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_bell::AnnouncementBell;
 use crate::resources::images::svgs::dashboard_icon::DashboardIcon;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
@@ -16,8 +18,6 @@ use crate::{
 };
 use leptos::*;
 use leptos_router::{ActionForm, A};
-
-use super::push_notifications::get_authenticated_user;
 
 #[component]
 pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>) -> impl IntoView {
@@ -175,6 +175,12 @@ pub fn AnnouncementInfo() -> impl IntoView {
                 .rev()
                 .take(3)
                 .map(|announcement_info| {
+                                let class_name = create_resource(
+                                    move || announcement_info.0,
+                                    |class_id| async move {
+                                        get_class_name_with_id(class_id).await
+                                    },
+                                );
                   view! {
                     <li class="py-2 px-4 cursor-pointer hover:bg-gray-100">
                       <A
@@ -185,6 +191,15 @@ pub fn AnnouncementInfo() -> impl IntoView {
                         )
                         class="block"
                       >
+                        <Suspense fallback=move || {
+                          view! { <div>"Loading class name..."</div> }
+                        }>
+                            {class_name()
+                                .map(|class_name| {
+                                    view! { <div class="font-bold">{class_name}</div> }
+                                })
+                            }
+                      </Suspense>
                         {announcement_info.2}
                       </A>
                     </li>
@@ -195,6 +210,12 @@ pub fn AnnouncementInfo() -> impl IntoView {
         </Suspense>
       </ul>
     }
+}
+
+pub async fn get_class_name_with_id(class_id: i32) -> String {
+    get_class_name(class_id)
+        .await
+        .unwrap_or_else(|_| "Class not found".to_string())
 }
 
 /// Function to get the x newest announcement titles and contents from all classes a user is enrolled in
