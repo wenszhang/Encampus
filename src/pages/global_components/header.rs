@@ -73,7 +73,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
               .map(|_| {
                 view! {
                   <div class="relative group">
-                    <button class="pr-2">
+                    <button class="pr-2 mt-1">
                       <AnnouncementBell size="1.3rem" />
                     </button>
                     <span class="inline-flex items-baseline"></span>
