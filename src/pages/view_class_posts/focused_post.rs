@@ -614,7 +614,7 @@ where
                                         view! {
                                             <div>
                                                 <button
-                                                    class="inline-flex items-center p-1 w-full text-left leading-tight text-customYellow-details rounded-md hover:bg-gray-100"
+                                                    class="inline-flex items-center p-2 w-full text-sm leading-tight text-customYellow-details rounded-md hover:bg-gray-100"
                                                     on:click=move |_| {
                                                         unapprove_action.dispatch(ReplyId { reply_id });
                                                         set_menu_visible(false);

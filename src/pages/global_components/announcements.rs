@@ -269,8 +269,8 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                                                             }}
 
                                                             <div class="flex-1">
-                                                                <div class="flex items-center mb-2">
-                                                                <h4 class="text-lg font-semibold  text-customBlue">{announcement.title.clone()}</h4>
+                                                                <div class="flex items-center mb-3">
+                                                                <h4 class="text-lg mt-2 font-semibold  text-customBlue">{announcement.title.clone()}</h4>
                                                             </div>
                                                                 <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
                                                             </div>
