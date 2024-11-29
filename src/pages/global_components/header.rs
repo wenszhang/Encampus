@@ -52,7 +52,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
     let logout_action = create_server_action::<Logout>();
 
     view! {
-      <div class="flex justify-between items-center p-4 text-gray-600 bg-white border-b border-customBlue">
+      <div class="flex justify-between items-center p-4 text-gray-600 bg-white border-b shadow-md">
         <div class="flex items-center" style="padding: 0;">
           <a href="/classes">
             <img src=format!("/{}", logo_src) alt="Logo" class="h-8" style="padding: 0;" />
