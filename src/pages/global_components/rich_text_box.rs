@@ -17,7 +17,7 @@ fn StyleButton(
 ) -> impl IntoView {
     view! {
         <button
-            class="rounded border self-center flex justify-center"
+            class="rounded border self-center flex justify-center hover:bg-gray-100 transition-colors duration-200"
             class=(
                 "shadow-lg",
                 {

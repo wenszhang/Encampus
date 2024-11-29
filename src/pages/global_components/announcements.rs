@@ -216,7 +216,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                                     }
                                 }}
                             </Suspense>
-                            <div class="h-[300px] overflow-y-auto">
+                            <div class="h-[290px] overflow-y-auto">
                                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white">
                                     {announcements_clone
                                         .into_iter()
@@ -270,8 +270,7 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
 
                                                             <div class="flex-1">
                                                                 <div class="flex items-center mb-2">
-                                                                    <AnnouncementMicAlt size="1.3em" />
-                                                                <h4 class="text-lg font-semibold pl-2 text-customBlue">{announcement.title.clone()}</h4>
+                                                                <h4 class="text-lg font-semibold  text-customBlue">{announcement.title.clone()}</h4>
                                                             </div>
                                                                 <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
                                                             </div>
