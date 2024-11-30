@@ -251,7 +251,9 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>) -> impl IntoView {
                                                                         </button>
                                                                         {move || if menu_visible.get() {
                                                                             view! {
-                                                                                <div class="absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                                                                                <div class="absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                                                                                on:click=move |e| e.stop_propagation()
+                                                                                >
                                                                                     <AnnouncementDropDownMenu
                                                                                         announcement_id=announcement.announcement_id
                                                                                         announcement_author_id=announcement.author_id
@@ -347,17 +349,15 @@ pub fn ViewAnnouncementModal(
                             </button>
                         </div>
 
-                        // Main content section
                         <div class="px-6 py-4">
-                            // Announcement title with indicator
+                            // annoucement title
                             <div class="flex items-center gap-3 mb-4">
                                 <div class="w-2 h-2 bg-customBlue rounded-full"></div>
                                 <h3 class="text-xl font-semibold text-gray-800">
                                     {announcement.title.clone()}
                                 </h3>
                             </div>
-
-                            // Metadata (timestamp)
+                            // time stampe
                             <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
@@ -369,7 +369,7 @@ pub fn ViewAnnouncementModal(
                                 </span>
                             </div>
 
-                            // Content
+
                             <div class="bg-gray-50 rounded-lg p-6">
                                 <div class="prose max-w-none">
                                     <p class="whitespace-pre-wrap text-gray-700 leading-relaxed">
