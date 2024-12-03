@@ -37,6 +37,7 @@ pub mod remove_icon;
 pub mod save_icon;
 pub mod settings_icon;
 pub mod strikethrough_icon;
+pub mod success_icon;
 pub mod text_area_icon;
 pub mod unapprove_icon;
 pub mod unpinned_icon;

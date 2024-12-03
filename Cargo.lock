@@ -725,6 +725,7 @@ dependencies = [
  "gloo-timers",
  "http 1.1.0",
  "js-sys",
+ "leptoaster",
  "leptos",
  "leptos-tiptap",
  "leptos_axum",
@@ -991,6 +992,8 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994"
 dependencies = [
+ "futures-channel",
+ "futures-core",
  "js-sys",
  "wasm-bindgen",
 ]
@@ -1528,6 +1531,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 dependencies = [
  "spin",
+]
+
+[[package]]
+name = "leptoaster"
+version = "0.1.8"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d8d5ddaf53b6a840372747f7aa245f35ae30b7b68fbf342dfd284ac19c25ace5"
+dependencies = [
+ "gloo-timers",
+ "leptos",
 ]
 
 [[package]]
