@@ -273,12 +273,48 @@ pub async fn get_users_classes(
     ))?;
 
     if role == "Student" {
-        let classes: Vec<ClassInfo> = sqlx::query_as("select classes.courseid as id, classes.coursename as name, instructing.professorid as instructor_id, CONCAT(users.firstname, ' ', users.lastname) as instructor_name, description 
-        from classes join instructing on classes.courseid = instructing.courseid join users on instructing.professorid = users.id join enrolled on classes.courseid = enrolled.courseid where enrolled.studentid = $1")
-            .bind(user_id)
-            .fetch_all(&pool)
-            .await
-            .expect("select should work");
+        let classes: Vec<ClassInfo> = sqlx::query_as(
+            "(SELECT 
+                    classes.courseid AS id, 
+                    classes.coursename AS name, 
+                    instructing.professorid AS instructor_id, 
+                    CONCAT(users.firstname, ' ', users.lastname) AS instructor_name, 
+                    classes.description 
+                FROM 
+                    classes 
+                JOIN 
+                    instructing ON classes.courseid = instructing.courseid 
+                JOIN 
+                    users ON instructing.professorid = users.id 
+                JOIN 
+                    enrolled ON classes.courseid = enrolled.courseid 
+                WHERE 
+                    enrolled.studentid = $1
+            )
+            UNION
+            (
+                SELECT 
+                    classes.courseid AS id, 
+                    classes.coursename AS name, 
+                    instructing.professorid AS instructor_id, 
+                    CONCAT(users.firstname, ' ', users.lastname) AS instructor_name, 
+                    classes.description 
+                FROM 
+                    classes 
+                JOIN 
+                    instructing ON classes.courseid = instructing.courseid 
+                JOIN 
+                    users ON instructing.professorid = users.id 
+                JOIN 
+                    ta ON classes.courseid = ta.classid 
+                WHERE 
+                    ta.id = $1
+            );",
+        )
+        .bind(user_id)
+        .fetch_all(&pool)
+        .await
+        .expect("select should work");
 
         Ok(classes)
     } else if role == "Instructor" {
