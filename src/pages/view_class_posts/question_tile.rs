@@ -15,8 +15,8 @@ use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
+use crate::resources::images::svgs::instructor_endorsed_icon::InstructorEndorsedIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
-use crate::resources::images::svgs::paper_icon::PaperIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 
@@ -359,11 +359,11 @@ fn TagPill(props: TagPillProperties) -> impl IntoView {
           <div class=[
             sharedClassesAll,
             sharedClassesWithIcon,
-            "bg-customYellow text-customYellow-details",
+            "bg-instructorYellow text-instructorYellow-details",
           ]
             .join(" ")>
             <span class="relative top-[2px]">
-              <EndorsedIcon size="1em" />
+              <InstructorEndorsedIcon size="1em" />
             </span>
             "Instructor Approved"
           </div>

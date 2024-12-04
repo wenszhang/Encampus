@@ -17,7 +17,7 @@ fn StyleButton(
 ) -> impl IntoView {
     view! {
         <button
-            class="rounded border self-center flex justify-center"
+            class="rounded border self-center flex justify-center hover:bg-gray-100 transition-colors duration-200"
             class=(
                 "shadow-lg",
                 {
@@ -49,6 +49,7 @@ pub fn RichTextBox(
     view! {
         <div class="bg-white rounded-lg border border-slate-400 h-full flex flex-col">
             <div class="flex flex-row flex-wrap gap-1 p-2 border-b border-slate-400">
+                // Enlarge
                 <StyleButton
                     msg=TiptapInstanceMsg::H1
                     set_msg=set_msg

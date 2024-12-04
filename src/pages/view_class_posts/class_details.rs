@@ -50,55 +50,65 @@ pub fn ClassDetails() -> impl IntoView {
     });
 
     view! {
-      <div class="relative p-8 space-y-8 min-h-screen bg-gray-100 class-details">
-        // Close Button
-        <button
-          class="absolute top-4 right-4 text-gray-600 hover:text-gray-800"
-          on:click=move |_| {
-            if let Ok(class_id) = class_id_result.get() {
-              navigate(&format!("/classes/{}", class_id.class_id), Default::default());
-            }
-          }
-        >
-          <span class="text-xl font-bold">"X"</span>
-        </button>
-
-        <Suspense fallback=|| view! { <p>"Loading class name..."</p> }>
-          <div class="py-4 text-center text-white rounded shadow-md header bg-customBlue">
-            <h1 class="text-3xl font-bold">
-              {class_name().unwrap_or("Class not found".to_string())}
-            </h1>
-          </div>
-        </Suspense>
-
-        <div class="space-y-8 content">
-          <div class="p-6 bg-white rounded-lg shadow-md course-info">
-            <h2 class="mb-4 text-2xl font-semibold text-customBlue">"Course Information"</h2>
-
-            <Suspense fallback=|| view! { <p>"Loading enrolled users..."</p> }>
-              <ul class="mt-4 space-y-2">
-                <For
-                  each=move || enrolled_users().unwrap_or_default()
-                  key=|user| user.user_id
-                  let:user
+        <div class="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+          // fix view for cleaner pop up
+            <div class="relative bg-white rounded-xl w-11/12 max-w-4xl max-h-[90vh] overflow-hidden shadow-2xl">
+                // Close button
+                <button
+                class="absolute top-4 right-4 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-200 shadow-lg z-50"
+                on:click=move |_| {
+                        if let Ok(class_id) = class_id_result.get() {
+                            navigate(&format!("/classes/{}", class_id.class_id), Default::default());
+                        }
+                    }
                 >
-                  <li class="flex justify-between items-center p-2 bg-gray-100 rounded shadow-sm">
-                    <span class="font-medium text-gray-800">{&user.full_name}</span>
-                    <span class="italic text-gray-500">{&user.role}</span>
-                  </li>
-                </For>
-              </ul>
-            </Suspense>
-          </div>
+                    <span class="text-xl font-bold leading-none">"×"</span>
+                </button>
 
-                <div class="course-stats bg-white p-6 rounded-lg shadow-md">
-                    <h2 class="text-2xl font-semibold mb-4 text-customBlue">"Course Statistics"</h2>
-                    // <p class="text-gray-700">"This will display various course statistics"</p>
+                // Header
+                <Suspense fallback=|| view! { <div class="h-16 bg-customBlue animate-pulse"></div> }>
+                    <div class="w-full py-6 px-8 bg-customBlue text-center">
+                        <h1 class="text-2xl font-bold text-white">
+                            {class_name().unwrap_or("Class not found".to_string())}
+                        </h1>
+                    </div>
+                </Suspense>
 
-                    // Render the chart on a canvas
-                    <Suspense fallback=|| view! { <p>"Loading enrolled users..."</p> }>
-                        <canvas id=canvas_id width="640" height="480"></canvas>
-                    </Suspense>
+                // Scrollable content
+                <div class="overflow-y-auto p-8 space-y-6 max-h-[calc(90vh-4rem)]">
+                    // Course Information Section
+                    <div class="bg-gray-50 rounded-lg shadow-sm border border-gray-100">
+                        <div class="p-6">
+                            <h2 class="text-xl font-semibold text-customBlue mb-6">"Course Information"</h2>
+
+                            <Suspense fallback=|| view! { <div class="animate-pulse h-40 bg-gray-200 rounded"></div> }>
+                                <ul class="space-y-3">
+                                    <For
+                                        each=move || enrolled_users().unwrap_or_default()
+                                        key=|user| user.user_id
+                                        let:user
+                                    >
+                                        <li class="flex justify-between items-center p-3 bg-white rounded border border-gray-100 hover:border-gray-200 transition-colors duration-200">
+                                            <span class="font-medium text-gray-800">{&user.full_name}</span>
+                                            <span class="text-sm px-3 py-1 bg-gray-100 rounded-full text-gray-600">{&user.role}</span>
+                                        </li>
+                                    </For>
+                                </ul>
+                            </Suspense>
+                        </div>
+                    </div>
+
+                    // Course Statistics Section
+                    <div class="bg-gray-50 rounded-lg shadow-sm border border-gray-100">
+                        <div class="p-6">
+                            <h2 class="text-xl font-semibold text-customBlue mb-6">"Course Statistics"</h2>
+                            <Suspense fallback=|| view! { <div class="animate-pulse h-[480px] bg-gray-200 rounded"></div> }>
+                                <div class="bg-white p-4 rounded border border-gray-100">
+                                    <canvas id=canvas_id width="640" height="480"></canvas>
+                                </div>
+                            </Suspense>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>

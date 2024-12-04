@@ -10,10 +10,13 @@ use crate::pages::global_components::notification::{
 };
 use crate::pages::global_components::rich_text_box::{RichTextBox, TiptapContentWrapper};
 use crate::pages::view_class_posts::class::ClassId;
+use crate::resources::images::svgs::approval_icon::ApproveIcon;
+use crate::resources::images::svgs::cancel_icon::CancelIcon;
 use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::edit_post_icon::EditPostIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
+use crate::resources::images::svgs::unapprove_icon::UnapproveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
 use chrono::FixedOffset;
 use chrono::NaiveDateTime;
@@ -213,6 +216,7 @@ where
     let (user, _) = expect_logged_in_user!();
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
+    let class_id: Memo<Result<ClassId, leptos_router::ParamsError>> = use_params::<ClassId>();
 
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
@@ -284,6 +288,20 @@ where
 
                     </div>
                 </label>
+                <button
+                    class="ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-red-500 hover:bg-red-600 focus:ring-offset-red-500 flex items-center gap-2"
+                    type="button"
+                    on:click=move |_| {
+                    let navigate = leptos_router::use_navigate();
+                    navigate(
+                        format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
+                        Default::default(),
+                    );
+                    }
+                >
+                <CancelIcon size="1em"/>
+                    "Cancel"
+                </button>
                 <button
                     class="py-2 px-6 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
                     on:click=move |_| {
@@ -474,7 +492,7 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                                 {if post_is_resolved {
                                     view! {
                                         <button
-                                            class="inline-flex items-center p-1 w-full text-left leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                                            class="inline-flex items-center p-1 w-full text-left leading-tight text-customYellow-details rounded-md hover:bg-gray-100"
                                             on:click=move |_| {
                                                 resolve_action.dispatch(PostId { post_id });
                                                 set_menu_visible(false);
@@ -596,13 +614,13 @@ where
                                         view! {
                                             <div>
                                                 <button
-                                                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                                                    class="inline-flex items-center p-2 w-full text-sm leading-tight text-customYellow-details rounded-md hover:bg-gray-100"
                                                     on:click=move |_| {
                                                         unapprove_action.dispatch(ReplyId { reply_id });
                                                         set_menu_visible(false);
                                                     }
                                                 >
-
+                                                   <UnapproveIcon size="1em"/> 
                                                     <span class="ml-2">Unapprove</span>
                                                 </button>
                                             </div>
@@ -611,13 +629,13 @@ where
                                         view! {
                                             <div>
                                                 <button
-                                                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                                                    class="inline-flex items-center p-2 w-full text-sm leading-tight text-customGreen-details rounded-md hover:text-black hover:bg-gray-100"
                                                     on:click=move |_| {
                                                         approve_action.dispatch(ReplyId { reply_id });
                                                         set_menu_visible(false);
                                                     }
                                                 >
-
+                                                    <ApproveIcon size="20px"/>
                                                     <span class="ml-2">Approve</span>
                                                 </button>
                                             </div>
@@ -627,15 +645,16 @@ where
                                     view! { <div></div> }
                                 }}
                                 <button
-                                    class="inline-flex items-center p-1 w-full text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                                class="inline-flex items-center p-2 w-full text-sm leading-tight text-red-500 rounded-md hover:text-red-500 hover:bg-gray-100"
                                     on:click=move |_| {
                                         remove_action.dispatch(ReplyId { reply_id });
                                         set_menu_visible(false);
                                     }
                                 >
-
+                                <RemoveIcon size="20px" />
                                     <span class="ml-2">Remove</span>
                                 </button>
+
                             </div>
                         }
                             .into_view()

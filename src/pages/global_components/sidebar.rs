@@ -74,6 +74,7 @@ fn expanded_view(
     class_id_val: Option<i32>,
 ) -> View {
     let (user, _) = expect_logged_in_user!();
+
     view! {
       <div class="flex flex-col h-full">
         // Profile Image and User Info
@@ -107,9 +108,13 @@ fn expanded_view(
                   <A
                     href=format!("/classes/{}", class.id)
                     target="_self"
-                    class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
                   >
-                    {class.name}
+                    <p
+                      class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                      class=("bg-gray-700", move || (class_id_val == Some(class.id)))
+                    >
+                      {class.name}
+                    </p>
                   </A>
                 </li>
               </For>
@@ -122,7 +127,10 @@ fn expanded_view(
               {if let Some(class_id) = class_id_val {
                 view! {
                   <div>
-                    <A href=format!("/classes/{}/details", class_id)>"Class Details"</A>
+                    <A href=format!("/classes/{}/details", class_id)
+                    class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                    >"Class Details"
+                    </A>
                   </div>
                 }
               } else {
@@ -135,7 +143,10 @@ fn expanded_view(
             <li class="py-2">
               {class_id_val.map(|class_id|
                 view! {
-                  <A href=format!("/class/{class_id}/poll")>"Live Polling"</A>
+                  <A href=format!("/class/{class_id}/poll")
+                  class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                  >"Live Polling"
+                  </A>
                 })
               }
             </li>
@@ -144,8 +155,8 @@ fn expanded_view(
 
         // Account Settings Button
         <div class="py-2 px-2 w-full bg-gray-700 rounded-md hover:bg-gray-600">
-          <A href="/settings" class="block py-1 w-full text-sm text-center text-white">
-            "Account Settings"
+          <A href="/classes" class="block py-1 w-full text-sm text-center text-white">
+            "Back To Classes"
           </A>
         </div>
 

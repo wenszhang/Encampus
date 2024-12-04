@@ -18,7 +18,7 @@ use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params};
 
-#[derive(Params, PartialEq, Clone)]
+#[derive(Params, PartialEq, Clone, Default)]
 pub struct ClassId {
     pub class_id: i32,
 }
@@ -147,17 +147,12 @@ pub fn ClassPage() -> impl IntoView {
                   }
                   prop:value=filter_keywords
                 />
-                <button
-                  class="flex absolute inset-y-0 top-1 right-12 justify-between items-center py-1 px-10 text-white bg-gray-300 rounded-full hover:bg-gray-400"
-                  style="height: 30px;"
+                <button 
+                  class="flex absolute inset-y-0 right-0 items-center pr-4"
                   on:click=move |_| {
                     filtered_posts_action.dispatch(filter_keywords.get());
                   }
                 >
-                  <p class="pr-2 text-xs">"Filter Posts"</p>
-                  <FilterIcon size="20px" />
-                </button>
-                <button class="flex absolute inset-y-0 right-0 items-center pr-4">
                   <MagnifyingGlass size="21px" />
                 </button>
               </div>
@@ -200,7 +195,7 @@ pub fn ClassPage() -> impl IntoView {
             }>
               {move || {
                 let ann_list = announcements().unwrap_or_default();
-                view! { <Announcements announcements=ann_list /> }
+                view! { <Announcements announcements=ann_list class_id=move || class_id().unwrap_or_default().class_id/> }
               }}
             </Suspense>
             <div class="grid grid-cols-3 gap-4">

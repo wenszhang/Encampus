@@ -116,7 +116,7 @@ pub fn RegisterPage() -> impl IntoView {
     };
 
     view! {
-      <form on:submit=on_submit>
+      <form on:submit=on_submit class="opacity-95">
         <div class="flex flex-col justify-center items-center h-screen">
           <div class="p-20 w-96 bg-white rounded-lg shadow-md">
             <div class="flex justify-center items-center">
