@@ -10,6 +10,7 @@ use crate::{
     expect_logged_in_user,
     pages::global_components::rich_text_box::RichTextBox,
 };
+use leptoaster::*;
 use leptos::*;
 use leptos_router::use_params;
 use serde::{Deserialize, Serialize};
@@ -43,6 +44,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let (post_title, set_post_title) = create_signal("".to_string());
     let (post_contents, set_post_contents) = create_signal("".to_string());
     let (ai_response, set_ai_response) = create_signal(false);
+    let toaster = expect_toaster(); // post submission confirmation.
 
     let add_post_action = create_action(move |postInfo: &AddPostInfo| {
         let postInfo = postInfo.clone();
@@ -165,10 +167,18 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                                 private: private_state(),
                                 ai_response: ai_response(),
                             });
+                            // post confirmation.
+                            toaster.toast(
+                                ToastBuilder::new("Post Created Successfully!")
+                                    .with_level(ToastLevel::Success)
+                                    .with_dismissable(true)
+                                    .with_expiry(Some(4_000))
+                                    .with_progress(false)
+                                    .with_position(ToastPosition::BottomRight)
+                                );
                         on_new_post();
                     }
                 >
-
                     "Post +"
                 </button>
             </div>

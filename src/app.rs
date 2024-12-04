@@ -25,6 +25,8 @@ use crate::{
     },
 };
 use gloo_timers::callback::Interval;
+use leptoaster::*;
+use leptos::*;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -34,6 +36,9 @@ const EMBEDDED_AUTHENTICATION_KEY: &str = "__EMBEDDED_ENCAMPUS_AUTHENTICATION__"
 
 #[component]
 pub fn App() -> impl IntoView {
+    // creating a toast through a leptos toast library.
+    provide_toaster();
+
     // Provides context that manages stylesheets, titles, meta tags, etc.
     provide_meta_context();
 
@@ -67,6 +72,9 @@ pub fn App() -> impl IntoView {
 
       // sets the document title
       <Title text="Encampus" />
+
+      // Provide toaster
+      <Toaster />
 
       // Routes
       <Router fallback=|| {

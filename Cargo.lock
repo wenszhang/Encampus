@@ -725,6 +725,7 @@ dependencies = [
  "gloo-timers",
  "http 1.1.0",
  "js-sys",
+ "leptoaster",
  "leptos",
  "leptos-tiptap",
  "leptos_axum",
@@ -1528,6 +1529,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbd2bcb4c963f2ddae06a2efc7e9f3591312473c50c6685e1f298068316e66fe"
 dependencies = [
  "spin",
+]
+
+[[package]]
+name = "leptoaster"
+version = "0.1.8"
+source = "git+https://github.com/TimTom2016/leptoaster.git#61124e1c6c97c35b0778b2a3d55eaf62cc8426c9"
+dependencies = [
+ "leptos",
 ]
 
 [[package]]
