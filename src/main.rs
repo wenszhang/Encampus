@@ -72,9 +72,9 @@ cfg_if::cfg_if! {
             // Connect to the database
             let pool = PgPoolOptions::new()
                 .max_connections(5)
-                .connect("postgres://dev:encampus@143.198.110.69/encampusdb")
+                .connect("postgres://encampus:encampus@localhost/encampusdb")
                 .await
-                .expect("Database at 143.198.110.69 should be live and accessible");
+                .expect("Database at localhost:5432 should be live and accessible");
 
             // Set up session management for auth
             let session_store = MemoryStore::default();
