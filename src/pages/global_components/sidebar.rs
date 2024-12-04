@@ -74,6 +74,7 @@ fn expanded_view(
     class_id_val: Option<i32>,
 ) -> View {
     let (user, _) = expect_logged_in_user!();
+
     view! {
       <div class="flex flex-col h-full">
         // Profile Image and User Info
@@ -107,9 +108,13 @@ fn expanded_view(
                   <A
                     href=format!("/classes/{}", class.id)
                     target="_self"
-                    class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
                   >
-                    {class.name}
+                    <p
+                      class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                      class=("bg-gray-700", move || (class_id_val == Some(class.id)))
+                    >
+                      {class.name}
+                    </p>
                   </A>
                 </li>
               </For>
