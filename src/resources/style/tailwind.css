@@ -8,7 +8,7 @@
     scrollbar-color: #4A5568 #2D3748; /* Thumb and track colors for Firefox */
 }
 
-/* For Webkit-based browsers (Chrome, Safari, Edge) */
+/* For Webkit-based browsers (Chrome; Safari; Edge) */
 .custom-scrollbar::-webkit-scrollbar {
     width: 8px; /* Width of the scrollbar */
 }
@@ -39,4 +39,23 @@ leptos-tiptap-instance > .tiptap {
     overflow-wrap: anywhere;
     overflow-y: auto;
     padding: .5em;
+}
+
+:root {
+    --leptoaster-success-background-color:  #34C759 !important;
+    --leptoaster-success-border-color:  #2EAF4E  !important;
+    --leptoaster-success-text-color: #ffffff !important;
+    --leptoaster-width: 360px !important;
+    --leptoaster-font-family: sans-serif !important;
+    --leptoaster-font-size:  0.9375rem !important;
+    --leptoaster-line-height: 1.5 !important;
+    --leptoaster-font-weight: 600 !important;
+    --leptoaster-progress-height: 3px !important;
+    --leptoaster-z-index: 50 !important;
+    --leptoaster-error-background-color: #F23B2F !important;
+    --leptoaster-error-border-color: #FDDFDD !important;
+    --leptoaster-warn-background-color: #B47E29 !important;
+    --leptoaster-warn-border-color: #FFEDB4 !important;
+    --leptoaster-info-background-color: #1879BD !important;
+    --leptoaster-info-border-color: #1260A4 !important;
 }

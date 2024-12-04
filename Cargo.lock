@@ -992,8 +992,6 @@ version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bbb143cf96099802033e0d4f4963b19fd2e0b728bcf076cd9cf7f6634f092994"
 dependencies = [
- "futures-channel",
- "futures-core",
  "js-sys",
  "wasm-bindgen",
 ]
@@ -1536,10 +1534,8 @@ dependencies = [
 [[package]]
 name = "leptoaster"
 version = "0.1.8"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d8d5ddaf53b6a840372747f7aa245f35ae30b7b68fbf342dfd284ac19c25ace5"
+source = "git+https://github.com/TimTom2016/leptoaster.git#61124e1c6c97c35b0778b2a3d55eaf62cc8426c9"
 dependencies = [
- "gloo-timers",
  "leptos",
 ]
 

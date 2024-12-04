@@ -169,10 +169,10 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                             });
                             // post confirmation.
                             toaster.toast(
-                                ToastBuilder::new("Post created successfully!")
+                                ToastBuilder::new("Post Created Successfully!")
                                     .with_level(ToastLevel::Success)
-                                    .with_dismissable(false)
-                                    .with_expiry(Some(3_000))
+                                    .with_dismissable(true)
+                                    .with_expiry(Some(4_000))
                                     .with_progress(false)
                                     .with_position(ToastPosition::BottomRight)
                                 );
