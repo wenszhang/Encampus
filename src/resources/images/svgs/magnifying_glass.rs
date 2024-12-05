@@ -11,8 +11,8 @@ pub fn MagnifyingGlass(
     size: &'static str,
 ) -> impl IntoView {
     view! {
-      <svg width=size xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-        <path d="M416 208c0 45.9-14.9 88.3-40 122.7L502.6 457.4c12.5 12.5 12.5 32.8 0 45.3s-32.8 12.5-45.3 0L330.7 376c-34.4 25.2-76.8 40-122.7 40C93.1 416 0 322.9 0 208S93.1 0 208 0S416 93.1 416 208zM208 352a144 144 0 1 0 0-288 144 144 0 1 0 0 288z" />
+      <svg xmlns="http://www.w3.org/2000/svg" width=size height=size viewBox="0 0 24 24"><rect width=size height=size fill="none"/>
+      <path fill="#ffff" d="m19.6 21l-6.3-6.3q-.75.6-1.725.95T9.5 16q-2.725 0-4.612-1.888T3 9.5t1.888-4.612T9.5 3t4.613 1.888T16 9.5q0 1.1-.35 2.075T14.7 13.3l6.3 6.3zM9.5 14q1.875 0 3.188-1.312T14 9.5t-1.312-3.187T9.5 5T6.313 6.313T5 9.5t1.313 3.188T9.5 14"/>
       </svg>
     }
 }

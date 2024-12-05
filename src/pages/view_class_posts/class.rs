@@ -128,11 +128,11 @@ pub fn ClassPage() -> impl IntoView {
           </span>
           <div class="flex justify-center pt-8 mx-20">
             <div class="flex justify-center items-center">
-              <div class="flex relative items-center p-2 bg-white rounded-full border border-gray-300 shadow-lg focus-within:border-blue-500 w-[35rem]">
+              <div class="flex relative items-center p-2 bg-white rounded-full border border-gray-300 shadow-xl focus-within:border-blue-500 w-[30rem]">
                 <input
                   type="text"
                   placeholder="Search posts by keywords..."
-                  class="pr-24 pl-5 w-full bg-white border-none focus:outline-none"
+                  class="pr-16 pl-4 py-1.5 w-full bg-white border-none focus:outline-none"
                   on:input=on_input(set_filter_keywords)
                   on:keydown=move |ev: web_sys::KeyboardEvent| {
                     if ev.key() == "Enter" {
@@ -146,12 +146,12 @@ pub fn ClassPage() -> impl IntoView {
                   prop:value=filter_keywords
                 />
                 <button 
-                  class="flex absolute inset-y-0 right-0 items-center pr-4"
-                  on:click=move |_| {
+                class="flex absolute right-0 top-0 bottom-0 rounded-r-full items-center justify-center w-[4rem] bg-gradient-to-r bg-slate-400 hover:bg-slate-500 transition-all duration-200"
+                on:click=move |_| {
                     filtered_posts_action.dispatch(filter_keywords.get());
                   }
                 >
-                  <MagnifyingGlass size="21px" />
+                  <MagnifyingGlass size="2em" />
                 </button>
               </div>
             </div>
