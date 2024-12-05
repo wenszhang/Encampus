@@ -1,7 +1,7 @@
 use crate::resources::images::svgs::{
     aligncenter_icon::AlignCenterIcon, alignjustify_icon::AlignJustifyIcon,
     alignleft_icon::AlignLeftIcon, alignright_icon::AlignRightIcon,
-    blockquote_icon::BlockquoteIcon, bold_icon::BoldIcon, enlargetext_icon::EnlargeTextIcon,
+    bold_icon::BoldIcon, enlargetext_icon::EnlargeTextIcon,
     highlighter_icon::HighlighterIcon, italic_icon::ItalicIcon,
     strikethrough_icon::StrikethroughIcon,
 };

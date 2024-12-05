@@ -3,14 +3,11 @@ use crate::data::database::announcement_functions::{
 };
 use crate::data::database::class_functions::check_user_is_instructor;
 use crate::expect_logged_in_user;
-use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use crate::resources::images::svgs::announcement_mic_2::AnnouncementMicAlt;
-
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use leptos::*;
-use leptos_router::{use_params, A};
 
 #[component]
 pub fn AddAnnouncementModal(

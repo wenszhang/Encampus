@@ -52,7 +52,7 @@ pub fn generate_answered_unanswered_histogram(
         .draw()
         .map_err(|e| JsValue::from_str(&format!("Error drawing chart mesh: {}", e)))?;
 
-    let data = vec![("Resolved", resolved), ("Unresolved", unresolved)];
+    let data = [("Resolved", resolved), ("Unresolved", unresolved)];
 
     chart
         .draw_series(

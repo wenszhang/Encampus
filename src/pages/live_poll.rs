@@ -1,12 +1,8 @@
 use ev::MouseEvent;
 use gloo_timers::callback::Interval;
 use leptos::*;
-use leptos::{create_effect, on_cleanup};
+use leptos::create_effect;
 use leptos_router::use_params;
-use std::time::Duration;
-use wasm_bindgen::prelude::Closure;
-use wasm_bindgen::JsCast;
-
 use crate::data::database::class_functions::check_user_is_instructor;
 use crate::data::database::live_poll_functions::*;
 use crate::expect_logged_in_user;
@@ -70,7 +66,7 @@ pub fn LivePoll() -> impl IntoView {
     let create_new_poll = move |question: String, answers: Vec<String>| {
         spawn_local(async move {
             let course_id = class_id().unwrap().class_id;
-            if let Ok(_) = create_poll(question, course_id, answers).await {
+            if (create_poll(question, course_id, answers).await).is_ok() {
                 polls_resource.refetch();
             }
             set_show_modal.set(false);
@@ -214,8 +210,7 @@ pub fn PollCard(poll_data: Poll) -> impl IntoView {
         let user_id = user().id;
         let poll_id = poll_id;
         spawn_local(async move {
-            if let Ok(_) =
-                vote_on_poll_answer(user_id, poll_id, new_answer.clone(), old_answer).await
+            if (vote_on_poll_answer(user_id, poll_id, new_answer.clone(), old_answer).await).is_ok()
             {
                 set_selected_answer(Some(new_answer));
                 set_has_voted(true);
@@ -454,7 +449,7 @@ pub fn PollCreationModal(
               view! {
                 <input
                   type="text"
-                  class="p-2 mb-2 w-full rounded-lg border-gray-300 shadow-sm border-customBlue focus:border-customBlue-HOVER focus:ring-customBlue-HOVER"
+                  class="p-2 mb-2 w-full rounded-lg shadow-sm border-customBlue focus:border-customBlue-HOVER focus:ring-customBlue-HOVER"
                   placeholder="Answer option"
                   value=answer.content
                   on:input=move |ev| {

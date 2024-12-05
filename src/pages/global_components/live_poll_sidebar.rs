@@ -9,7 +9,6 @@ use leptos_router::{use_params, A};
 #[component]
 pub fn Sidebar() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
-    let (collapsed, set_collapsed) = create_signal(false);
     let curr_class_id = use_params::<ClassId>();
     let class_id_val = curr_class_id.get_untracked().unwrap().class_id;
 
@@ -20,42 +19,23 @@ pub fn Sidebar() -> impl IntoView {
             async move { get_students_classes(id).await.unwrap_or_default() }
         },
     );
-
-    let class = if collapsed.get() {
-        "sticky top-0 h-screen w-8 bg-gray-800 text-white flex items-center justify-center"
-    } else {
-        "sticky top-0 h-screen w-64 bg-gray-800 text-white"
-    };
-
-    // Collapsed view for the sidebar
-    fn collapsed_view(set_collapsed: WriteSignal<bool>) -> View {
-        view! {
-          <button class="text-2xl text-white" on:click=move |_| set_collapsed.update(|c| *c = !*c)>
-            "→"
-          </button>
-        }
-        .into_view()
-    }
-
+    
     view! {
-      <div class=class>
-        {if collapsed.get() {
-          collapsed_view(set_collapsed).into_view()
-        } else {
-          expanded_view(set_collapsed, courses, class_id_val).into_view()
-        }}
+      <div class="sticky top-0 h-screen w-64 bg-gray-800 text-white">
+        <ExpandedView courses class_id_val />
       </div>
     }
     .into_view()
 }
 
 // Expanded view for the sidebar
-fn expanded_view(
-    set_collapsed: WriteSignal<bool>,
+#[component]
+fn ExpandedView(
     courses: Resource<(), Vec<ClassInfo>>,
     class_id_val: i32,
-) -> View {
+) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
+
     view! {
       <div class="flex flex-col h-full">
         <div class="flex justify-center items-center mt-10 mb-4">

@@ -349,7 +349,7 @@ pub fn validate_password(password: &str) -> bool {
     let min_length = 8;
     let has_uppercase = password.chars().any(|c| c.is_uppercase());
     let has_lowercase = password.chars().any(|c| c.is_lowercase());
-    let has_digit = password.chars().any(|c| c.is_digit(10));
+    let has_digit = password.chars().any(|c| c.is_ascii_digit());
     let has_special_char = password.chars().any(|c| !c.is_alphanumeric());
 
     password.len() >= min_length && has_uppercase && has_lowercase && has_digit && has_special_char

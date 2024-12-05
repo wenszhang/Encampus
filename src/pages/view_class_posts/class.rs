@@ -11,8 +11,6 @@ use crate::pages::global_components::header::Header;
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::pages::view_class_posts::create_post::CreatePost;
 use crate::resources::images::svgs::cancel_icon::CancelIcon;
-use crate::resources::images::svgs::filter_icon::FilterIcon;
-use crate::resources::images::svgs::information_icon::InformationIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
 
 use leptos::*;

@@ -1,6 +1,13 @@
-use crate::data::database::class_functions::check_user_is_instructor;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "ssr")] {
+        use leptos::{server_fn::error::NoCustomError, use_context};
+        use sqlx::postgres::PgPool;
+        use crate::data::database::class_functions::check_user_is_instructor;
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize, Default, Debug, PartialEq)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
@@ -61,9 +68,6 @@ pub async fn create_poll(
     course_id: i32,
     answers: Vec<String>,
 ) -> Result<Poll, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -107,9 +111,6 @@ pub async fn create_poll(
 
 #[server(GetPollAnswers)]
 pub async fn get_poll_answers(poll_id: i32) -> Result<Vec<Answer>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -132,9 +133,6 @@ pub async fn vote_on_poll_answer(
     new_answer: String,
     old_answer: Option<String>,
 ) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::{postgres::PgPool, Executor};
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -217,9 +215,6 @@ pub async fn get_student_answer(
     user_id: i32,
     poll_id: i32,
 ) -> Result<Option<String>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -239,9 +234,6 @@ pub async fn get_student_answer(
 // For student to get the options of the poll. ALso need them to get the question of the poll. get question of the poll and options of the poll in one fucntion.
 #[server(GetPollOptions)]
 pub async fn get_poll_options(poll_id: i32) -> Result<Vec<PollOption>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -259,9 +251,6 @@ pub async fn get_poll_options(poll_id: i32) -> Result<Vec<PollOption>, ServerFnE
 
 #[server(VoteOnPollOption)]
 pub async fn vote_on_poll_option(poll_option_id: i32) -> Result<PollOption, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -280,9 +269,6 @@ pub async fn vote_on_poll_option(poll_option_id: i32) -> Result<PollOption, Serv
 }
 #[server(GetPollById)]
 pub async fn get_poll_by_id(poll_id: i32) -> Result<Poll, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -298,9 +284,6 @@ pub async fn get_poll_by_id(poll_id: i32) -> Result<Poll, ServerFnError> {
 //This is only called at the end. Do not call it for anyone but professor, but call it for everyone when exiting the eventLoop
 #[server(GetPollResults)]
 pub async fn get_poll_results(poll_id: i32) -> Result<Vec<PollOption>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -320,10 +303,7 @@ pub async fn get_poll_results(poll_id: i32) -> Result<Vec<PollOption>, ServerFnE
 pub async fn update_poll(
     poll_id: i32,
     new_answer: String,
-    old_answer: Option<String>,
 ) -> Result<Poll, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
     //Check if it's a first time, or update for a poll answer
 
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
@@ -344,9 +324,6 @@ pub async fn update_poll(
 
 #[server(DeletePoll)]
 pub async fn delete_poll(poll_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -369,9 +346,6 @@ pub async fn get_all_polls(
     course_id: i32,
     user_id: i32,
 ) -> Result<Vec<PollWithAnswers>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::{postgres::PgPool, Row};
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;
@@ -404,9 +378,6 @@ pub async fn get_all_polls(
 
 #[server(SetPollActiveStatus)]
 pub async fn set_poll_active_status(poll_id: i32, is_active: bool) -> Result<Poll, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete request".to_string(),
     ))?;

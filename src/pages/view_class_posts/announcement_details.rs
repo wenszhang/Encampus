@@ -1,6 +1,4 @@
-use crate::{
-    data::database::announcement_functions::get_announcement_by_id, expect_logged_in_user,
-};
+use crate::data::database::announcement_functions::get_announcement_by_id;
 use leptos::*;
 use leptos_router::{use_params, Params};
 
@@ -13,9 +11,7 @@ pub struct AnnouncementId {
 pub fn AnnouncementDetails() -> impl IntoView {
     // Get URL parameters
     let announcement_id_result = use_params::<AnnouncementId>();
-    let (user, _) = expect_logged_in_user!();
-    let is_instructor = move || user().role == *"Instructor";
-
+    
     let announcement = create_resource(
         move || {
             announcement_id_result
@@ -49,14 +45,6 @@ pub fn AnnouncementDetails() -> impl IntoView {
                     <p class="text-xs text-gray-500">
                       {announcement_details.time.format("%Y-%m-%d %H:%M:%S").to_string()}
                     </p>
-                    {is_instructor()
-                      .then(|| {
-                        view! {
-                          // TODO instructor edit post
-                          // <p class="text-green-600">{"You are an instructor."}</p>
-                          {}
-                        }
-                      })}
                   </div>
                 }
                   .into_view()
