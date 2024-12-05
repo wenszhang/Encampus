@@ -121,18 +121,18 @@ pub fn ClassPage() -> impl IntoView {
               class_id=(move || class_id().ok().map(|id| id.class_id)).into_signal()
             />
           </Suspense>
-          <span class="inline-flex items-baseline ml-5">// <button class="pt-7 pr-1">
+          // <button class="pt-7 pr-1">
           // <InformationIcon size="20px" />
           // </button>
           // <h3 class="pb-1 text-s">"Help"</h3>
-          </span>
+          <span class="inline-flex items-baseline ml-5"></span>
           <div class="flex justify-center pt-8 mx-20">
             <div class="flex justify-center items-center">
               <div class="flex relative items-center p-2 bg-white rounded-full border border-gray-300 shadow-xl focus-within:border-blue-500 w-[30rem]">
                 <input
                   type="text"
                   placeholder="Search posts by keywords..."
-                  class="pr-16 pl-4 py-1.5 w-full bg-white border-none focus:outline-none"
+                  class="py-1.5 pr-16 pl-4 w-full bg-white border-none focus:outline-none"
                   on:input=on_input(set_filter_keywords)
                   on:keydown=move |ev: web_sys::KeyboardEvent| {
                     if ev.key() == "Enter" {
@@ -145,9 +145,9 @@ pub fn ClassPage() -> impl IntoView {
                   }
                   prop:value=filter_keywords
                 />
-                <button 
-                class="flex absolute right-0 top-0 bottom-0 rounded-r-full items-center justify-center w-[4rem] bg-gradient-to-r bg-slate-400 hover:bg-slate-500 transition-all duration-200"
-                on:click=move |_| {
+                <button
+                  class="flex absolute top-0 right-0 bottom-0 justify-center items-center bg-gradient-to-r rounded-r-full transition-all duration-200 w-[4rem] bg-[#AAAA] hover:bg-[#999999]"
+                  on:click=move |_| {
                     filtered_posts_action.dispatch(filter_keywords.get());
                   }
                 >
@@ -156,30 +156,28 @@ pub fn ClassPage() -> impl IntoView {
               </div>
             </div>
             <button
-            class=move || {
+              class=move || {
                 if is_visible() {
-                    "ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-red-500 hover:bg-red-600 focus:ring-offset-red-500 flex items-center gap-2"
+                  "ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-red-500 hover:bg-red-600 focus:ring-offset-red-500 flex items-center gap-2"
                 } else {
-                    "ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue gap-2"
+                  "ml-4 py-2 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:outline-none bg-customBlue hover:bg-customBlue-HOVER focus:ring-offset-customBlue gap-2"
                 }
-            }
-            on:click=move |_| set_is_visible(!is_visible())
-        >
-            {move || if is_visible() {
-                view! {
-                    <div class="flex items-center gap-2">
-                        <CancelIcon size="1em"/>
-                        "Cancel"
+              }
+              on:click=move |_| set_is_visible(!is_visible())
+            >
+              {move || {
+                if is_visible() {
+                  view! {
+                    <div class="flex gap-2 items-center">
+                      <CancelIcon size="1em" />
+                      "Cancel"
                     </div>
+                  }
+                } else {
+                  view! { <div class="flex gap-2 items-center">"Post +"</div> }
                 }
-            } else {
-                view! {
-                    <div class="flex items-center gap-2">
-                        "Post +"
-                    </div>
-                }
-            }}
-        </button>
+              }}
+            </button>
           </div>
           <div class="flex flex-col gap-4 my-10 mx-20 align">
             <Show when=is_visible fallback=|| ()>
@@ -193,7 +191,12 @@ pub fn ClassPage() -> impl IntoView {
             }>
               {move || {
                 let ann_list = announcements().unwrap_or_default();
-                view! { <Announcements announcements=ann_list class_id=move || class_id().unwrap_or_default().class_id/> }
+                view! {
+                  <Announcements
+                    announcements=ann_list
+                    class_id=move || class_id().unwrap_or_default().class_id
+                  />
+                }
               }}
             </Suspense>
             <div class="grid grid-cols-3 gap-4">

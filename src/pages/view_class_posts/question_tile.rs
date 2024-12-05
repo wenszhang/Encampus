@@ -322,42 +322,32 @@ pub fn QuestionTile(
             <div class="flex justify-between items-center p-4 w-full text-sm text-gray-600">
               <span>{format_time_ago()}</span>
               <div class="flex gap-4">
-                <span class="flex gap-1 items-center">
-                  <div class="inline-flex relative justify-center items-center">
-                    <div class="w-5 h-5 rounded-full bg-[#3256BE]"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <GraduationCapIcon size="1em" />
-                      // Tooltip
-                      <div class="absolute -top-8 left-1/2 invisible z-50 py-1 px-2 text-xs text-white whitespace-nowrap bg-black rounded -translate-x-1/2 group-hover:visible">
-                        Number of student responses
-                      </div>
-                    </div>
-                  </div>
-                  {move || {
+                // Student responses
+                <ResponseCounter
+                  bg_color="bg-[#3256BE]"
+                  tooltip="Student responses"
+                  count=move || {
                     reply_counts
                       .get()
                       .map(|counts| counts.student_replies.to_string())
                       .unwrap_or_default()
-                  }}
-                </span>
-                <span class="flex gap-1 items-center">
-                  <div class="inline-flex relative justify-center items-center">
-                    <div class="w-5 h-5 rounded-full bg-[#F09636]"></div>
-                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                      <InstructorIcon size="1em" />
-                      // Tooltip
-                      <div class="absolute -top-8 left-1/2 invisible z-50 py-1 px-2 text-xs text-white whitespace-nowrap bg-black rounded -translate-x-1/2 group-hover:visible">
-                        Number of instructor responses
-                      </div>
-                    </div>
-                  </div>
-                  {move || {
+                  }
+                >
+                  <GraduationCapIcon size="1em" />
+                </ResponseCounter>
+                // Instructor responses
+                <ResponseCounter
+                  bg_color="bg-[#F09636]"
+                  tooltip="Instructor responses"
+                  count=move || {
                     reply_counts
                       .get()
                       .map(|counts| counts.instructor_replies.to_string())
                       .unwrap_or_default()
-                  }}
-                </span>
+                  }
+                >
+                  <InstructorIcon size="1em" />
+                </ResponseCounter>
               </div>
             </div>
           </div>
@@ -384,6 +374,30 @@ pub fn QuestionTile(
           </div>
         </div>
       </div>
+    }
+}
+
+// Helper component for response counters
+#[component]
+fn ResponseCounter(
+    bg_color: &'static str,
+    tooltip: &'static str,
+    count: impl Fn() -> String + 'static,
+    children: Children,
+) -> impl IntoView {
+    view! {
+      <span class="flex gap-1 items-center">
+        <div class="inline-flex relative justify-center items-center cursor-help group">
+          <div class=format!("w-5 h-5 rounded-full {}", bg_color)></div>
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            {children()}
+          </div>
+          <div class="hidden absolute -top-7 z-50 py-1 px-2 text-xs text-white whitespace-nowrap bg-black rounded -translate-x-1/4 group-hover:block">
+            {tooltip}
+          </div>
+        </div>
+        <div class="min-w-[1ch]">{move || count()}</div>
+      </span>
     }
 }
 
