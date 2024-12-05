@@ -19,10 +19,8 @@ use crate::resources::images::svgs::instructor_endorsed_icon::InstructorEndorsed
 use crate::resources::images::svgs::lock_icon::LockIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
-
 use ev::MouseEvent;
 use leptos::*;
-use leptos_dom::logging::console_debug_warn;
 use leptos_router::{use_params, A};
 
 enum TagPillProperties {
@@ -246,14 +244,13 @@ pub fn QuestionTile(
         set_menu_invisible.update(|visible| *visible = !*visible);
     };
 
-    (move || console_debug_warn(format!("debug {}", is_endorsed()).as_str()))();
     view! {
       <div
         class="relative h-60 rounded-lg shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-105 bg-card-bg"
-        class=("border-4", move || is_endorsed())
-        class=("border-customYellow", move || is_endorsed())
-        class=("bg-customRed", move || is_resolved())
-        class=("hover:bg-customRed-HOVER", move || is_resolved())
+        class=("border-4", is_endorsed)
+        class=("border-customYellow", is_endorsed)
+        class=("bg-customRed", is_resolved)
+        class=("hover:bg-customRed-HOVER", is_resolved)
         class=("hover:bg-gray-200", move || !is_resolved())
         class=("bg-gray-100", move || !is_resolved())
       >

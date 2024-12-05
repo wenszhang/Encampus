@@ -5,9 +5,11 @@
         "encampus",
         "firstname",
         "lastname",
+        "leptoaster",
         "leptos",
         "sqlx",
         "stylesheet",
+        "svgs",
         "tiptap"
     ],
     "files.associations": {

@@ -5,8 +5,6 @@ use crate::data::database::class_functions::{get_class_name, get_users_classes};
  */
 use crate::data::database::user_functions::Logout;
 use crate::data::global_state::{Authentication, User};
-use crate::pages::view_class_posts::class::ClassId;
-use crate::resources::images::svgs::announcement_bell::AnnouncementBell;
 use crate::resources::images::svgs::dashboard_icon::DashboardIcon;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
 use crate::resources::images::svgs::drop_down_bars_close::DropDownBarsCloseIcon;
@@ -91,7 +89,7 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
             >
               {move || {
                 if dropdown_visible() {
-                  view! { <DropDownBarsCloseIcon size="5rem" /> }
+                  view! { <DropDownBarsCloseIcon /> }
                 } else {
                   view! { <DropDownBars size="1.3rem" /> }
                 }

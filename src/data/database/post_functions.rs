@@ -1,12 +1,20 @@
 #[allow(unused_imports)] // Suppress UserID - false compiler warning due to RowToStruct
 use super::user_functions::UserId;
-use crate::data::database::class_functions::get_class_description;
-use crate::data::database::reply_functions::add_reply;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
-use crate::pages::view_class_posts::focused_post::AddReplyInfo;
-use leptos::logging::error;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "ssr")] {
+        use leptos::logging::error;
+        use leptos::{server_fn::error::NoCustomError, use_context};
+        use sqlx::postgres::PgPool;
+        use crate::data::database::class_functions::get_class_description;
+        use crate::pages::view_class_posts::focused_post::AddReplyInfo;
+        use crate::data::database::reply_functions::add_reply;
+        use crate::data::database::ai_functions::get_gemini_response;
+    }
+}
 
 /**
  * Struct to hold information for displaying a post in a list
@@ -36,9 +44,6 @@ pub struct PostFetcher {
  */
 #[server(GetPosts)]
 pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -65,10 +70,6 @@ pub async fn get_posts(class_id: i32, user_id: i32) -> Result<Vec<Post>, ServerF
  */
 #[server(AddPost)]
 pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, ServerFnError> {
-    use crate::data::database::ai_functions::get_gemini_response;
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -132,9 +133,6 @@ pub async fn add_post(new_post_info: AddPostInfo, user_id: i32) -> Result<Post, 
 
 #[server(ResolvePost)]
 pub async fn resolve_post(post_id: i32, status: bool) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -151,9 +149,6 @@ pub async fn resolve_post(post_id: i32, status: bool) -> Result<(), ServerFnErro
 
 #[server(RemovePost)]
 pub async fn remove_post(post_id: i32, user_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -186,9 +181,6 @@ pub async fn get_search_posts(
     user_id: i32,
     filter_keyword: String,
 ) -> Result<Vec<Post>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -213,9 +205,6 @@ pub async fn edit_post(
     private: bool,
     anonymous: bool,
 ) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -242,10 +231,6 @@ pub async fn edit_post(
 
 #[server(EndorsePost)]
 pub async fn endorse_post(post_id: i32, status: bool) -> Result<(), ServerFnError> {
-    println!("{}", status);
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -280,9 +265,6 @@ pub async fn bump_post(post_id: i32) -> Result<(), ServerFnError> {
 
 #[server(GetTotalQuestions)]
 pub async fn get_total_questions(class_id: i32) -> Result<i64, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -299,9 +281,6 @@ pub async fn get_total_questions(class_id: i32) -> Result<i64, ServerFnError> {
 
 #[server(GetResolvedQuestions)]
 pub async fn get_resolved_questions(class_id: i32) -> Result<i64, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;

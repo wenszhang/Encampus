@@ -55,7 +55,7 @@ pub fn UserProfile() -> impl IntoView {
                 first_name: Some(user.first_name.clone()),
                 last_name: Some(user.last_name.clone()),
                 user_name: Some(user.user_name.clone()),
-                id: Some(user.id.clone()),
+                id: Some(user.id),
                 role: Some(user.role.clone()),
             });
         }

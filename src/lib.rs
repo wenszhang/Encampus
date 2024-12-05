@@ -1,3 +1,5 @@
+#![allow(unexpected_cfgs)]
+
 pub mod app;
 pub mod data;
 #[cfg(feature = "ssr")]

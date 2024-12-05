@@ -23,7 +23,6 @@ use chrono::NaiveDateTime;
 use leptos::*;
 use leptos_router::use_params;
 use leptos_router::Params;
-use leptos_router::ParamsError;
 use serde::Deserialize;
 use serde::Serialize;
 
@@ -540,8 +539,6 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
         </div>
     }.into_view()
 }
-
-type PostAndReplies = Resource<Result<PostId, ParamsError>, Option<(PostDetails, Vec<Reply>)>>;
 
 #[component]
 pub fn ReplyDropdown<F>(

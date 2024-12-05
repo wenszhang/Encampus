@@ -9,7 +9,6 @@ use crate::{
         global_components::{
             error_template::{AppError, ErrorTemplate},
             page::Page,
-            push_notifications::{configure_notifications, send_newest_announcement_notification},
         },
         home::Home,
         live_poll::LivePoll,
@@ -24,13 +23,10 @@ use crate::{
         view_enrolled_classes::classes::ClassesPage,
     },
 };
-use gloo_timers::callback::Interval;
 use leptoaster::*;
-use leptos::*;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-use web_sys::window;
 
 const EMBEDDED_AUTHENTICATION_KEY: &str = "__EMBEDDED_ENCAMPUS_AUTHENTICATION__";
 
@@ -232,6 +228,10 @@ fn UnauthenticatedRoutes() -> impl IntoView {
 fn start_timer() {
     #[cfg(target_arch = "wasm32")]
     {
+        use gloo_timers::callback::Interval;
+        use crate::pages::global_components::push_notifications::{configure_notifications, send_newest_announcement_notification};
+        use web_sys::window;
+
         // Timer signals
         let (tick_counter, set_tick_counter) = create_signal(0);
 
@@ -251,7 +251,7 @@ fn start_timer() {
 
         // Listen for timer changes
         create_effect(move |_| {
-            let tick_value = tick_counter.get();
+            let _tick_value = tick_counter.get();
 
             // Call the send_newest_announcement_notification function
             spawn_local(async move {

@@ -11,7 +11,7 @@ pub fn ClassDetails() -> impl IntoView {
     let navigate = use_navigate();
 
     // Fetch the class name based on class ID
-    let class_name = create_local_resource(class_id_result.clone(), |class_id_result| async {
+    let class_name = create_local_resource(class_id_result, |class_id_result| async {
         match class_id_result {
             Ok(class_id) => get_class_name(class_id.class_id)
                 .await
@@ -21,7 +21,7 @@ pub fn ClassDetails() -> impl IntoView {
     });
 
     // Fetch the list of users enrolled in the class with their roles
-    let enrolled_users = create_local_resource(class_id_result.clone(), |class_id_result| async {
+    let enrolled_users = create_local_resource(class_id_result, |class_id_result| async {
         match class_id_result {
             Ok(class_id) => get_users_enrolled_in_class(class_id.class_id)
                 .await
@@ -41,10 +41,7 @@ pub fn ClassDetails() -> impl IntoView {
                 let resolved = get_resolved_questions(class_id.class_id).await.unwrap_or(0) as i32;
                 let unresolved = total_questions - resolved;
 
-                if let Err(e) =
-                    generate_answered_unanswered_histogram(canvas_id, unresolved, resolved)
-                {
-                }
+                let _ = generate_answered_unanswered_histogram(canvas_id, unresolved, resolved);
             });
         }
     });

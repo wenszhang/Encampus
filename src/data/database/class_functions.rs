@@ -1,9 +1,28 @@
 /**
  * This file contains all the database functions that are used in the server
  */
-use crate::data::database::user_functions::DbUser;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
+
+cfg_if::cfg_if! {
+    if #[cfg(feature = "ssr")] {
+        use leptos::{server_fn::error::NoCustomError, use_context};
+        use sqlx::postgres::PgPool;
+        use crate::data::database::user_functions::DbUser;
+
+        /**
+         * Struct to hold the class name
+         */
+        #[derive(sqlx::FromRow)]
+        pub struct ClassName(String);
+
+        #[derive(sqlx::FromRow)]
+        pub struct UserName(String);
+
+        #[derive(sqlx::FromRow)]
+        pub struct IsInstructor(i64);
+    }
+}
 
 #[derive(Clone, Serialize, Deserialize, Default, Debug)]
 #[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
@@ -22,16 +41,6 @@ pub struct ClassInfo {
     pub description: String,
 }
 
-/**
- * Struct to hold the class name
- */
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct ClassName(String);
-
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct UserName(String);
 
 /**
  * Struct to hold enrollment info
@@ -50,9 +59,6 @@ pub struct UserEnrollmentInfo {
  */
 #[server(GetClassList)]
 pub async fn get_class_list() -> Result<Vec<ClassInfo>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -73,9 +79,6 @@ pub async fn add_class(
     instructor_username: i32,
     class_description: String,
 ) -> Result<ClassInfo, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -123,9 +126,6 @@ pub async fn add_class(
 
 #[server(DeleteClass)]
 pub async fn delete_class(class_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -154,9 +154,6 @@ pub async fn delete_class(class_id: i32) -> Result<(), ServerFnError> {
  */
 #[server(GetClassName)]
 pub async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -171,9 +168,6 @@ pub async fn get_class_name(class_id: i32) -> Result<String, ServerFnError> {
 
 #[server(GetInstructor)]
 pub async fn get_instructor(post_id: i32) -> Result<String, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -188,9 +182,6 @@ pub async fn get_instructor(post_id: i32) -> Result<String, ServerFnError> {
 
 #[server(AddStudentToClass)]
 pub async fn add_student_to_class(class_id: i32, user_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -206,9 +197,6 @@ pub async fn add_student_to_class(class_id: i32, user_id: i32) -> Result<(), Ser
 
 #[server(RemoveStudentFromClass)]
 pub async fn remove_student_from_class(class_id: i32, user_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -224,9 +212,6 @@ pub async fn remove_student_from_class(class_id: i32, user_id: i32) -> Result<()
 
 #[server(GetStudentsClasses)]
 pub async fn get_students_classes(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -243,9 +228,6 @@ pub async fn get_students_classes(user_id: i32) -> Result<Vec<ClassInfo>, Server
 
 #[server(GetInstructorsClasses)]
 pub async fn get_instructors_classes(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -265,9 +247,6 @@ pub async fn get_users_classes(
     user_id: i32,
     role: String,
 ) -> Result<Vec<ClassInfo>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -335,9 +314,6 @@ pub async fn get_users_classes(
 
 #[server(UpdateClassInfo)]
 pub async fn update_class_info(class: ClassInfo, instructor_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -364,15 +340,8 @@ pub async fn update_class_info(class: ClassInfo, instructor_id: i32) -> Result<(
     Ok(())
 }
 
-#[cfg(feature = "ssr")]
-#[derive(sqlx::FromRow)]
-pub struct IsInstructor(i64);
-
 #[server(CheckUserIsInstructor)]
 pub async fn check_user_is_instructor(user_id: i32, class_id: i32) -> Result<bool, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -393,9 +362,6 @@ pub async fn check_user_is_instructor(user_id: i32, class_id: i32) -> Result<boo
 
 #[server(AddTAToClass)]
 pub async fn add_ta_to_class(user_id: i32, class_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -411,9 +377,6 @@ pub async fn add_ta_to_class(user_id: i32, class_id: i32) -> Result<(), ServerFn
 
 #[server(RemoveTAFromClass)]
 pub async fn remove_ta_from_class(user_id: i32, class_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -429,9 +392,6 @@ pub async fn remove_ta_from_class(user_id: i32, class_id: i32) -> Result<(), Ser
 
 #[server(GetClassesTA)]
 pub async fn get_classes_ta(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -448,8 +408,6 @@ pub async fn get_classes_ta(user_id: i32) -> Result<Vec<ClassInfo>, ServerFnErro
 
 #[server(GetClassDescription)]
 pub async fn get_class_description(class_id: i32) -> Result<String, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -466,9 +424,6 @@ pub async fn get_class_description(class_id: i32) -> Result<String, ServerFnErro
 pub async fn get_users_enrolled_in_class(
     class_id: i32,
 ) -> Result<Vec<UserEnrollmentInfo>, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;

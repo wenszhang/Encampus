@@ -1,14 +1,19 @@
-use leptos::{logging, server, ServerFnError};
+use leptos::{server, ServerFnError};
 
-use crate::data::database::class_functions::{check_user_is_instructor, ClassId};
-use crate::data::database::user_functions::UserId;
+cfg_if::cfg_if! {
+    if #[cfg(feature = "ssr")] {
+        use leptos::logging;
+        use leptos::{server_fn::error::NoCustomError, use_context};
+        use sqlx::postgres::PgPool;
+        use crate::data::database::user_functions::UserId;
+        use crate::data::database::class_functions::{check_user_is_instructor, ClassId};
+    }
+}
+
 use crate::pages::view_class_posts::focused_post::{AddReplyInfo, Reply};
 
 #[server(RemoveReply)]
 pub async fn remove_reply(reply_id: i32, user_id: i32) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -37,9 +42,6 @@ pub async fn remove_reply(reply_id: i32, user_id: i32) -> Result<(), ServerFnErr
 
 #[server(ApproveReply)]
 pub async fn approve_reply(reply_id: i32, user_id: i32, status: bool) -> Result<(), ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
@@ -70,10 +72,6 @@ pub async fn approve_reply(reply_id: i32, user_id: i32, status: bool) -> Result<
 
 #[server(AddReply)]
 pub async fn add_reply(reply_info: AddReplyInfo, user: String) -> Result<Reply, ServerFnError> {
-    use crate::data::database::user_functions::UserId;
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to add Reply".to_string(),
     ))?;

@@ -1,6 +1,5 @@
 use crate::resources::images::svgs::cancel_icon::CancelIcon;
 use crate::resources::images::svgs::error_icon::ErrorIcon;
-use crate::resources::images::svgs::success_icon::SuccessIcon;
 use crate::resources::images::svgs::warning_icon::WarningIcon;
 
 use leptos::*;
@@ -13,7 +12,6 @@ pub struct NotificationDetails {
 
 #[derive(Clone, PartialEq)]
 pub enum NotificationType {
-    Success, // Commented out to pass linting checks due to not being used, let's add it back when we implement it
     Error,
     // Info,
     Warning,
@@ -27,7 +25,6 @@ pub fn NotificationComponent(
     let notification_type = notification_details.notification_type.clone();
 
     let class_name = match notification_type {
-        NotificationType::Success => "bg-customGreen border border-customGreen-details",
         NotificationType::Error => {
             "bg-errorNotification-bg border border-errorNotification-details"
         }
@@ -38,13 +35,11 @@ pub fn NotificationComponent(
     };
 
     let button_class = match notification_type {
-        NotificationType::Success => "ml-4 text-customGreen-details",
         NotificationType::Warning => "ml-4 text-warningNotification-details",
         NotificationType::Error => "text-errorNotification-details",
     };
 
     let message_class = match notification_type {
-        NotificationType::Success => "ml-4 text-customGreen-details",
         NotificationType::Warning => "text-warningNotification-details",
         NotificationType::Error => "text-errorNotification-details text-sm",
     };
@@ -53,7 +48,6 @@ pub fn NotificationComponent(
       <div class=format!("rounded p-4 text-white flex items-center {}", class_name)>
         <div class="pr-2">
           {move || match notification_details.notification_type {
-            NotificationType::Success => view! { <SuccessIcon size="25px" /> }.into_view(),
             NotificationType::Error => view! { <ErrorIcon size="25px" /> }.into_view(),
             NotificationType::Warning => view! { <WarningIcon size="20px" /> }.into_view(),
           }}
