@@ -7,13 +7,28 @@ use leptos::{create_effect, leptos_dom};
 use crate::data::database::class_functions::{get_users_classes, ClassInfo};
 use crate::expect_logged_in_user;
 use crate::pages::global_components::header::Header;
+use crate::resources::tile_design::TileDesign;
 
 #[component]
 pub fn ClassTile(class: ClassInfo) -> impl IntoView {
+    let design = match class.id % 4 {
+        0 => TileDesign::CircleCrayonStroke,
+        1 => TileDesign::ThickCrayonStroke,
+        2 => TileDesign::SquiggleCrayonStroke,
+        _ => TileDesign::SwirlCrayonStroke,
+    };
     let var_name = view! {
       <a href=&format!("classes/{}", class.id)>
-        <div class="flex overflow-hidden relative flex-col justify-center items-center p-6 h-60 text-lg font-semibold bg-white rounded-lg shadow-lg transition-transform duration-300 hover:bg-gray-100 hover:shadow-xl hover:scale-105 w-85">
-          <div class="flex flex-1 justify-center items-center mt-2 text-center">
+      <div class={format!("flex overflow-hidden relative flex-col justify-center items-center p-6 h-60 text-lg font-semibold {} rounded-lg shadow-lg transition-transform duration-300 {} hover:shadow-xl hover:scale-105 w-85",
+        design.get_bg_color(),
+        design.get_hover_color())}>
+          <div class="absolute h-600 w-600">
+            <img src=design.get_svg_path()
+            alt="Class Tile Design"
+             />
+          </div>
+          <div class="absolute inset-0 bg-black/15"></div>
+          <div class="flex flex-1 justify-center items-center mt-2 text-center text-white relative z-10">
             <span>{class.name}</span>
           </div>
         </div>

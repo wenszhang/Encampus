@@ -30,6 +30,22 @@ module.exports = {
         customOrange: { 
           DEFAULT: '#FFB74D',
         },
+        classCardGreen: { 
+          DEFAULT: '#4F8A77',
+          HOVER:   '#426F61'
+        },
+        classCardBrown: { 
+          DEFAULT: '#C78544',
+          HOVER: '#A66E39'
+        },
+        classCardBlue: { 
+          DEFAULT: '#6178CF',
+          HOVER: '#526ABC'
+        },
+        classCardPurple: { 
+          DEFAULT: '#8769C3',
+          HOVER: '#7259A5'
+        },
         warningNotification: {
           bg: '#FFEDB4',
           details: '#B47E29',
