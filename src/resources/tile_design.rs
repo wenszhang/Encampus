@@ -1,3 +1,8 @@
+/*
+    This file contains the logic for applying different colored backgrounds, stroke svg's, hover colors to each class tile
+    on the class page.
+*/
+
 #[derive(Clone, Copy)]
 pub enum TileDesign {
     SquiggleCrayonStroke,
