@@ -56,8 +56,6 @@ pub fn DropDownMenu(
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
 
-    // logging::log!("Global State: {:?}", global_state);
-
     let _notification_view = move || {
         notification_details.get().map(|details| {
             view! {
@@ -253,9 +251,9 @@ pub fn QuestionTile(
         let days = duration.num_days();
 
         match days {
-            0 => "Posted today, ".to_string(),
-            1 => "Posted yesterday, ".to_string(),
-            n => format!("Posted {} days ago", n,),
+            0 => "Posted today ".to_string(),
+            1 => "Posted yesterday ".to_string(),
+            n => format!("Posted {} days ago", n),
         }
     };
 
