@@ -146,7 +146,7 @@ pub fn ClassPage() -> impl IntoView {
                   prop:value=filter_keywords
                 />
                 <button 
-                class="flex absolute right-0 top-0 bottom-0 rounded-r-full items-center justify-center w-[4rem] bg-gradient-to-r bg-slate-400 transition-all duration-200"
+                class="flex absolute right-0 top-0 bottom-0 rounded-r-full items-center justify-center w-[4rem] bg-gradient-to-r bg-slate-400 hover:bg-slate-500 transition-all duration-200"
                 on:click=move |_| {
                     filtered_posts_action.dispatch(filter_keywords.get());
                   }
