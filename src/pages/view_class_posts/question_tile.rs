@@ -276,14 +276,7 @@ pub fn QuestionTile(
       >
 
         <A href=format!("{}", post.post_id) class="block w-full h-full">
-          <div
-            class="flex flex-col justify-between items-center p-6 m-auto h-full text-lg font-semibold"
-
-            // class:border-purple-500=is_private()
-
-            // class:border-4=is_private()
-            class=is_private()
-          >
+          <div class="flex flex-col justify-between h-full">
 
             // Card header
             <div class="flex top-0 left-0 z-10 gap-2 items-center pl-2 w-full h-12 text-xs rounded-t-lg shadow-md bg-card-header">
@@ -317,46 +310,57 @@ pub fn QuestionTile(
               }}
             </div>
 
-            // Card body
-            <div class="flex justify-center items-center p-4 w-full h-full text-center sm:p-6 md:p-8 lg:p-12">
-              <p class="text-base font-bold">{post.title}</p>
+            // subtract header height
+            <div class="flex flex-col">
+
+              // Card body
+              <div class="flex justify-center items-center p-4 w-full text-center">
+                <p class="text-base font-bold">{post.title}</p>
+              </div>
+            </div>
+            // Info string
+            <div class="flex justify-between items-center p-4 w-full text-sm text-gray-600">
+              <span>{format_time_ago()}</span>
+              <div class="flex gap-4">
+                <span class="flex gap-1 items-center">
+                  <div class="inline-flex relative justify-center items-center">
+                    <div class="w-5 h-5 rounded-full bg-[#3256BE]"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <GraduationCapIcon size="1em" />
+                      // Tooltip
+                      <div class="absolute -top-8 left-1/2 invisible z-50 py-1 px-2 text-xs text-white whitespace-nowrap bg-black rounded -translate-x-1/2 group-hover:visible">
+                        Number of student responses
+                      </div>
+                    </div>
+                  </div>
+                  {move || {
+                    reply_counts
+                      .get()
+                      .map(|counts| counts.student_replies.to_string())
+                      .unwrap_or_default()
+                  }}
+                </span>
+                <span class="flex gap-1 items-center">
+                  <div class="inline-flex relative justify-center items-center">
+                    <div class="w-5 h-5 rounded-full bg-[#F09636]"></div>
+                    <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                      <InstructorIcon size="1em" />
+                      // Tooltip
+                      <div class="absolute -top-8 left-1/2 invisible z-50 py-1 px-2 text-xs text-white whitespace-nowrap bg-black rounded -translate-x-1/2 group-hover:visible">
+                        Number of instructor responses
+                      </div>
+                    </div>
+                  </div>
+                  {move || {
+                    reply_counts
+                      .get()
+                      .map(|counts| counts.instructor_replies.to_string())
+                      .unwrap_or_default()
+                  }}
+                </span>
+              </div>
             </div>
           </div>
-
-             // Info string
-             <div class="flex-shrink-0 flex justify-between items-center px-2 pb-2 mt-auto text-sm text-gray-600">
-             <span>{format_time_ago()}</span>
-             <div class="flex gap-4">
-               <span class="flex gap-1 items-center">
-                 <div class="inline-flex relative justify-center items-center">
-                   <div class="w-5 h-5 rounded-full bg-[#3256BE]"></div>
-                   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                     <GraduationCapIcon size="1.2em" />
-                   </div>
-                 </div>
-                 {move || {
-                   reply_counts
-                     .get()
-                     .map(|counts| counts.student_replies.to_string())
-                     .unwrap_or_default()
-                 }}
-               </span>
-               <span class="flex gap-1 items-center">
-                 <div class="inline-flex relative justify-center items-center">
-                   <div class="w-5 h-5 rounded-full bg-[#F09636]"></div>
-                   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
-                     <InstructorIcon size="1.2em" />
-                   </div>
-                 </div>
-                 {move || {
-                   reply_counts
-                     .get()
-                     .map(|counts| counts.instructor_replies.to_string())
-                     .unwrap_or_default()
-                 }}
-               </span>
-             </div>
-         </div>
         </A>
         <div class="flex absolute top-1 right-2 z-20 items-center">
           <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">

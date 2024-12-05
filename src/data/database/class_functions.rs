@@ -41,7 +41,6 @@ pub struct ClassInfo {
     pub description: String,
 }
 
-
 /**
  * Struct to hold enrollment info
  */

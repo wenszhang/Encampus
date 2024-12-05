@@ -300,10 +300,7 @@ pub async fn get_poll_results(poll_id: i32) -> Result<Vec<PollOption>, ServerFnE
 }
 
 #[server(UpdatePoll)]
-pub async fn update_poll(
-    poll_id: i32,
-    new_answer: String,
-) -> Result<Poll, ServerFnError> {
+pub async fn update_poll(poll_id: i32, new_answer: String) -> Result<Poll, ServerFnError> {
     //Check if it's a first time, or update for a poll answer
 
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(

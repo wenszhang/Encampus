@@ -126,35 +126,37 @@ pub fn AnnouncementDropDownMenu(
 }
 
 #[component]
-pub fn Announcements(announcements: Vec<AnnouncementInfo>, class_id: impl Fn() -> i32 + 'static + Copy) -> impl IntoView {
+pub fn Announcements(
+    announcements: Vec<AnnouncementInfo>,
+    class_id: impl Fn() -> i32 + 'static + Copy,
+) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
-    let is_instructor = create_resource(move || (class_id(), user().id), move |(class_id, user_id)| {
-        async move {
+    let is_instructor = create_resource(
+        move || (class_id(), user().id),
+        move |(class_id, user_id)| async move {
             check_user_is_instructor(user_id, class_id)
                 .await
                 .unwrap_or(false)
-        }
-    });
+        },
+    );
     let (is_adding_post, set_is_adding_post) = create_signal(false);
     let (is_expanded, set_is_expanded) = create_signal(true);
     let (title, set_title) = create_signal(String::new());
     let (contents, set_contents) = create_signal(String::new());
     let (selected_announcement, set_selected_announcement) =
-    create_signal(None::<AnnouncementInfo>);
+        create_signal(None::<AnnouncementInfo>);
     let (sorted_announcements, set_sorted_announcements) = create_signal({
         announcements.clone().sort_by(|a, b| b.time.cmp(&a.time));
         announcements
     });
-    
+
     let add_announcement_action = create_action(move |announcement_info: &AddAnnouncementInfo| {
         let announcement_info = announcement_info.clone();
         async move {
             match post_announcement(announcement_info, user().id).await {
                 Ok(announcement) => {
                     set_sorted_announcements
-                    .update(|announcements| 
-                        announcements.insert(0, announcement)
-                    );
+                        .update(|announcements| announcements.insert(0, announcement));
                 }
                 Err(_) => logging::error!("Failed to post announcement. Please try again"),
             }
@@ -166,14 +168,15 @@ pub fn Announcements(announcements: Vec<AnnouncementInfo>, class_id: impl Fn() -
             match delete_announcement(announcement_id).await {
                 Ok(_) => {
                     set_sorted_announcements.update(|announcements| {
-                        announcements.retain(|announcement| announcement.announcement_id != announcement_id);
+                        announcements
+                            .retain(|announcement| announcement.announcement_id != announcement_id);
                     });
                 }
                 Err(_) => logging::error!("Failed to delete announcement"),
             }
         }
     });
-    
+
     view! {
         <div class="flex overflow-hidden relative flex-col w-full rounded-lg shadow-lg bg-white">
             <div class="flex flex-col w-full bg-customBlue rounded-t-lg">

@@ -228,8 +228,10 @@ fn UnauthenticatedRoutes() -> impl IntoView {
 fn start_timer() {
     #[cfg(target_arch = "wasm32")]
     {
+        use crate::pages::global_components::push_notifications::{
+            configure_notifications, send_newest_announcement_notification,
+        };
         use gloo_timers::callback::Interval;
-        use crate::pages::global_components::push_notifications::{configure_notifications, send_newest_announcement_notification};
         use web_sys::window;
 
         // Timer signals

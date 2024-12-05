@@ -306,27 +306,36 @@ pub struct ReplyCounts {
 // Used to get the amount of student and instructor replies for the question tile body.
 #[server(GetReplyCounts)]
 pub async fn get_reply_counts(post_id: i32) -> Result<ReplyCounts, ServerFnError> {
-    use leptos::{server_fn::error::NoCustomError, use_context};
-    use sqlx::postgres::PgPool;
-
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
 
     let counts: ReplyCounts = sqlx::query_as(
         r#"
+        WITH filtered_replies AS (
+            SELECT r.replyid,
+                   CASE 
+                       WHEN u.role IN ('instructor', 'ta') OR p.id IS NOT NULL THEN true 
+                       ELSE false 
+                   END as is_instructor
+            FROM replies r
+            JOIN users u ON r.authorid = u.id
+            LEFT JOIN professors p ON u.id = p.id
+            WHERE r.postid = $1 
+            AND r.removed = false
+        )
         SELECT 
-            COUNT(CASE WHEN u.role NOT IN ('instructor', 'ta') THEN 1 END) as student_replies,
-            COUNT(CASE WHEN u.role IN ('instructor', 'ta') THEN 1 END) as instructor_replies
-        FROM replies r
-        JOIN users u ON r.authorid = u.id
-        WHERE r.postid = $1 AND r.removed = false
+            COUNT(CASE WHEN NOT is_instructor THEN 1 END) as student_replies,
+            COUNT(CASE WHEN is_instructor THEN 1 END) as instructor_replies
+        FROM filtered_replies
         "#,
     )
     .bind(post_id)
     .fetch_one(&pool)
     .await
-    .expect("Failed to count get reply count. ");
+    .map_err(|e| {
+        ServerFnError::<NoCustomError>::ServerError(format!("Failed to get reply counts: {}", e))
+    })?;
 
     Ok(counts)
 }
