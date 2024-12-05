@@ -3,7 +3,7 @@
  */
 use crate::data::database::class_functions::check_user_is_instructor;
 use crate::data::database::post_functions::{
-    bump_post, endorse_post, remove_post, Post, PostFetcher,
+    bump_post, endorse_post, get_reply_counts, remove_post, Post, PostFetcher,
 };
 use crate::expect_logged_in_user;
 use crate::pages::global_components::notification::{
@@ -15,7 +15,9 @@ use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
+use crate::resources::images::svgs::graduation_cap_icon::GraduationCapIcon;
 use crate::resources::images::svgs::instructor_endorsed_icon::InstructorEndorsedIcon;
+use crate::resources::images::svgs::instructor_icon::InstructorIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
@@ -237,7 +239,25 @@ pub fn QuestionTile(
 ) -> impl IntoView {
     let (menu_invisible, set_menu_invisible) = create_signal(true);
     let (is_endorsed, set_endorsed) = create_signal(post.endorsed);
-    // let (is_pinned, set_is_pinned) = create_signal(!post.pinned); // Retrieve pin state from post data
+
+    // Gets the reply counts.
+    let reply_counts = create_resource(
+        move || post.post_id,
+        move |post_id| async move { get_reply_counts(post_id).await.unwrap_or_default() },
+    );
+
+    // Formats the string.
+    let format_time_ago = move || {
+        let now = chrono::Utc::now().naive_utc();
+        let duration = now.signed_duration_since(post.created_at);
+        let days = duration.num_days();
+
+        match days {
+            0 => "Posted today, ".to_string(),
+            1 => "Posted yesterday, ".to_string(),
+            n => format!("Posted {} days ago", n,),
+        }
+    };
 
     let toggle_menu = move |e: MouseEvent| {
         e.stop_propagation();
@@ -302,6 +322,41 @@ pub fn QuestionTile(
               <p class="text-base font-bold">{post.title}</p>
             </div>
           </div>
+
+             // Info string
+             <div class="flex-shrink-0 flex justify-between items-center px-2 pb-2 mt-auto text-sm text-gray-600">
+             <span>{format_time_ago()}</span>
+             <div class="flex gap-4">
+               <span class="flex gap-1 items-center">
+                 <div class="inline-flex relative justify-center items-center">
+                   <div class="w-5 h-5 rounded-full bg-[#3256BE]"></div>
+                   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                     <GraduationCapIcon size="1.2em" />
+                   </div>
+                 </div>
+                 {move || {
+                   reply_counts
+                     .get()
+                     .map(|counts| counts.student_replies.to_string())
+                     .unwrap_or_default()
+                 }}
+               </span>
+               <span class="flex gap-1 items-center">
+                 <div class="inline-flex relative justify-center items-center">
+                   <div class="w-5 h-5 rounded-full bg-[#F09636]"></div>
+                   <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+                     <InstructorIcon size="1.2em" />
+                   </div>
+                 </div>
+                 {move || {
+                   reply_counts
+                     .get()
+                     .map(|counts| counts.instructor_replies.to_string())
+                     .unwrap_or_default()
+                 }}
+               </span>
+             </div>
+         </div>
         </A>
         <div class="flex absolute top-1 right-2 z-20 items-center">
           <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
