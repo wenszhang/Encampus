@@ -250,7 +250,7 @@ pub fn QuestionTile(
         move || post.post_id,
         move |post_id| async move { get_reply_counts(post_id).await.unwrap_or_default() },
     );
-
+    // Used for instructor vs student replays featured at bottom of question tile.
     let format_time_ago = move || {
         let now = chrono::Utc::now().naive_utc();
         let duration = now.signed_duration_since(post.created_at);
@@ -329,14 +329,13 @@ pub fn QuestionTile(
                 <p class="text-base font-bold">{post.title}</p>
               </div>
 
-              // Spacer to push content to bottom
+              // Spacer to push content to bottom. Instructor vs student
               <div class="flex-grow"></div>
 
-              // Info string with circle-backed icons
-              <div class="flex justify-between items-center px-2 pb-2 text-sm text-gray-600">
+              // Info string
+              <div class="flex-shrink-0 flex justify-between items-center px-2 pb-2 mt-auto text-sm text-gray-600">
                 <span>{format_time_ago()}</span>
                 <div class="flex gap-4">
-                  // Student count with circle-backed grad cap
                   <span class="flex gap-1 items-center">
                     <div class="inline-flex relative justify-center items-center">
                       <div class="w-6 h-6 rounded-full bg-[#3256BE]"></div>
@@ -351,8 +350,6 @@ pub fn QuestionTile(
                         .unwrap_or_default()
                     }}
                   </span>
-
-                  // Instructor count with circle-backed instructor icon
                   <span class="flex gap-1 items-center">
                     <div class="inline-flex relative justify-center items-center">
                       <div class="w-6 h-6 rounded-full bg-[#F09636]"></div>
