@@ -396,30 +396,22 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
         create_signal(None::<NotificationDetails>);
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
 
-    let remove_action = create_action(move |post_id: &PostId| {
-        let post_id = post_id.post_id;
+    // Remove logic
+    let remove_action = create_action(move |(post_id, user_id): &(i32, i32)| {
+        let post_id = *post_id;
+        let user_id = *user_id;
         async move {
-            match get_post_details(post_id).await {
-                Ok(current_post) => {
-                    if (remove_post(post_id, user().id).await).is_ok() {
-                        posts.update(|posts| {
-                            if let Some(index) = posts
-                                .as_mut()
-                                .unwrap()
-                                .iter()
-                                .position(|post| post.post_id == current_post.0.post_id)
-                            {
-                                posts.as_mut().unwrap().remove(index);
-                            }
-
-                            let navigate = leptos_router::use_navigate();
-                            navigate(
-                                format!("/classes/{}", class_id,).as_str(),
-                                Default::default(),
-                            );
-                        });
-                    }
-                }
+            match remove_post(post_id, user_id).await {
+                Ok(_) => {
+                    posts.update(|posts| {
+                        posts.as_mut().unwrap().retain(|post| post.post_id != post_id);
+                    });
+                    let navigate = leptos_router::use_navigate();
+                    navigate(
+                        format!("/classes/{}", class_id).as_str(),
+                        Default::default(),
+                    );
+                },
                 Err(_) => {
                     logging::error!("Attempt to remove post failed. Please try again");
                     set_notification_details(Some(NotificationDetails {
@@ -525,7 +517,7 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                                 <button
                                     class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:bg-gray-100"
                                     on:click=move |_| {
-                                        remove_action.dispatch(PostId { post_id });
+                                        remove_action.dispatch((post_id, user().id));
                                         set_menu_visible(false);
                                     }
                                 >
@@ -768,7 +760,7 @@ where
                             </p>
                             <div class="flex gap-5 justify-end">
                                 <div class="flex items-center cursor-pointer select-none">
-                                    {(reply.author_id == user().id || is_instructor)
+                                    {move || (reply.author_id == user().id || is_instructor)
                                         .then(move || {
                                             view! {
                                                 <div>

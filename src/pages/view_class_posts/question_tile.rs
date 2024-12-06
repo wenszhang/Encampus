@@ -10,7 +10,6 @@ use crate::pages::global_components::notification::{
     NotificationComponent, NotificationDetails, NotificationType,
 };
 use crate::pages::view_class_posts::class::ClassId;
-use crate::pages::view_class_posts::focused_post::get_post_details;
 use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
@@ -43,12 +42,14 @@ pub fn DropDownMenu(
     let posts: Resource<PostFetcher, Vec<Post>> =
         expect_context::<Resource<PostFetcher, Vec<Post>>>();
     let (user, _) = expect_logged_in_user!();
-    let class_id = use_params::<ClassId>();
+    let class_id = {
+      let class_params = use_params::<ClassId>();
+      move || class_params().expect("Tried to render class page without class id").class_id
+    };
     let is_on_my_post = move || user().id == post_author_id;
-    let is_instructor = create_resource(class_id, move |class_id| {
-        let user_id = user().id;
+    let is_instructor = create_resource(move || (class_id(), user().id), move |(class_id, user_id)| {
         async move {
-            check_user_is_instructor(user_id, class_id.unwrap().class_id)
+            check_user_is_instructor(user_id, class_id)
                 .await
                 .unwrap_or(false)
         }
@@ -132,25 +133,22 @@ pub fn DropDownMenu(
     });
 
     // Remove logic
-    let remove_action = create_action(move |post_id: &i32| {
-        let post_id = post_id.to_owned();
-
+    let remove_action = create_action(move |(post_id, user_id, class_id): &(i32, i32, i32)| {
+        let post_id = *post_id;
+        let user_id = *user_id;
+        let class_id = *class_id;
         async move {
-            match get_post_details(post_id).await {
-                Ok(current_post) => {
-                    if let Ok(()) = remove_post(post_id, user().id).await {
-                        posts.update(|posts| {
-                            if let Some(index) = posts
-                                .as_mut()
-                                .unwrap()
-                                .iter()
-                                .position(|post| post.post_id == current_post.0.post_id)
-                            {
-                                posts.as_mut().unwrap().remove(index);
-                            }
-                        });
-                    }
-                }
+            match remove_post(post_id, user_id).await {
+                Ok(_) => {
+                  posts.update(|posts| {
+                      posts.as_mut().unwrap().retain(|post| post.post_id != post_id);
+                  });
+                  let navigate = leptos_router::use_navigate();
+                  navigate(
+                      format!("/classes/{}", class_id).as_str(),
+                      Default::default(),
+                  );
+                },
                 Err(_) => {
                     logging::error!("Attempt to remove post failed. Please try again");
                     set_notification_details(Some(NotificationDetails {
@@ -213,7 +211,7 @@ pub fn DropDownMenu(
                 <div class="p-1">
                   <button
                     class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:text-black hover:bg-gray-100"
-                    on:click=move |_| remove_action.dispatch(post_id)
+                    on:click=move |_| remove_action.dispatch((post_id, user().id, class_id()))
                   >
                     <RemoveIcon size="20px" />
                     <span class="ml-2">Remove</span>

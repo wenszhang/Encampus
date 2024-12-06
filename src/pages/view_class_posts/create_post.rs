@@ -29,10 +29,12 @@ pub struct AddPostInfo {
 #[component]
 pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
-    let user_id = user().id;
-    let class_id = use_params::<ClassId>();
+    // Fetch class id from route in the format of "class/:class_id"
+    let class_id = {
+      let class_params = use_params::<ClassId>();
+      move || class_params().expect("Tried to render create post element page without class id").class_id
+    };
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
-
 
     let (anonymous_state, set_anonymous_state) = create_signal(false);
     let (private_state, set_private_state) = create_signal(false);
@@ -41,8 +43,10 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let (ai_response, set_ai_response) = create_signal(false);
     let toaster = expect_toaster(); // post submission confirmation.
 
-    let add_post_action = create_action(move |postInfo: &AddPostInfo| {
+    let add_post_action = create_action(move |(postInfo, user_id): &(AddPostInfo, i32)| {
         let postInfo = postInfo.clone();
+        let user_id = *user_id;
+        let class_id = postInfo.classid;
         async move {
             match add_post(postInfo, user_id).await {
                 Ok(post) => {
@@ -56,7 +60,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                     navigate(
                         format!(
                             "/classes/{}/{}",
-                            class_id.get_untracked().unwrap().class_id,
+                            class_id,
                             post_id
                         )
                         .as_str(),
@@ -156,15 +160,15 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                 return;
               }
               add_post_action
-                .dispatch(AddPostInfo {
+                .dispatch((AddPostInfo {
                   title: post_title(),
                   contents: post_contents(),
                   anonymous: anonymous_state(),
                   limited_visibility: false,
-                  classid: class_id.get().unwrap().class_id,
+                  classid: class_id(),
                   private: private_state(),
                   ai_response: ai_response(),
-                });
+                }, user().id));
               toaster
                 .toast(
                   ToastBuilder::new("Post Created Successfully!")
