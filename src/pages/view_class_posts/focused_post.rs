@@ -451,11 +451,13 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
 
     let (menu_visible, set_menu_visible) = create_signal(false);
 
-    let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
-
     view! {
         <div class="flex absolute top-1 right-2 z-20 items-center">
-            <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+            <button 
+                class="rounded-lg bg-card-header hover:shadow-customInset"
+                on:focusin=move |_| set_menu_visible(true)
+                on:focusout=move |_| set_menu_visible(false)
+            >
                 <DotsIcon size="36px"/>
             </button>
             <div class=move || {
@@ -472,7 +474,7 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                             <div class="p-3 rounded-md w-30">
                                 <button
                                     class="inline-flex items-center p-1 w-full leading-tight text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                                    on:click=move |_| {
+                                    on:mousedown=move |_| {
                                         set_menu_visible(false);
                                         let navigate = leptos_router::use_navigate();
                                         navigate(
@@ -489,7 +491,7 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                                     view! {
                                         <button
                                             class="inline-flex items-center p-1 w-full leading-tight text-left rounded-md hover:bg-gray-100 text-customYellow-details"
-                                            on:click=move |_| {
+                                            on:mousedown=move |_| {
                                                 resolve_action.dispatch(PostId { post_id });
                                                 set_menu_visible(false);
                                             }
@@ -503,7 +505,7 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
                                     view! {
                                         <button
                                             class="inline-flex items-center p-1 w-full text-sm leading-tight rounded-md hover:bg-gray-100 text-customGreen-details"
-                                            on:click=move |_| {
+                                            on:mousedown=move |_| {
                                                 resolve_action.dispatch(PostId { post_id });
                                                 set_menu_visible(false);
                                             }
@@ -517,7 +519,7 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
 
                                 <button
                                     class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:bg-gray-100"
-                                    on:click=move |_| {
+                                    on:mousedown=move |_| {
                                         remove_action.dispatch((post_id, user().id));
                                         set_menu_visible(false);
                                     }
@@ -584,11 +586,13 @@ where
     });
 
     let (menu_visible, set_menu_visible) = create_signal(false);
-    let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
 
     view! {
         <div class="flex absolute top-0 right-2 z-20 items-center">
-            <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+            <button 
+            on:focusin=move |_| set_menu_visible(true)
+            on:focusout=move |_| set_menu_visible(false)
+            class="rounded-lg bg-card-header hover:shadow-customInset">
                 <DotsIcon size="36px"/>
             </button>
             <div class=move || {
@@ -609,7 +613,7 @@ where
                                             <div>
                                                 <button
                                                     class="inline-flex items-center p-2 w-full text-sm leading-tight rounded-md hover:bg-gray-100 text-customYellow-details"
-                                                    on:click=move |_| {
+                                                    on:mousedown=move |_| {
                                                         unapprove_action.dispatch(ReplyId { reply_id });
                                                         set_menu_visible(false);
                                                     }
@@ -625,7 +629,7 @@ where
                                             <div>
                                                 <button
                                                     class="inline-flex items-center p-2 w-full text-sm leading-tight rounded-md hover:text-black hover:bg-gray-100 text-customGreen-details"
-                                                    on:click=move |_| {
+                                                    on:mousedown=move |_| {
                                                         approve_action.dispatch(ReplyId { reply_id });
                                                         set_menu_visible(false);
                                                     }
@@ -642,7 +646,7 @@ where
                                 }}
                                 <button
                                     class="inline-flex items-center p-2 w-full text-sm leading-tight text-red-500 rounded-md hover:text-red-500 hover:bg-gray-100"
-                                    on:click=move |_| {
+                                    on:mousedown=move |_| {
                                         remove_action.dispatch(ReplyId { reply_id });
                                         set_menu_visible(false);
                                     }

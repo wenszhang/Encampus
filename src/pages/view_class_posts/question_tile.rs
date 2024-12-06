@@ -20,7 +20,6 @@ use crate::resources::images::svgs::instructor_icon::InstructorIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
-use ev::MouseEvent;
 use leptos::*;
 use leptos_router::{use_params, A};
 
@@ -170,7 +169,7 @@ pub fn DropDownMenu(
               <div class="p-1">
                 <button
                   class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                  on:click=move |_| endorsed_action.dispatch((post_id, !is_endorsed()))
+                  on:mousedown=move |_| endorsed_action.dispatch((post_id, !is_endorsed()))
                 >
                   <EndorsedIcon size="20px" />
                   <span class="ml-2">Endorse</span>
@@ -185,7 +184,7 @@ pub fn DropDownMenu(
               <div class="p-1">
                 <button
                   class="inline-flex items-center p-1 w-full text-sm leading-tight text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                  on:click=move |_| bump_action.dispatch(post_id)
+                  on:mousedown=move |_| bump_action.dispatch(post_id)
                 >
                   <BumpIcon size="20px" />
                   <span class="ml-2">bump</span>
@@ -211,7 +210,7 @@ pub fn DropDownMenu(
                 <div class="p-1">
                   <button
                     class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:text-black hover:bg-gray-100"
-                    on:click=move |_| remove_action.dispatch((post_id, user().id, class_id()))
+                    on:mousedown=move |_| remove_action.dispatch((post_id, user().id, class_id()))
                   >
                     <RemoveIcon size="20px" />
                     <span class="ml-2">Remove</span>
@@ -253,11 +252,6 @@ pub fn QuestionTile(
             1 => "Posted yesterday ".to_string(),
             n => format!("Posted {} days ago", n),
         }
-    };
-
-    let toggle_menu = move |e: MouseEvent| {
-        e.stop_propagation();
-        set_menu_invisible.update(|visible| *visible = !*visible);
     };
 
     view! {
@@ -348,8 +342,14 @@ pub fn QuestionTile(
             </div>
           </div>
         </A>
-        <div class="flex absolute top-1 right-2 z-20 items-center">
-          <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+        <div class="flex absolute top-1 right-2 z-20 items-center"
+
+        >
+          <button 
+            class="rounded-lg bg-card-header hover:shadow-customInset"
+            on:focusin=move |_| set_menu_invisible(false)
+            on:focusout=move |_| set_menu_invisible(true)
+          >
             <DotsIcon size="36px" />
           </button>
           // Dropdown menu
