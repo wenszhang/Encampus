@@ -10,35 +10,39 @@ pub fn Sidebar() -> impl IntoView {
 
   let collapse_class = move || {
       if collapsed.get() {
-          "sticky top-0 h-screen w-8 bg-gray-800 text-white flex items-center justify-center"
+          "sticky top-0 h-screen w-8 bg-gray-800 text-white flex items-center justify-center cursor-pointer"
       } else {
           "sticky top-0 h-screen w-64 bg-gray-800 text-white"
       }
   };
 
-  view! {
-    <div class=collapse_class>
-      {move || {
-        if collapsed.get() {
-          view! {<CollapsedView handle_expand_button=move || set_collapsed.set(false) />}
-        } else {
-          view! {<ExpandedView handle_collapse_button=move || set_collapsed.set(true) />}
+    view! {
+      <div
+        class=collapse_class
+        on:click=move |_| {
+          if collapsed.get() {
+            set_collapsed.set(false)
+          }
         }
-      }}
-    </div>
-  }
+      >
+        {move || {
+          if collapsed.get() {
+            view! { <CollapsedView /> }
+          } else {
+            view! { <ExpandedView handle_collapse_button=move || set_collapsed.set(true) /> }
+          }
+        }}
+      </div>
+    }
 }
 
 // Collapsed view for the sidebar
 #[component]
-fn CollapsedView(handle_expand_button: impl Fn() + 'static + Copy) -> impl IntoView {
+fn CollapsedView() -> impl IntoView {
     view! {
-      <button
-        class="flex justify-center items-center w-full h-full text-2xl text-white"
-        on:click=move |_| handle_expand_button()
-      >
-        "⮞"
-      </button>
+      <div class="flex justify-center items-center w-full h-full font-bold text-white whitespace-nowrap -rotate-90">
+        "OPEN NAVIGATION ▼"
+      </div>
     }
 }
 
@@ -50,8 +54,8 @@ fn ExpandedView(
     let (user, _) = expect_logged_in_user!();
 
     let class_id = {
-      let class_params = use_params::<ClassId>();
-      move || class_params().expect("Tried to render main sidebar without class id").class_id
+        let class_params = use_params::<ClassId>();
+        move || class_params().ok().map(|params| params.class_id)
     };
 
     let courses = create_resource(
@@ -94,7 +98,7 @@ fn ExpandedView(
                   <A href=format!("/classes/{}", class.id)>
                     <p
                       class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
-                      class=("bg-gray-700", move || (class_id() == class.id))
+                      class=("bg-gray-700", move || class_id() == Some(class.id))
                     >
                       {class.name}
                     </p>
@@ -104,30 +108,36 @@ fn ExpandedView(
             </ul>
           </Suspense>
 
-          <h2 class="mt-6 mb-2 text-sm tracking-widest text-gray-400 uppercase">"Tools"</h2>
-          <ul>
-            <li class="py-2">
+          {move || class_id().map(|class_id| 
+            view! {
               <div>
-                <A
-                  href=move || format!("/classes/{}/details", class_id())
-                  class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
-                >
-                  "Class Details"
-                </A>
-              </div>
-            </li>
-          </ul>
+                <h2 class="mt-6 mb-2 text-sm tracking-widest text-gray-400 uppercase">"Tools"</h2>
+                <ul>
+                  <li class="py-2">
+                    <div>
+                      <A
+                        href=move || format!("/classes/{}/details", class_id)
+                        class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                      >
+                        "Class Details"
+                      </A>
+                    </div>
+                  </li>
+                </ul>
 
-          <ul>
-            <li class="py-2">
-              <A
-                href=move || format!("/class/{}/poll", class_id())
-                class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
-              >
-                "Live Polling"
-              </A>
-            </li>
-          </ul>
+                <ul>
+                  <li class="py-2">
+                    <A
+                      href=move || format!("/class/{}/poll", class_id)
+                      class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                    >
+                      "Live Polling"
+                    </A>
+                  </li>
+                </ul>
+              </div>
+            })
+          }
         </div>
 
         // Back to classes button.

@@ -256,7 +256,7 @@ pub fn QuestionTile(
 
     view! {
       <div
-        class="relative h-60 rounded-lg shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-105 bg-card-bg"
+        class="overflow-hidden relative h-60 rounded-lg shadow-lg transition-transform duration-300 hover:shadow-xl hover:scale-105 bg-card-bg"
         class=("border-4", is_endorsed)
         class=("border-customYellow", is_endorsed)
         class=("bg-customRed", is_resolved)
@@ -342,10 +342,8 @@ pub fn QuestionTile(
             </div>
           </div>
         </A>
-        <div class="flex absolute top-1 right-2 z-20 items-center"
-
-        >
-          <button 
+        <div class="flex absolute top-1 right-2 z-20 items-center">
+          <button
             class="rounded-lg bg-card-header hover:shadow-customInset"
             on:focusin=move |_| set_menu_invisible(false)
             on:focusout=move |_| set_menu_invisible(true)
