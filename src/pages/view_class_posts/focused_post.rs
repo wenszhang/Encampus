@@ -15,6 +15,7 @@ use crate::resources::images::svgs::cancel_icon::CancelIcon;
 use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::edit_post_icon::EditPostIcon;
+use crate::resources::images::svgs::encampus_assistant_icon::EncampusAssistantIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unapprove_icon::UnapproveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
@@ -105,48 +106,47 @@ pub fn FocusedPost() -> impl IntoView {
     });
 
     view! {
-        <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
-            <Suspense fallback=|| {
-                view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }
-            }>
-                {move || {
-                    post_and_replies()
-                        .zip(is_instructor())
-                        .map(|((post, replies), is_instructor)| {
-                            let (replies, set_replies) = create_signal(replies);
-                            view! {
-                                <QuestionContent post=post class_id=class_id() is_instructor/>
-                                <RepliesList
-                                    replies
-                                    is_instructor
-                                    remove_reply_callback=move |reply_id_to_remove| {
-                                        set_replies
-                                            .update(|replies_vec| {
-                                                let mut i = 0;
-                                                while i < replies_vec.len() {
-                                                    if replies_vec[i].reply_id == reply_id_to_remove {
-                                                        replies_vec.remove(i);
-                                                    } else {
-                                                        i += 1;
-                                                    }
-                                                }
-                                            })
-                                    }
-                                />
-
-                                <CreateReply
-                                    post_id=post_id()
-                                    add_reply_callback=move |new_reply| {
-                                        set_replies
-                                            .update(move |replies_vec| replies_vec.push(new_reply))
-                                    }
-                                />
+      <div class="flex flex-col gap-3 p-6 bg-white rounded shadow">
+        <Suspense fallback=|| {
+          view! { <DarkenedCard class="h-32">"Loading..."</DarkenedCard> }
+        }>
+          {move || {
+            post_and_replies()
+              .zip(is_instructor())
+              .map(|((post, replies), is_instructor)| {
+                let (replies, set_replies) = create_signal(replies);
+                view! {
+                  <QuestionContent post=post class_id=class_id() is_instructor />
+                  <RepliesList
+                    replies
+                    is_instructor
+                    remove_reply_callback=move |reply_id_to_remove| {
+                      set_replies
+                        .update(|replies_vec| {
+                          let mut i = 0;
+                          while i < replies_vec.len() {
+                            if replies_vec[i].reply_id == reply_id_to_remove {
+                              replies_vec.remove(i);
+                            } else {
+                              i += 1;
                             }
+                          }
                         })
-                }}
+                    }
+                  />
 
-            </Suspense>
-        </div>
+                  <CreateReply
+                    post_id=post_id()
+                    add_reply_callback=move |new_reply| {
+                      set_replies.update(move |replies_vec| replies_vec.push(new_reply))
+                    }
+                  />
+                }
+              })
+          }}
+
+        </Suspense>
+      </div>
     }
     .into_view()
 }
@@ -162,9 +162,9 @@ pub fn SelectOrderOption(
     #[prop(default = false)] selected: bool,
 ) -> impl IntoView {
     view! {
-        <option value=value_and_label selected=selected>
-            {value_and_label}
-        </option>
+      <option value=value_and_label selected=selected>
+        {value_and_label}
+      </option>
     }
 }
 
@@ -173,40 +173,36 @@ fn QuestionContent(post: PostDetails, class_id: i32, is_instructor: bool) -> imp
     let (user, _) = expect_logged_in_user!();
 
     view! {
-        <DarkenedCard class="relative p-5">
-            <p class="text-lg font-bold">{&post.title}</p>
-            <div class="flex gap-5 justify-end">
-                <div class="flex items-center cursor-pointer select-none">
-                    // Post Dropdown
-                    {move || {
-                        (post.author_id == user().id || is_instructor)
-                            .then(move || {
-                                view! {
-                                    <FocusedDropdown
-                                        class_id
-                                        post_id=post.post_id
-                                        post_is_resolved=post.resolved
-                                    />
-                                }
-                            })
-                    }}
+      <DarkenedCard class="relative p-5">
+        <p class="text-lg font-bold">{&post.title}</p>
+        <div class="flex gap-5 justify-end">
+          <div class="flex items-center cursor-pointer select-none">
+            // Post Dropdown
+            {move || {
+              (post.author_id == user().id || is_instructor)
+                .then(move || {
+                  view! {
+                    <FocusedDropdown class_id post_id=post.post_id post_is_resolved=post.resolved />
+                  }
+                })
+            }}
 
-                </div>
-            </div>
-            <p class="text-sm font-light">
-                "Posted by " {post.author_first_name} " " {post.author_last_name} " "
-                {post
-                    .timestamp
-                    .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
-                    .unwrap()
-                    .format("at %l %p on %b %-d")
-                    .to_string()}
+          </div>
+        </div>
+        <p class="text-sm font-light">
+          "Posted by " {post.author_first_name} " " {post.author_last_name} " "
+          {post
+            .timestamp
+            .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
+            .unwrap()
+            .format("at %l %p on %b %-d")
+            .to_string()}
 
-            </p>
-            <br/>
-            <TiptapContentWrapper raw_html=post.contents/>
-        // TODO use the post's timestamp
-        </DarkenedCard>
+        </p>
+        <br />
+        <TiptapContentWrapper raw_html=post.contents />
+      // TODO use the post's timestamp
+      </DarkenedCard>
     }
 }
 
@@ -228,10 +224,10 @@ where
     let notification_view = move || {
         notification_details.get().map(|details| {
             view! {
-                <NotificationComponent
-                    notification_details=details.clone()
-                    on_close=move || set_notification_details(None)
-                />
+              <NotificationComponent
+                notification_details=details.clone()
+                on_close=move || set_notification_details(None)
+              />
             }
         })
     };
@@ -257,80 +253,80 @@ where
     });
 
     view! {
-        <DarkenedCard class="flex flex-col gap-2 p-5">
-            <p>"Answer this post:"</p>
-            <div class="p-3 h-96 bg-white rounded-t-lg">
-                {move || {
-                    view! {
-                        <RichTextBox
-                            id=format!("reply_rich_text_box_{}", editor_count())
-                            set_value=set_reply_contents
-                            value=reply_contents
-                        />
-                    }
-                }}
+      <DarkenedCard class="flex flex-col gap-2 p-5">
+        <p>"Answer this post:"</p>
+        <div class="p-3 h-96 bg-white rounded-t-lg">
+          {move || {
+            view! {
+              <RichTextBox
+                id=format!("reply_rich_text_box_{}", editor_count())
+                set_value=set_reply_contents
+                value=reply_contents
+              />
+            }
+          }}
+
+        </div>
+        <div class="flex gap-5 justify-end">
+          <label for="anonymousToggle" class="flex items-center cursor-pointer select-none">
+            <span class="mx-2">"Reply Anonymously:"</span>
+            <div class="relative">
+              <input
+                type="checkbox"
+                id="anonymousToggle"
+                class="sr-only peer"
+                prop:checked=reply_anonymous_state
+                on:change=move |_| set_reply_anonymous_state(!reply_anonymous_state())
+              />
+              <div class="flex justify-evenly items-center w-16 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-green-500">
+                <span class="text-white [&:not(:peer-checked)]:invisible">"On"</span>
+                <span class="text-white peer-checked:invisible">"Off"</span>
+              </div>
+              <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-8 peer-checked:bg-primary"></div>
 
             </div>
-            <div class="flex gap-5 justify-end">
-                <label for="anonymousToggle" class="flex items-center cursor-pointer select-none">
-                    <span class="mx-2">"Reply Anonymously:"</span>
-                    <div class="relative">
-                        <input
-                            type="checkbox"
-                            id="anonymousToggle"
-                            class="sr-only peer"
-                            prop:checked=reply_anonymous_state
-                            on:change=move |_| set_reply_anonymous_state(!reply_anonymous_state())
-                        />
-                        <div class="flex justify-evenly items-center w-16 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-green-500">
-                            <span class="text-white [&:not(:peer-checked)]:invisible">"On"</span>
-                            <span class="text-white peer-checked:invisible">"Off"</span>
-                        </div>
-                        <div class="absolute top-1 left-1 w-6 h-6 bg-white rounded-full transition peer-checked:translate-x-8 peer-checked:bg-primary"></div>
+          </label>
+          <button
+            class="flex gap-2 items-center py-2 px-4 ml-4 text-white bg-red-500 rounded-full hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-500 focus:outline-none"
+            type="button"
+            on:click=move |_| {
+              let navigate = leptos_router::use_navigate();
+              navigate(
+                format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
+                Default::default(),
+              );
+            }
+          >
 
-                    </div>
-                </label>
-                <button
-                    class="flex gap-2 items-center py-2 px-4 ml-4 text-white bg-red-500 rounded-full hover:bg-red-600 focus:ring-2 focus:ring-offset-2 focus:ring-offset-red-500 focus:outline-none"
-                    type="button"
-                    on:click=move |_| {
-                        let navigate = leptos_router::use_navigate();
-                        navigate(
-                            format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
-                            Default::default(),
-                        );
-                    }
-                >
+            <CancelIcon size="1em" />
+            "Cancel"
+          </button>
+          <button
+            class="py-2 px-6 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
+            on:click=move |_| {
+              if reply_contents().is_empty() {
+                set_notification_details(
+                  Some(NotificationDetails {
+                    message: "Response cannot be empty.".to_string(),
+                    notification_type: NotificationType::Warning,
+                  }),
+                );
+                return;
+              }
+              add_reply_action
+                .dispatch(AddReplyInfo {
+                  post_id,
+                  contents: reply_contents(),
+                  anonymous: reply_anonymous_state(),
+                })
+            }
+          >
 
-                    <CancelIcon size="1em"/>
-                    "Cancel"
-                </button>
-                <button
-                    class="py-2 px-6 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
-                    on:click=move |_| {
-                        if reply_contents().is_empty() {
-                            set_notification_details(
-                                Some(NotificationDetails {
-                                    message: "Response cannot be empty.".to_string(),
-                                    notification_type: NotificationType::Warning,
-                                }),
-                            );
-                            return;
-                        }
-                        add_reply_action
-                            .dispatch(AddReplyInfo {
-                                post_id,
-                                contents: reply_contents(),
-                                anonymous: reply_anonymous_state(),
-                            })
-                    }
-                >
-
-                    "Post Response +"
-                </button>
-                {notification_view}
-            </div>
-        </DarkenedCard>
+            "Post Response +"
+          </button>
+          {notification_view}
+        </div>
+      </DarkenedCard>
     }
 }
 
@@ -461,86 +457,86 @@ pub fn FocusedDropdown(class_id: i32, post_id: i32, post_is_resolved: bool) -> i
     let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
 
     view! {
-        <div class="flex absolute top-1 right-2 z-20 items-center">
-            <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
-                <DotsIcon size="36px"/>
-            </button>
-            <div class=move || {
-                if menu_visible.get() {
-                    "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-                } else {
-                    "hidden"
-                }
-            }>
+      <div class="flex absolute top-1 right-2 z-20 items-center">
+        <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+          <DotsIcon size="36px" />
+        </button>
+        <div class=move || {
+          if menu_visible.get() {
+            "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+          } else {
+            "hidden"
+          }
+        }>
 
-                <div class="pr-2 text-right">
-                    {move || {
-                        view! {
-                            <div class="p-3 rounded-md w-30">
-                                <button
-                                    class="inline-flex items-center p-1 w-full leading-tight text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
-                                    on:click=move |_| {
-                                        set_menu_visible(false);
-                                        let navigate = leptos_router::use_navigate();
-                                        navigate(
-                                            format!("/classes/{}/{}/edit", class_id, post_id).as_str(),
-                                            Default::default(),
-                                        );
-                                    }
-                                >
+          <div class="pr-2 text-right">
+            {move || {
+              view! {
+                <div class="p-3 rounded-md w-30">
+                  <button
+                    class="inline-flex items-center p-1 w-full leading-tight text-left text-gray-700 rounded-md hover:text-black hover:bg-gray-100"
+                    on:click=move |_| {
+                      set_menu_visible(false);
+                      let navigate = leptos_router::use_navigate();
+                      navigate(
+                        format!("/classes/{}/{}/edit", class_id, post_id).as_str(),
+                        Default::default(),
+                      );
+                    }
+                  >
 
-                                    <EditPostIcon size="20px"/>
-                                    <span class="ml-2">Edit</span>
-                                </button>
-                                {if post_is_resolved {
-                                    view! {
-                                        <button
-                                            class="inline-flex items-center p-1 w-full leading-tight text-left rounded-md hover:bg-gray-100 text-customYellow-details"
-                                            on:click=move |_| {
-                                                resolve_action.dispatch(PostId { post_id });
-                                                set_menu_visible(false);
-                                            }
-                                        >
-
-                                            <UnresolvedIcon size="20px"/>
-                                            <span class="ml-2">Unresolve</span>
-                                        </button>
-                                    }
-                                } else {
-                                    view! {
-                                        <button
-                                            class="inline-flex items-center p-1 w-full text-sm leading-tight rounded-md hover:bg-gray-100 text-customGreen-details"
-                                            on:click=move |_| {
-                                                resolve_action.dispatch(PostId { post_id });
-                                                set_menu_visible(false);
-                                            }
-                                        >
-
-                                            <CheckIcon size="20px"/>
-                                            <span class="ml-2">Resolve</span>
-                                        </button>
-                                    }
-                                }}
-
-                                <button
-                                    class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:bg-gray-100"
-                                    on:click=move |_| {
-                                        remove_action.dispatch(PostId { post_id });
-                                        set_menu_visible(false);
-                                    }
-                                >
-
-                                    <RemoveIcon size="20px"/>
-                                    <span class="ml-2">Remove</span>
-                                </button>
-                            </div>
+                    <EditPostIcon size="20px" />
+                    <span class="ml-2">Edit</span>
+                  </button>
+                  {if post_is_resolved {
+                    view! {
+                      <button
+                        class="inline-flex items-center p-1 w-full leading-tight text-left rounded-md hover:bg-gray-100 text-customYellow-details"
+                        on:click=move |_| {
+                          resolve_action.dispatch(PostId { post_id });
+                          set_menu_visible(false);
                         }
-                            .into_view()
-                    }}
+                      >
 
+                        <UnresolvedIcon size="20px" />
+                        <span class="ml-2">Unresolve</span>
+                      </button>
+                    }
+                  } else {
+                    view! {
+                      <button
+                        class="inline-flex items-center p-1 w-full text-sm leading-tight rounded-md hover:bg-gray-100 text-customGreen-details"
+                        on:click=move |_| {
+                          resolve_action.dispatch(PostId { post_id });
+                          set_menu_visible(false);
+                        }
+                      >
+
+                        <CheckIcon size="20px" />
+                        <span class="ml-2">Resolve</span>
+                      </button>
+                    }
+                  }}
+
+                  <button
+                    class="inline-flex items-center p-1 w-full text-sm leading-tight text-red-500 rounded-md hover:bg-gray-100"
+                    on:click=move |_| {
+                      remove_action.dispatch(PostId { post_id });
+                      set_menu_visible(false);
+                    }
+                  >
+
+                    <RemoveIcon size="20px" />
+                    <span class="ml-2">Remove</span>
+                  </button>
                 </div>
-            </div>
+              }
+                .into_view()
+            }}
+
+          </div>
         </div>
+      </div>
     }.into_view()
 }
 
@@ -594,79 +590,79 @@ where
     let toggle_menu = { move |_| set_menu_visible(!menu_visible.get()) };
 
     view! {
-        <div class="flex absolute top-0 right-2 z-20 items-center">
-            <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
-                <DotsIcon size="36px"/>
-            </button>
-            <div class=move || {
-                if menu_visible.get() {
-                    "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-                } else {
-                    "hidden"
-                }
-            }>
+      <div class="flex absolute top-0 right-2 z-20 items-center">
+        <button on:click=toggle_menu class="rounded-lg bg-card-header hover:shadow-customInset">
+          <DotsIcon size="36px" />
+        </button>
+        <div class=move || {
+          if menu_visible.get() {
+            "absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+          } else {
+            "hidden"
+          }
+        }>
 
-                <div class="pr-2 text-right">
-                    {move || {
-                        view! {
-                            <div class="p-3 rounded-md w-30">
-                                {if is_instructor {
-                                    if reply_approved {
-                                        view! {
-                                            <div>
-                                                <button
-                                                    class="inline-flex items-center p-2 w-full text-sm leading-tight rounded-md hover:bg-gray-100 text-customYellow-details"
-                                                    on:click=move |_| {
-                                                        unapprove_action.dispatch(ReplyId { reply_id });
-                                                        set_menu_visible(false);
-                                                    }
-                                                >
+          <div class="pr-2 text-right">
+            {move || {
+              view! {
+                <div class="p-3 rounded-md w-30">
+                  {if is_instructor {
+                    if reply_approved {
+                      view! {
+                        <div>
+                          <button
+                            class="inline-flex items-center p-2 w-full text-sm leading-tight rounded-md hover:bg-gray-100 text-customYellow-details"
+                            on:click=move |_| {
+                              unapprove_action.dispatch(ReplyId { reply_id });
+                              set_menu_visible(false);
+                            }
+                          >
 
-                                                    <UnapproveIcon size="1em"/>
-                                                    <span class="ml-2">Unapprove</span>
-                                                </button>
-                                            </div>
-                                        }
-                                    } else {
-                                        view! {
-                                            <div>
-                                                <button
-                                                    class="inline-flex items-center p-2 w-full text-sm leading-tight rounded-md hover:text-black hover:bg-gray-100 text-customGreen-details"
-                                                    on:click=move |_| {
-                                                        approve_action.dispatch(ReplyId { reply_id });
-                                                        set_menu_visible(false);
-                                                    }
-                                                >
+                            <UnapproveIcon size="1em" />
+                            <span class="ml-2">Unapprove</span>
+                          </button>
+                        </div>
+                      }
+                    } else {
+                      view! {
+                        <div>
+                          <button
+                            class="inline-flex items-center p-2 w-full text-sm leading-tight rounded-md hover:text-black hover:bg-gray-100 text-customGreen-details"
+                            on:click=move |_| {
+                              approve_action.dispatch(ReplyId { reply_id });
+                              set_menu_visible(false);
+                            }
+                          >
 
-                                                    <ApproveIcon size="20px"/>
-                                                    <span class="ml-2">Approve</span>
-                                                </button>
-                                            </div>
-                                        }
-                                    }
-                                } else {
-                                    view! { <div></div> }
-                                }}
-                                <button
-                                    class="inline-flex items-center p-2 w-full text-sm leading-tight text-red-500 rounded-md hover:text-red-500 hover:bg-gray-100"
-                                    on:click=move |_| {
-                                        remove_action.dispatch(ReplyId { reply_id });
-                                        set_menu_visible(false);
-                                    }
-                                >
+                            <ApproveIcon size="20px" />
+                            <span class="ml-2">Approve</span>
+                          </button>
+                        </div>
+                      }
+                    }
+                  } else {
+                    view! { <div></div> }
+                  }}
+                  <button
+                    class="inline-flex items-center p-2 w-full text-sm leading-tight text-red-500 rounded-md hover:text-red-500 hover:bg-gray-100"
+                    on:click=move |_| {
+                      remove_action.dispatch(ReplyId { reply_id });
+                      set_menu_visible(false);
+                    }
+                  >
 
-                                    <RemoveIcon size="20px"/>
-                                    <span class="ml-2">Remove</span>
-                                </button>
-
-                            </div>
-                        }
-                            .into_view()
-                    }}
+                    <RemoveIcon size="20px" />
+                    <span class="ml-2">Remove</span>
+                  </button>
 
                 </div>
-            </div>
+              }
+                .into_view()
+            }}
+
+          </div>
         </div>
+      </div>
     }.into_view()
 }
 
@@ -704,154 +700,134 @@ where
     };
 
     view! {
+      <div>
+        {move || {
+          if sorted_replies().is_empty() {
+            view! {
+              <span>
+                <b>"No Replies Yet"</b>
+              </span>
+            }
+              .into_view()
+          } else {
+            view! {
+              <div class="flex justify-between">
+                <b class="inline-block">"Replies:"</b>
+                <span class="inline-block">
+                  <select on:change=move |ev| {
+                    let new_value = event_target_value(&ev);
+                    set_order_option(new_value);
+                  }>
+                    <SelectOrderOption selected=true value_and_label="Newest First" />
+                    <SelectOrderOption value_and_label="Oldest First" />
+                  // <SelectOrderOption value_and_label="By Rating"/>
+                  </select>
+                </span>
+              </div>
+            }
+              .into_view()
+          }
+        }}
+
+      </div>
+      <For each=sorted_replies key=|reply| reply.reply_id let:reply>
         <div>
-            {move || {
-                if sorted_replies().is_empty() {
-                    view! {
-                        <span>
-                            <b>"No Replies Yet"</b>
-                        </span>
-                    }
-                        .into_view()
-                } else {
-                    view! {
-                        <div class="flex justify-between">
-                            <b class="inline-block">"Replies:"</b>
-                            <span class="inline-block">
-                                <select on:change=move |ev| {
-                                    let new_value = event_target_value(&ev);
-                                    set_order_option(new_value);
-                                }>
-                                    <SelectOrderOption
-                                        selected=true
-                                        value_and_label="Newest First"
-                                    />
-                                    <SelectOrderOption value_and_label="Oldest First"/>
-                                // <SelectOrderOption value_and_label="By Rating"/>
-                                </select>
-                            </span>
-                        </div>
-                    }
-                        .into_view()
-                }
-            }}
+          {if reply.author_name == "Encampus Assistant" {
+            view! {
+              <DarkenedCard class="relative p-5 rounded-lg border-2 border-[transparent] [border-image:linear-gradient(to_right,#60a5fa,#9333ea)_1]">
+                <p class="flex gap-2 items-center font-bold">
+                  // div for icon and name not sure why formatter keeps pushing it next to answered by text
+                  "Answered by " <div class="flex gap-1 items-center">
+                    <EncampusAssistantIcon size="2em" />
+                    <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">
+                      {reply.author_name}
+                    </span>
+                  </div>
+                  {reply
+                    .time
+                    .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
+                    .unwrap()
+                    .format(" at %l %p on %b %-d")
+                    .to_string()} ":"
+                </p>
+                <div class="flex gap-5 justify-end">
+                  <div class="flex items-center cursor-pointer select-none">
+                    {(reply.author_id == user().id || is_instructor)
+                      .then(move || {
+                        view! {
+                          <div>
+                            <ReplyDropdown
+                              remove_reply_callback
+                              reply_id=reply.reply_id
+                              reply_approved=reply.approved
+                              is_instructor=is_instructor
+                            />
+                          </div>
+                        }
+                      })}
+
+                  </div>
+                </div>
+                <br />
+                <TiptapContentWrapper raw_html=reply.contents />
+                {reply
+                  .approved
+                  .then_some(
+                    view! { <p class="text-sm font-light">"Instructor Approved Response"</p> },
+                  )}
+
+              // TODO use the reply's timestamp, author's name and anonymous info
+              </DarkenedCard>
+            }
+          } else {
+            view! {
+              // TODO use the reply's timestamp, author's name and anonymous info
+
+              <DarkenedCard class="relative p-5">
+                <p class="font-bold">
+                  "Answered by " {reply.author_name}
+                  {reply
+                    .time
+                    .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
+                    .unwrap()
+                    .format(" at %l %p on %b %-d")
+                    .to_string()} ":"
+                </p>
+                <div class="flex gap-5 justify-end">
+                  <div class="flex items-center cursor-pointer select-none">
+                    {move || {
+                      (reply.author_id == user().id || is_instructor)
+                        .then(move || {
+                          view! {
+                            <div>
+                              <ReplyDropdown
+                                remove_reply_callback
+                                reply_id=reply.reply_id
+                                reply_approved=reply.approved
+                                is_instructor=is_instructor
+                              />
+                            </div>
+                          }
+                        })
+                    }}
+
+                  </div>
+                </div>
+                <br />
+                <TiptapContentWrapper raw_html=reply.contents />
+                {reply
+                  .approved
+                  .then_some(
+                    view! { <p class="text-sm font-light">"Instructor Approved Response"</p> },
+                  )}
+
+              // TODO use the reply's timestamp, author's name and anonymous info
+              </DarkenedCard>
+            }
+          }}
 
         </div>
-        <For each=sorted_replies key=|reply| reply.reply_id let:reply>
-            <div>
-                {if reply.author_name == "Encampus Assistant" {
-                    view! {
-                        <DarkenedCard class="relative p-5 border-2 border-blue-500">
-                            <p class="font-bold">
-                                "Answered by "
-                                <svg
-                                    class="inline-block ml-1 w-4 h-4 text-blue-500"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M5 13l4 4L19 7"
-                                    ></path>
-                                </svg>
-                                <span class="font-bold text-blue-500">{reply.author_name}</span>
-                                {reply
-                                    .time
-                                    .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
-                                    .unwrap()
-                                    .format(" at %l %p on %b %-d")
-                                    .to_string()} ":"
-                            </p>
-                            <div class="flex gap-5 justify-end">
-                                <div class="flex items-center cursor-pointer select-none">
-                                    {(reply.author_id == user().id || is_instructor)
-                                        .then(move || {
-                                            view! {
-                                                <div>
-                                                    <ReplyDropdown
-                                                        remove_reply_callback
-                                                        reply_id=reply.reply_id
-                                                        reply_approved=reply.approved
-                                                        is_instructor=is_instructor
-                                                    />
-                                                </div>
-                                            }
-                                        })}
-
-                                </div>
-                            </div>
-                            <br/>
-                            <TiptapContentWrapper raw_html=reply.contents/>
-                            {reply
-                                .approved
-                                .then_some(
-                                    view! {
-                                        <p class="text-sm font-light">
-                                            "Instructor Approved Response"
-                                        </p>
-                                    },
-                                )}
-
-                        // TODO use the reply's timestamp, author's name and anonymous info
-                        </DarkenedCard>
-                    }
-                } else {
-                    view! {
-                        // TODO use the reply's timestamp, author's name and anonymous info
-
-                        <DarkenedCard class="relative p-5">
-                            <p class="font-bold">
-                                "Answered by " {reply.author_name}
-                                {reply
-                                    .time
-                                    .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
-                                    .unwrap()
-                                    .format(" at %l %p on %b %-d")
-                                    .to_string()} ":"
-                            </p>
-                            <div class="flex gap-5 justify-end">
-                                <div class="flex items-center cursor-pointer select-none">
-                                    {move || {
-                                        (reply.author_id == user().id || is_instructor)
-                                            .then(move || {
-                                                view! {
-                                                    <div>
-                                                        <ReplyDropdown
-                                                            remove_reply_callback
-                                                            reply_id=reply.reply_id
-                                                            reply_approved=reply.approved
-                                                            is_instructor=is_instructor
-                                                        />
-                                                    </div>
-                                                }
-                                            })
-                                    }}
-
-                                </div>
-                            </div>
-                            <br/>
-                            <TiptapContentWrapper raw_html=reply.contents/>
-                            {reply
-                                .approved
-                                .then_some(
-                                    view! {
-                                        <p class="text-sm font-light">
-                                            "Instructor Approved Response"
-                                        </p>
-                                    },
-                                )}
-
-                        // TODO use the reply's timestamp, author's name and anonymous info
-                        </DarkenedCard>
-                    }
-                }}
-
-            </div>
-        </For>
+      </For>
     }
     .into_view()
 }
