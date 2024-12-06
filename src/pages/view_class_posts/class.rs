@@ -154,14 +154,13 @@ pub fn ClassPage() -> impl IntoView {
             <Transition fallback=move || {
               view! { <p>"Loading announcements..."</p> }
             }>
-              {move || {
-                let ann_list = announcements().unwrap_or_default();
-                view! {
+              {move || 
+                announcements().map(|ann_list| view! {
                   <Announcements
                     announcements=ann_list
                   />
-                }
-              }}
+                })
+              }
             </Transition>
             <div class="grid grid-cols-3 gap-4">
               <Transition fallback=move || view! { <p>"Loading..."</p> }>

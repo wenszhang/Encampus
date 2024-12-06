@@ -1,8 +1,7 @@
 use crate::data::database::announcement_functions::{
     delete_announcement, post_announcement, AddAnnouncementInfo, AnnouncementInfo,
 };
-use crate::data::database::class_functions::check_user_is_instructor;
-use crate::expect_logged_in_user;
+use crate::{expect_logged_in_user, on_input};
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use crate::resources::images::svgs::announcement_mic_2::AnnouncementMicAlt;
@@ -15,14 +14,17 @@ use leptos_router::use_params;
 pub fn AddAnnouncementModal(
     show: ReadSignal<bool>,
     set_show: WriteSignal<bool>,
-    title: ReadSignal<String>,
-    set_title: WriteSignal<String>,
-    contents: ReadSignal<String>,
-    set_contents: WriteSignal<String>,
     on_submit: Action<(i32, AddAnnouncementInfo), ()>,
-    class_id: impl Fn() -> i32 + 'static + Copy,
 ) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
+    // Fetch class id from route in the format of "class/:class_id"
+    let class_id = {
+        let class_params = use_params::<ClassId>();
+        move || class_params().expect("Tried to render add announcement modal without class id").class_id
+    };
+
+    let (title, set_title) = create_signal(String::new());
+    let (contents, set_contents) = create_signal(String::new());
 
     view! {
         {move || if show.get() {
@@ -50,7 +52,7 @@ pub fn AddAnnouncementModal(
                                         type="text"
                                         placeholder="Announcement Title"
                                         prop:value=title
-                                        on:input=move |ev| set_title.set(event_target_value(&ev))
+                                        on:input=on_input!(set_title)
                                     />
                                 </div>
                                 <div>
@@ -59,8 +61,8 @@ pub fn AddAnnouncementModal(
                                         class="w-full p-2 border border-gray-300 rounded-md h-32 focus:ring-2 focus:ring-customBlue focus:border-transparent"
                                         placeholder="Announcement Contents"
                                         prop:value=contents
-                                        on:input=move |ev| set_contents.set(event_target_value(&ev))
-                                    />
+                                        on:input=on_input!(set_contents)
+                                    ></textarea>
                                 </div>
                                 <div class="flex justify-end gap-3 mt-4">
                                     <button
@@ -133,59 +135,7 @@ pub fn AnnouncementDropDownMenu(
 pub fn Announcements(
     announcements: Vec<AnnouncementInfo>,
 ) -> impl IntoView {
-    let (user, _) = expect_logged_in_user!();
-    // Fetch class id from route in the format of "class/:class_id"
-    let class_id = {
-        let class_params = use_params::<ClassId>();
-        move || class_params().expect("Tried to render class page without class id").class_id
-      };
-
-    let is_instructor = create_resource(
-        move || (class_id(), user().id),
-        move |(class_id, user_id)| async move {
-            check_user_is_instructor(user_id, class_id)
-                .await
-                .unwrap_or(false)
-        },
-    );
-    let (is_adding_post, set_is_adding_post) = create_signal(false);
     let (is_expanded, set_is_expanded) = create_signal(true);
-    let (title, set_title) = create_signal(String::new());
-    let (contents, set_contents) = create_signal(String::new());
-    let (selected_announcement, set_selected_announcement) =
-        create_signal(None::<AnnouncementInfo>);
-    let (sorted_announcements, set_sorted_announcements) = create_signal({
-        announcements.clone().sort_by(|a, b| b.time.cmp(&a.time));
-        announcements
-    });
-
-    let add_announcement_action = create_action(move |(user_id, announcement_info): &(i32, AddAnnouncementInfo)| {
-        let announcement_info = announcement_info.clone();
-        let user_id = *user_id;
-        async move {
-            match post_announcement(announcement_info, user_id).await {
-                Ok(announcement) => {
-                    set_sorted_announcements
-                        .update(|announcements| announcements.insert(0, announcement));
-                }
-                Err(_) => logging::error!("Failed to post announcement. Please try again"),
-            }
-        }
-    });
-    let delete_announcement_action = create_action(move |announcement_id: &i32| {
-        let announcement_id = *announcement_id;
-        async move {
-            match delete_announcement(announcement_id).await {
-                Ok(_) => {
-                    set_sorted_announcements.update(|announcements| {
-                        announcements
-                            .retain(|announcement| announcement.announcement_id != announcement_id);
-                    });
-                }
-                Err(_) => logging::error!("Failed to delete announcement"),
-            }
-        }
-    });
 
     view! {
         <div class="flex overflow-hidden relative flex-col w-full rounded-lg shadow-lg bg-white">
@@ -206,119 +156,173 @@ pub fn Announcements(
                 </div>
             </div>
 
-            {move || {
-                if is_expanded.get() {
-                    view! {
-                        <>
-                            <Suspense fallback=move || view! { <p>"Loading ..."</p> }>
-                                {move || {
-                                    if is_instructor().unwrap_or_default() {
-                                        view! {
-                                            <div class="flex justify-end px-4 pt-2">
-                                                <button
-                                                    class="px-3 py-1 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
-                                                    on:click=move |_| set_is_adding_post.set(true)
-                                                >
-                                                    "Add New Announcement +"
-                                                </button>
-                                            </div>
-                                        }.into_view()
-                                    } else {
-                                        view! { <div></div> }.into_view()
-                                    }
-                                }}
-                            </Suspense>
-                            <div class="h-[290px] overflow-y-auto">
-                                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white">
-                                    <For each=sorted_announcements key=|announcement| announcement.announcement_id let:announcement>
-                                        <div class="relative">
-                                            <div
-                                                class="cursor-pointer"
-                                                on:click={
-                                                    let announcement = announcement.clone(); 
-                                                    move |_| set_selected_announcement.set(Some(announcement.clone()))
-                                                }
-                                            >
-                                                <div class="flex overflow-hidden relative flex-col justify-between p-6 h-60 bg-card-header rounded-lg shadow-lg transition-transform duration-300 hover:bg-gray-100 hover:shadow-xl hover:scale-105">
-                                                //<div class="flex overflow-hidden relative flex-col justify-between p-6 h-60 bg-blue-50 rounded-lg shadow-sm transition-all duration-300 hover:bg-blue-100 hover:shadow-md hover:scale-105">
-                                                    {
-                                                        let announcement_id = announcement.announcement_id;
-                                                        let author_id = announcement.author_id;
-                                                        move || (user().id == author_id).then(move || {
-                                                        let (menu_visible, set_menu_visible) = create_signal(false);
-                                                        view! {
-                                                            <div class="flex absolute top-1 right-2 z-20 items-center">
-                                                                <button
-                                                                    class="rounded-lg bg-card-header hover:shadow-customInset"
-                                                                    on:click=move |e| {
-                                                                        e.stop_propagation();
-                                                                        }
-                                                                    on:focusin=move |_| set_menu_visible.set(true)
-                                                                    on:focusout=move |_| set_menu_visible.set(false)
-                                                                >
-                                                                    <DotsIcon size="36px"/>
-                                                                </button>
-                                                                {move || menu_visible.get().then(move || 
-                                                                    view! {
-                                                                        <div class="absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
-                                                                        on:click=move |e| e.stop_propagation()
-                                                                        >
-                                                                            <AnnouncementDropDownMenu
-                                                                                announcement_id=announcement_id
-                                                                                announcement_author_id=author_id
-                                                                                delete_action=delete_announcement_action
-                                                                            />
-                                                                        </div>
-                                                                    })
-                                                                }
-                                                            </div>
-                                                        }})
-                                                    }
-                                                    <div class="flex-1">
-                                                        <div class="flex items-center mb-3">
-                                                        <h4 class="text-lg mt-2 font-semibold  text-customBlue">{announcement.title.clone()}</h4>
-                                                    </div>
-                                                        <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
-                                                    </div>
-                                                    <p class="text-xs text-gray-500 mt-2 pl-2">
-                                                        {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </For>
-                                </div>
-                            </div>
-                        </>
-                    }.into_view()
-                } else {
-                    view! { <div></div> }.into_view()
-                }
-            }}
-
-            <AddAnnouncementModal
-                show=is_adding_post
-                set_show=set_is_adding_post
-                title=title
-                set_title=set_title
-                contents=contents
-                set_contents=set_contents
-                on_submit=add_announcement_action
-                class_id=class_id
-            />
-
+            
             {move || 
-                selected_announcement.get().map(move |announcement| 
-                    view! {
-                        <ViewAnnouncementModal
-                            close_modal_callback=move || set_selected_announcement.set(None)
-                            announcement=announcement
-                        />
-                    }
-                ) 
+                {
+                    let clone = announcements.clone();
+                    is_expanded().then(move || 
+                        view! {
+                            <ExpandedAnnouncements announcements=clone/>
+                        }
+                    )
+                }
             }
+            
         </div>
     }.into_view()
+}
+
+#[component]
+fn ExpandedAnnouncements(
+    announcements: Vec<AnnouncementInfo>,
+) -> impl IntoView {
+    let (user, _) = expect_logged_in_user!();
+
+    let (is_adding_post, set_is_adding_post) = create_signal(false);
+    let (selected_announcement, set_selected_announcement) =
+        create_signal(None::<AnnouncementInfo>);
+
+    let (sorted_announcements, set_sorted_announcements) = create_signal({
+        let mut clone = announcements.clone();
+        clone.sort_by(|a, b| b.time.cmp(&a.time));
+        clone
+    });
+
+    let add_announcement_action = create_action(move |(user_id, announcement_info): &(i32, AddAnnouncementInfo)| {
+        let announcement_info = announcement_info.clone();
+        let user_id = *user_id;
+        async move {
+            match post_announcement(announcement_info, user_id).await {
+                Ok(announcement) => {
+                    set_sorted_announcements
+                        .update(|announcements| announcements.insert(0, announcement));
+                }
+                Err(_) => logging::error!("Failed to post announcement. Please try again"),
+            }
+        }
+    });
+
+    let delete_announcement_action = create_action(move |announcement_id: &i32| {
+        let announcement_id = *announcement_id;
+        async move {
+            match delete_announcement(announcement_id).await {
+                Ok(_) => {
+                    set_sorted_announcements.update(|announcements| {
+                        announcements
+                            .retain(|announcement| announcement.announcement_id != announcement_id);
+                    });
+                }
+                Err(_) => logging::error!("Failed to delete announcement"),
+            }
+        }
+    });
+
+    view! {
+            {move || 
+                (user().role == "Instructor").then(move ||
+                    view! {
+                        <div class="flex justify-end px-4 pt-2">
+                            <button
+                                class="px-3 py-1 text-white rounded-full bg-customBlue hover:bg-customBlue-HOVER"
+                                on:click=move |_| set_is_adding_post.set(true)
+                            >
+                                "Add New Announcement +"
+                            </button>
+                        </div>
+                        <AddAnnouncementModal
+                            show=is_adding_post
+                            set_show=set_is_adding_post
+                            on_submit=add_announcement_action
+                        />
+                    }
+                )
+            }
+        <div class="h-[290px] overflow-y-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-white">
+                <For each=sorted_announcements key=|announcement| announcement.announcement_id let:announcement>
+                    <div class="relative">
+                        <div
+                            class="cursor-pointer"
+                            on:click={
+                                let announcement = announcement.clone(); 
+                                move |_| set_selected_announcement.set(Some(announcement.clone()))
+                            }
+                        >
+                            <div class="flex overflow-hidden relative flex-col justify-between p-6 h-60 bg-card-header rounded-lg shadow-lg transition-transform duration-300 hover:bg-gray-100 hover:shadow-xl hover:scale-105">
+                                {
+                                    move || (user().id == announcement.author_id).then(move || 
+                                        view! {
+                                            <AnnouncementDotsMenu
+                                                announcement_id=announcement.announcement_id
+                                                announcement_author_id=announcement.author_id
+                                                delete_action=delete_announcement_action
+                                            />
+                                        }
+                                    )
+                                }
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-3">
+                                        <h4 class="text-lg mt-2 font-semibold  text-customBlue">{announcement.title.clone()}</h4>
+                                    </div>
+                                    <p class="text-sm text-gray-600 line-clamp-3">{announcement.contents.clone()}</p>
+                                </div>
+                                <p class="text-xs text-gray-500 mt-2 pl-2">
+                                    {announcement.time.format("%Y-%m-%d %H:%M:%S").to_string()}
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </For>
+            </div>
+        </div>
+
+        {move || 
+            selected_announcement().map(move |announcement| 
+                view! {
+                    <ViewAnnouncementModal
+                        close_modal_callback=move || set_selected_announcement.set(None)
+                        announcement=announcement
+                    />
+                }
+            ) 
+        }
+    }.into_view()
+}
+
+#[component]
+fn AnnouncementDotsMenu(
+    announcement_id: i32,
+    announcement_author_id: i32,
+    delete_action: Action<i32, ()>,
+) -> impl IntoView {
+    let (menu_visible, set_menu_visible) = create_signal(false);
+    view! {
+        <div class="flex absolute top-1 right-2 z-20 items-center">
+            <button
+                class="rounded-lg bg-card-header hover:shadow-customInset"
+                on:click=move |e| {
+                    e.stop_propagation();
+                    }
+                on:focusin=move |_| set_menu_visible.set(true)
+                on:focusout=move |_| set_menu_visible.set(false)
+            >
+                <DotsIcon size="36px"/>
+            </button>
+            {move || menu_visible.get().then(move || 
+                view! {
+                    <div class="absolute right-0 top-0 mt-7 w-30 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5"
+                    on:click=move |e| e.stop_propagation()
+                    >
+                        <AnnouncementDropDownMenu
+                            announcement_id
+                            announcement_author_id
+                            delete_action
+                        />
+                    </div>
+                })
+            }
+        </div>
+    }
 }
 
 #[component]

@@ -10,22 +10,14 @@ pub struct AnnouncementId {
 #[component]
 pub fn AnnouncementDetails() -> impl IntoView {
     // Get URL parameters
-    let announcement_id_result = use_params::<AnnouncementId>();
+    let announcement_id = {
+        let announcement_id_result = use_params::<AnnouncementId>();
+        move || announcement_id_result().expect("Tried to render announcement details page without announcement id").announcement_id
+    };
 
     let announcement = create_resource(
-        move || {
-            announcement_id_result
-                .get()
-                .ok()
-                .map(|id| id.announcement_id)
-        },
-        |announcement_id| async move {
-            if let Some(id) = announcement_id {
-                get_announcement_by_id(id).await.ok()
-            } else {
-                None
-            }
-        },
+        announcement_id,
+        |announcement_id| async move {get_announcement_by_id(announcement_id).await.unwrap()}
     );
 
     view! {
@@ -34,25 +26,19 @@ pub fn AnnouncementDetails() -> impl IntoView {
           <Suspense fallback=|| {
             view! { <p>{"Loading announcement..."}</p> }
           }>
-            {move || match announcement.get() {
-              None => view! {}.into_view(),
-              Some(None) => view! { <p>{"Announcement not found."}</p> }.into_view(),
-              Some(Some(announcement_details)) => {
-                view! {
-                  <div class="p-2 border-b border-gray-300">
-                    <h4 class="font-bold">{announcement_details.title.clone()}</h4>
-                    <p class="text-sm">{announcement_details.contents.clone()}</p>
-                    <p class="text-xs text-gray-500">
-                      {announcement_details.time.format("%Y-%m-%d %H:%M:%S").to_string()}
-                    </p>
-                  </div>
-                }
-                  .into_view()
-              }
-            }}
+            {move || announcement().map(|announcement_details| 
+              view! {
+                <div class="p-2 border-b border-gray-300">
+                  <h4 class="font-bold">{announcement_details.title.clone()}</h4>
+                  <p class="text-sm">{announcement_details.contents.clone()}</p>
+                  <p class="text-xs text-gray-500">
+                    {announcement_details.time.format("%Y-%m-%d %H:%M:%S").to_string()}
+                  </p>
+                </div>
+              })
+            }
           </Suspense>
         </div>
       </div>
     }
-    .into_view()
 }
