@@ -743,7 +743,7 @@ where
                       stroke-width="2"
                       d="M5 13l4 4L19 7"
                     />
-                  </svg> {reply.author_name}
+                  </svg> <span class="font-bold text-blue-500">{reply.author_name}</span>
                   {reply
                     .time
                     .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
