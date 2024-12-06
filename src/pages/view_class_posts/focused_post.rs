@@ -15,6 +15,7 @@ use crate::resources::images::svgs::cancel_icon::CancelIcon;
 use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::edit_post_icon::EditPostIcon;
+use crate::resources::images::svgs::encampus_assistant_icon::EncampusAssistantIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unapprove_icon::UnapproveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
@@ -733,24 +734,15 @@ where
             <div>
                 {if reply.author_name == "Encampus Assistant" {
                     view! {
-                        <DarkenedCard class="relative p-5 border-2 border-blue-500">
-                            <p class="font-bold">
-                                "Answered by "
-                                <svg
-                                    class="inline-block ml-1 w-4 h-4 text-blue-500"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    fill="none"
-                                    viewBox="0 0 24 24"
-                                    stroke="currentColor"
-                                >
-                                    <path
-                                        stroke-linecap="round"
-                                        stroke-linejoin="round"
-                                        stroke-width="2"
-                                        d="M5 13l4 4L19 7"
-                                    ></path>
-                                </svg>
-                                <span class="font-bold text-blue-500">{reply.author_name}</span>
+                        <DarkenedCard class="relative p-5 rounded-lg border-2 border-[transparent] [border-image:linear-gradient(to_right,#60a5fa,#9333ea)_1]">
+                            <p class="flex gap-2 items-center font-bold">
+                                "Answered by " 
+                                <div class="flex gap-1 items-center">
+                                    <EncampusAssistantIcon size="2em" />
+                                    <span class="font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">
+                                    {reply.author_name}
+                                    </span>
+                                </div>
                                 {reply
                                     .time
                                     .checked_add_offset(FixedOffset::west_opt(6 * 3600).unwrap())
