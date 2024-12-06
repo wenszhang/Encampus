@@ -188,7 +188,7 @@ pub fn Announcements(
 
                     <div class="flex items-center text-white hover:text-gray-400">
                         <button on:click=move |_| set_is_expanded.update(|v| *v = !*v)>
-                            <details open=is_expanded.get()>
+                            <details open=is_expanded>
                                 <summary>{move || if is_expanded.get() { "COLLAPSE" } else { "EXPAND" }}</summary>
                             </details>
                         </button>

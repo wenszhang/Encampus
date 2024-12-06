@@ -5,6 +5,7 @@ use crate::data::database::class_functions::{get_class_name, get_users_classes};
  */
 use crate::data::database::user_functions::Logout;
 use crate::data::global_state::{Authentication, User};
+use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::dashboard_icon::DashboardIcon;
 use crate::resources::images::svgs::drop_down_bars::DropDownBars;
 use crate::resources::images::svgs::drop_down_bars_close::DropDownBarsCloseIcon;
@@ -15,10 +16,19 @@ use crate::{
     app::expect_auth_context, data::database::announcement_functions::get_announcement_list,
 };
 use leptos::*;
-use leptos_router::{ActionForm, A};
+use leptos_router::{use_params, ActionForm, A};
 
 #[component]
-pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>) -> impl IntoView {
+pub fn Header(
+  text: String, 
+  logo: Option<String>, 
+) -> impl IntoView {
+    // Fetch class id from route in the format of "class/:class_id"
+    // May not exist in this component
+    let class_id = {
+      let class_params = use_params::<ClassId>();
+      move || class_params().ok().map(|class_id| class_id.class_id )
+    };
     let logo_src = logo.as_deref().unwrap_or("images/BlockU_RGB.png");
 
     let authentication = expect_auth_context();
@@ -66,22 +76,22 @@ pub fn Header(text: String, logo: Option<String>, class_id: Signal<Option<i32>>)
 
         <div class="flex items-center">
           <span class="flex items-center mr-4 text-xl font-bold">{first_name}</span>
-          {move || {
-            class_id()
-              .map(|_| {
-                view! {
-                  <div class="relative group">
-                    // <button class="pr-2">
-                    //   <AnnouncementBell size="1.3rem" />
-                    // </button>
-                    // <span class="inline-flex items-baseline"></span>
-                    <div class="absolute right-0 top-full invisible bg-white rounded-lg shadow-md group-hover:visible group-hover:opacity-100 group-hover:scale-100 z-[9999] mt-[-0.1rem]">
-                      <AnnouncementInfo />
-                    </div>
-                  </div>
-                }
-              })
-          }}
+          // {move || {
+          //   class_id()
+          //     .map(|_| {
+          //       view! {
+          //         <div class="relative group">
+          //           <button class="pr-2">
+          //             <AnnouncementBell size="1.3rem" />
+          //           </button>
+          //           <span class="inline-flex items-baseline"></span>
+          //           <div class="absolute right-0 top-full invisible bg-white rounded-lg shadow-md group-hover:visible group-hover:opacity-100 group-hover:scale-100 z-[9999] mt-[-0.1rem]">
+          //             <AnnouncementInfo />
+          //           </div>
+          //         </div>
+          //       }
+          //     })
+          // }}
           <div class="flex relative items-center group">
             <button
               class="p-2 bg-white rounded-md hover:bg-gray-100 focus:ring-2 focus:ring-gray-300 focus:outline-none"
