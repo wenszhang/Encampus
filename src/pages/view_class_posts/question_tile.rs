@@ -3,7 +3,7 @@
  */
 use crate::data::database::class_functions::check_user_is_instructor;
 use crate::data::database::post_functions::{
-    bump_post, endorse_post, remove_post, Post, PostFetcher,
+    bump_post, endorse_post, get_reply_counts, remove_post, Post, PostFetcher,
 };
 use crate::expect_logged_in_user;
 use crate::pages::global_components::notification::{
@@ -15,7 +15,9 @@ use crate::resources::images::svgs::bump_icon::BumpIcon;
 use crate::resources::images::svgs::check_icon::CheckIcon;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::endorsed_icon::EndorsedIcon;
+use crate::resources::images::svgs::graduation_cap_icon::GraduationCapIcon;
 use crate::resources::images::svgs::instructor_endorsed_icon::InstructorEndorsedIcon;
+use crate::resources::images::svgs::instructor_icon::InstructorIcon;
 use crate::resources::images::svgs::lock_icon::LockIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use crate::resources::images::svgs::unresolved_icon::UnresolvedIcon;
@@ -53,8 +55,6 @@ pub fn DropDownMenu(
     });
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
-
-    // logging::log!("Global State: {:?}", global_state);
 
     let _notification_view = move || {
         notification_details.get().map(|details| {
@@ -237,7 +237,25 @@ pub fn QuestionTile(
 ) -> impl IntoView {
     let (menu_invisible, set_menu_invisible) = create_signal(true);
     let (is_endorsed, set_endorsed) = create_signal(post.endorsed);
-    // let (is_pinned, set_is_pinned) = create_signal(!post.pinned); // Retrieve pin state from post data
+
+    // Gets the reply counts.
+    let reply_counts = create_resource(
+        move || post.post_id,
+        move |post_id| async move { get_reply_counts(post_id).await.unwrap_or_default() },
+    );
+
+    // Formats the string.
+    let format_time_ago = move || {
+        let now = chrono::Utc::now().naive_utc();
+        let duration = now.signed_duration_since(post.created_at);
+        let days = duration.num_days();
+
+        match days {
+            0 => "Posted today ".to_string(),
+            1 => "Posted yesterday ".to_string(),
+            n => format!("Posted {} days ago", n),
+        }
+    };
 
     let toggle_menu = move |e: MouseEvent| {
         e.stop_propagation();
@@ -256,14 +274,7 @@ pub fn QuestionTile(
       >
 
         <A href=format!("{}", post.post_id) class="block w-full h-full">
-          <div
-            class="flex flex-col justify-between items-center p-6 m-auto h-full text-lg font-semibold"
-
-            // class:border-purple-500=is_private()
-
-            // class:border-4=is_private()
-            class=is_private()
-          >
+          <div class="flex flex-col justify-between h-full">
 
             // Card header
             <div class="flex top-0 left-0 z-10 gap-2 items-center pl-2 w-full h-12 text-xs rounded-t-lg shadow-md bg-card-header">
@@ -297,9 +308,45 @@ pub fn QuestionTile(
               }}
             </div>
 
-            // Card body
-            <div class="flex justify-center items-center p-4 w-full h-full text-center sm:p-6 md:p-8 lg:p-12">
-              <p class="text-base font-bold">{post.title}</p>
+            // subtract header height
+            <div class="flex flex-col">
+
+              // Card body
+              <div class="flex justify-center items-center p-4 w-full text-center">
+                <p class="text-base font-bold">{post.title}</p>
+              </div>
+            </div>
+            // Info string
+            <div class="flex justify-between items-center p-4 w-full text-sm text-gray-600">
+              <span>{format_time_ago()}</span>
+              <div class="flex gap-4">
+                // Student responses
+                <ResponseCounter
+                  bg_color="bg-[#3256BE]"
+                  tooltip="Student responses"
+                  count=move || {
+                    reply_counts
+                      .get()
+                      .map(|counts| counts.student_replies.to_string())
+                      .unwrap_or_default()
+                  }
+                >
+                  <GraduationCapIcon size="1em" />
+                </ResponseCounter>
+                // Instructor responses
+                <ResponseCounter
+                  bg_color="bg-[#F09636]"
+                  tooltip="Instructor responses"
+                  count=move || {
+                    reply_counts
+                      .get()
+                      .map(|counts| counts.instructor_replies.to_string())
+                      .unwrap_or_default()
+                  }
+                >
+                  <InstructorIcon size="1em" />
+                </ResponseCounter>
+              </div>
             </div>
           </div>
         </A>
@@ -325,6 +372,30 @@ pub fn QuestionTile(
           </div>
         </div>
       </div>
+    }
+}
+
+// Helper component for response counters
+#[component]
+fn ResponseCounter(
+    bg_color: &'static str,
+    tooltip: &'static str,
+    count: impl Fn() -> String + 'static,
+    children: Children,
+) -> impl IntoView {
+    view! {
+      <span class="flex gap-1 items-center">
+        <div class="inline-flex relative justify-center items-center cursor-help group">
+          <div class=format!("w-5 h-5 rounded-full {}", bg_color)></div>
+          <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            {children()}
+          </div>
+          <div class="hidden absolute -top-7 z-50 py-1 px-2 text-xs text-white whitespace-nowrap bg-black rounded -translate-x-1/4 group-hover:block">
+            {tooltip}
+          </div>
+        </div>
+        <div class="min-w-[1ch]">{move || count()}</div>
+      </span>
     }
 }
 

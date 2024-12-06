@@ -11,7 +11,7 @@ pub struct AnnouncementId {
 pub fn AnnouncementDetails() -> impl IntoView {
     // Get URL parameters
     let announcement_id_result = use_params::<AnnouncementId>();
-    
+
     let announcement = create_resource(
         move || {
             announcement_id_result

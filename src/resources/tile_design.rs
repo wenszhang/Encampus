@@ -19,7 +19,7 @@ impl TileDesign {
                 "/images/class_tile_designs/SquiggleCrayon_stroke.svg"
             }
             TileDesign::CircleCrayonStroke => "/images/class_tile_designs/CircleCrayon_stroke.svg",
-            TileDesign::ThickCrayonStroke => "/images/class_tile_designs/ThickCrayon_Stroke.svg",
+            TileDesign::ThickCrayonStroke => "/images/class_tile_designs/ThickCrayon_stroke.svg",
             TileDesign::SwirlCrayonStroke => "/images/class_tile_designs/SwirlCrayon_stroke.svg",
         }
     }

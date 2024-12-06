@@ -1,8 +1,7 @@
 use crate::resources::images::svgs::{
     aligncenter_icon::AlignCenterIcon, alignjustify_icon::AlignJustifyIcon,
-    alignleft_icon::AlignLeftIcon, alignright_icon::AlignRightIcon,
-    bold_icon::BoldIcon, enlargetext_icon::EnlargeTextIcon,
-    highlighter_icon::HighlighterIcon, italic_icon::ItalicIcon,
+    alignleft_icon::AlignLeftIcon, alignright_icon::AlignRightIcon, bold_icon::BoldIcon,
+    enlargetext_icon::EnlargeTextIcon, highlighter_icon::HighlighterIcon, italic_icon::ItalicIcon,
     strikethrough_icon::StrikethroughIcon,
 };
 use leptos::*;

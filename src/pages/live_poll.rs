@@ -1,13 +1,13 @@
-use ev::MouseEvent;
-use gloo_timers::callback::Interval;
-use leptos::*;
-use leptos::create_effect;
-use leptos_router::use_params;
 use crate::data::database::class_functions::check_user_is_instructor;
 use crate::data::database::live_poll_functions::*;
 use crate::expect_logged_in_user;
 use crate::pages::global_components::live_poll_sidebar::Sidebar;
 use crate::pages::view_class_posts::class::ClassId;
+use ev::MouseEvent;
+use gloo_timers::callback::Interval;
+use leptos::create_effect;
+use leptos::*;
+use leptos_router::use_params;
 
 #[component]
 pub fn LivePoll() -> impl IntoView {

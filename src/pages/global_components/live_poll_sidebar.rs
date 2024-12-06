@@ -19,7 +19,7 @@ pub fn Sidebar() -> impl IntoView {
             async move { get_students_classes(id).await.unwrap_or_default() }
         },
     );
-    
+
     view! {
       <div class="sticky top-0 h-screen w-64 bg-gray-800 text-white">
         <ExpandedView courses class_id_val />
@@ -30,10 +30,7 @@ pub fn Sidebar() -> impl IntoView {
 
 // Expanded view for the sidebar
 #[component]
-fn ExpandedView(
-    courses: Resource<(), Vec<ClassInfo>>,
-    class_id_val: i32,
-) -> impl IntoView {
+fn ExpandedView(courses: Resource<(), Vec<ClassInfo>>, class_id_val: i32) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
 
     view! {

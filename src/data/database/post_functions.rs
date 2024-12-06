@@ -295,3 +295,47 @@ pub async fn get_resolved_questions(class_id: i32) -> Result<i64, ServerFnError>
 
     Ok(count.0)
 }
+// Used to get the amount of replies from ///
+#[derive(Clone, Serialize, Deserialize, Default, Debug)]
+#[cfg_attr(feature = "ssr", derive(sqlx::FromRow))]
+pub struct ReplyCounts {
+    pub student_replies: i64,
+    pub instructor_replies: i64,
+}
+
+// Used to get the amount of student and instructor replies for the question tile body.
+#[server(GetReplyCounts)]
+pub async fn get_reply_counts(post_id: i32) -> Result<ReplyCounts, ServerFnError> {
+    let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
+        "Unable to complete Request".to_string(),
+    ))?;
+
+    let counts: ReplyCounts = sqlx::query_as(
+        r#"
+        WITH filtered_replies AS (
+            SELECT r.replyid,
+                   CASE 
+                       WHEN u.role IN ('instructor', 'ta') OR p.id IS NOT NULL THEN true 
+                       ELSE false 
+                   END as is_instructor
+            FROM replies r
+            JOIN users u ON r.authorid = u.id
+            LEFT JOIN professors p ON u.id = p.id
+            WHERE r.postid = $1 
+            AND r.removed = false
+        )
+        SELECT 
+            COUNT(CASE WHEN NOT is_instructor THEN 1 END) as student_replies,
+            COUNT(CASE WHEN is_instructor THEN 1 END) as instructor_replies
+        FROM filtered_replies
+        "#,
+    )
+    .bind(post_id)
+    .fetch_one(&pool)
+    .await
+    .map_err(|e| {
+        ServerFnError::<NoCustomError>::ServerError(format!("Failed to get reply counts: {}", e))
+    })?;
+
+    Ok(counts)
+}
