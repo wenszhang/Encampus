@@ -80,9 +80,9 @@ fn expanded_view(
         // Profile Image and User Info
         <div class="flex justify-center items-center mt-10 mb-4">
           <img
-            src="https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
-            class="w-16 h-16 rounded-full"
-            alt="Profile Image"
+            src="/images/user_profile/UserProfileIcon.svg"
+            alt="User Profile Icon"
+            class="w-24 h-24 rounded-full"
           />
         </div>
 
@@ -105,10 +105,7 @@ fn expanded_view(
             <ul>
               <For each=move || courses().unwrap_or_default() key=|class| class.id let:class>
                 <li class="py-2">
-                  <A
-                    href=format!("/classes/{}", class.id)
-                    target="_self"
-                  >
+                  <A href=format!("/classes/{}", class.id) target="_self">
                     <p
                       class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
                       class=("bg-gray-700", move || (class_id_val == Some(class.id)))
@@ -127,9 +124,11 @@ fn expanded_view(
               {if let Some(class_id) = class_id_val {
                 view! {
                   <div>
-                    <A href=format!("/classes/{}/details", class_id)
-                    class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
-                    >"Class Details"
+                    <A
+                      href=format!("/classes/{}/details", class_id)
+                      class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                    >
+                      "Class Details"
                     </A>
                   </div>
                 }
@@ -141,19 +140,22 @@ fn expanded_view(
 
           <ul>
             <li class="py-2">
-              {class_id_val.map(|class_id|
-                view! {
-                  <A href=format!("/class/{class_id}/poll")
-                  class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
-                  >"Live Polling"
-                  </A>
-                })
-              }
+              {class_id_val
+                .map(|class_id| {
+                  view! {
+                    <A
+                      href=format!("/class/{class_id}/poll")
+                      class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
+                    >
+                      "Live Polling"
+                    </A>
+                  }
+                })}
             </li>
           </ul>
         </div>
 
-        // Account Settings Button
+        // Back to classes button.
         <div class="py-2 px-2 w-full bg-gray-700 rounded-md hover:bg-gray-600">
           <A href="/classes" class="block py-1 w-full text-sm text-center text-white">
             "Back To Classes"

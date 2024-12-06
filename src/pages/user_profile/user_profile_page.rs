@@ -64,12 +64,12 @@ pub fn UserProfile() -> impl IntoView {
     let notification_view = move || {
         update_error().map(|details| {
             view! {
-                <div class="w-full mt-4">
-                    <NotificationComponent
-                        notification_details=details.clone()
-                        on_close=move || set_update_error(None)
-                    />
-                </div>
+              <div class="mt-4 w-full">
+                <NotificationComponent
+                  notification_details=details.clone()
+                  on_close=move || set_update_error(None)
+                />
+              </div>
             }
         })
     };
@@ -84,11 +84,12 @@ pub fn UserProfile() -> impl IntoView {
           <div class="p-6 mx-auto mt-8 max-w-2xl bg-white rounded-lg shadow-md user-settings">
             <h2 class="mb-6 text-2xl font-bold text-gray-800">Profile Settings</h2>
             <div class="flex justify-center items-center mb-6">
-              <div class="flex overflow-hidden justify-center items-center w-24 h-24 rounded-full">
+              <div class="flex overflow-hidden justify-center items-center w-24 h-24 rounded-full bg-customBlue">
+                // Profile icon
                 <img
-                  src="https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
-                  alt="Profile Image"
-                  class="object-cover w-full h-full"
+                  src="/images/user_profile/UserProfileIcon.svg"
+                  alt="User Profile Icon"
+                  class="w-24 h-24 rounded-full"
                 />
               </div>
             </div>
