@@ -2,6 +2,7 @@ use crate::data::database::class_functions::check_user_is_instructor;
 use crate::data::database::live_poll_functions::*;
 use crate::expect_logged_in_user;
 use crate::pages::global_components::live_poll_sidebar::Sidebar;
+use crate::pages::global_components::header::Header;
 use crate::pages::view_class_posts::class::ClassId;
 use ev::MouseEvent;
 use gloo_timers::callback::Interval;
@@ -54,7 +55,6 @@ pub fn LivePoll() -> impl IntoView {
 
     let polls = create_memo(move |_| polls_resource.get());
 
-    // Rest of your component remains exactly the same
     let (show_modal, set_show_modal) = create_signal(false);
 
     let is_instructor = create_resource(class_id, move |class_id| {
@@ -76,8 +76,8 @@ pub fn LivePoll() -> impl IntoView {
         });
     };
 
-    // Your existing view code remains exactly the same
     view! {
+      <Header />
       <div class="flex">
         <Sidebar />
         <div class="container flex-grow p-4 my-8 mx-auto">

@@ -3,6 +3,7 @@ use crate::data::database::class_functions::ClassInfo;
 use crate::expect_logged_in_user;
 use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::home_icon::HomeIcon;
+use crate::resources::images::svgs::profile_icon::ProfileIcon;
 use leptos::*;
 use leptos_router::{use_params, A};
 
@@ -38,11 +39,7 @@ fn ExpandedView(courses: Resource<(), Vec<ClassInfo>>, class_id_val: i32) -> imp
     view! {
       <div class="flex flex-col h-full">
         <div class="flex justify-center items-center mt-10 mb-4">
-          <img
-            src="https://static.vecteezy.com/system/resources/thumbnails/009/292/244/small/default-avatar-icon-of-social-media-user-vector.jpg"
-            class="w-16 h-16 rounded-full"
-            alt="Profile Image"
-          />
+          <ProfileIcon size="6em" />
         </div>
 
         <Suspense fallback=move || view! { <p>"Loading user info..."</p> }>
@@ -55,36 +52,17 @@ fn ExpandedView(courses: Resource<(), Vec<ClassInfo>>, class_id_val: i32) -> imp
           </h2>
         </Suspense>
 
-        <div class="overflow-y-auto flex-grow px-4 mt-6 custom-scrollbar">
-          // EDIT THIS TO DISPLAY WHATEVER COURSE YOU ARE IN
-          <h2 class="mb-2 text-sm tracking-widest text-gray-400 uppercase">"Fall 24 Courses"</h2>
-          <Suspense fallback=move || view! { <p>"Loading courses..."</p> }>
-            <ul>
-              <For each=move || courses().unwrap_or_default() key=|class| class.id let:class>
-                <li class="py-2">
-                  <A
-                    href=format!("/classes/{}", class.id)
-                    class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
-                  >
-                    {class.name}
-                  </A>
-                </li>
-              </For>
-            </ul>
-          </Suspense>
-
           <ul>
             <li class="flex items-center py-2">
               <A
                 href=move || format!("/classes/{}", class_id_val)
                 class="flex gap-2 items-center py-2 px-4 text-white rounded-md hover:bg-gray-700"
               >
-                <HomeIcon size="1em" />
-                <span>"Back to Class Page"</span>
+                <HomeIcon size="1.5em" />
+                <span>"Back to Class"</span>
               </A>
             </li>
           </ul>
         </div>
-      </div>
     }.into_view()
 }
