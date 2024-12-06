@@ -56,7 +56,7 @@ pub fn ClassesPage() -> impl IntoView {
     );
 
     view! {
-      <Header text="ENCAMPUS".to_string() logo=None />
+      <Header />
       <div class="px-10 mt-10">
         <h1 class="text-3xl font-bold leading-tight text-gray-900">Your Courses</h1>
       </div>

@@ -1,7 +1,6 @@
 use std::collections::HashSet;
 use super::question_tile::QuestionTile;
 use crate::data::database::announcement_functions::get_announcement_list;
-use crate::data::database::class_functions::get_class_name;
 use crate::data::database::post_functions::get_posts;
 use crate::data::database::post_functions::get_search_posts;
 use crate::data::database::post_functions::Post;
@@ -73,12 +72,6 @@ pub fn ClassPage() -> impl IntoView {
         .await.ok()
     }});
 
-    let class_name = create_local_resource(class_id, |class_id| async move  {
-        get_class_name(class_id)
-            .await
-            .unwrap_or_else(|_| "Failed".to_string())
-    });
-
     let announcements = create_resource(
         class_id,
         |class_id| async move {
@@ -88,32 +81,11 @@ pub fn ClassPage() -> impl IntoView {
         },
     );
 
-    // TODO: Use signal to store the question title when clicking a tile
-    let (question_title, _set_question_title) = create_signal("".to_string());
-
-    // Reactively update the document title when class_name or question_title changes.
-    create_effect(move |_| {
-        let current_class_name = class_name().unwrap_or_else(|| "Unknown Class".to_string());
-        // Only show question title if it is not empty
-        let title = if question_title().is_empty() {
-            current_class_name
-        } else {
-            format!("{} - {}", current_class_name, question_title())
-        };
-        leptos_dom::document().set_title(&title);
-    });
-
-
     view! {
       <div class="flex">
         <Sidebar />
         <div class="flex-1">
-          <Suspense fallback=move || view! {}>
-            <Header
-              text=class_name().unwrap_or_default()
-              logo=None
-            />
-          </Suspense>
+          <Header />
           // <button class="pt-7 pr-1">
           // <InformationIcon size="20px" />
           // </button>

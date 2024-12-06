@@ -9,7 +9,7 @@ use crate::pages::global_components::sidebar::Sidebar;
 use leptos::ev::SubmitEvent;
 use leptos::{
     component, create_action, create_effect, create_signal, view, IntoView,
-    SignalGetUntracked, Suspense,
+    SignalGetUntracked,
 };
 use leptos_router::use_navigate;
 use wasm_bindgen::JsCast;
@@ -98,9 +98,7 @@ pub fn UserSettings() -> impl IntoView {
       <div class="flex">
         <Sidebar />
         <div class="flex-1">
-          <Suspense fallback=move || view! {}>
-            <Header text="User Settings".to_string() logo=None />
-          </Suspense>
+          <Header />
           <div class="p-6 mx-auto mt-8 max-w-2xl bg-white rounded-lg shadow-md user-settings">
             <h2 class="mb-6 text-2xl font-bold text-gray-800">Account Settings</h2>
             <form class="space-y-6" on:submit=on_submit>

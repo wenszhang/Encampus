@@ -19,17 +19,13 @@ use leptos::*;
 use leptos_router::{use_params, ActionForm, A};
 
 #[component]
-pub fn Header(
-  text: String, 
-  logo: Option<String>, 
-) -> impl IntoView {
+pub fn Header() -> impl IntoView {
     // Fetch class id from route in the format of "class/:class_id"
     // May not exist in this component
     let class_id = {
       let class_params = use_params::<ClassId>();
       move || class_params().ok().map(|class_id| class_id.class_id )
     };
-    let logo_src = logo.as_deref().unwrap_or("images/BlockU_RGB.png");
 
     let authentication = expect_auth_context();
 
@@ -49,28 +45,36 @@ pub fn Header(
 
     let base_classes = "absolute right-0 top-full z-50 bg-white rounded-lg shadow-md transition-transform duration-200 ease-out";
 
-    let header_text_href = move || {
-        if let Some(id) = class_id() {
-            format!("/classes/{}", id)
-        } else {
-            "/classes".to_string()
-        }
-    };
+    let header_text_href = move || class_id().map(|id| format!("/classes/{}", id));
 
     let logout_action = create_server_action::<Logout>();
+
+    let header_title = create_resource(class_id, |class_id| async move  {
+      let title = match class_id {
+        Some(id) => get_class_name(id).await.ok(),
+        None => None,
+      }.unwrap_or_else(|| "ENCAMPUS".to_string());
+
+      #[cfg(not(feature = "ssr"))]
+      leptos_dom::document().set_title(title.as_str());
+      
+      title
+    });
 
     view! {
       <div class="flex justify-between items-center p-4 text-gray-600 bg-white border-b shadow-md">
         <div class="flex items-center" style="padding: 0;">
           <a href="/classes">
-            <img src=format!("/{}", logo_src) alt="Logo" class="h-8" style="padding: 0;" />
+            <img src="/images/BlockU_RGB.png" alt="Logo" class="h-8" style="padding: 0;" />
           </a>
           <a
             href=header_text_href
             class="flex items-center text-gray-600"
             style="font-size: 2rem; height: 2rem; line-height: 2rem; padding: 0;"
           >
-            {text}
+            <Transition fallback=move || "ENCAMPUS">
+              {header_title}
+            </Transition>
           </a>
         </div>
 

@@ -7,7 +7,7 @@ use crate::pages::global_components::notification::{
 use crate::pages::global_components::sidebar::Sidebar;
 use crate::{expect_logged_in_user, on_input};
 use leptos::ev::SubmitEvent;
-use leptos::{component, create_action, create_signal, view, IntoView, Suspense};
+use leptos::{component, create_action, create_signal, view, IntoView};
 use leptos::{create_effect, SignalGetUntracked};
 
 /// Renders the user settings page
@@ -78,9 +78,7 @@ pub fn UserProfile() -> impl IntoView {
       <div class="flex">
         <Sidebar />
         <div class="flex-1">
-          <Suspense fallback=move || view! {}>
-            <Header text="User Profile".to_string() logo=None />
-          </Suspense>
+          <Header />
           <div class="p-6 mx-auto mt-8 max-w-2xl bg-white rounded-lg shadow-md user-settings">
             <h2 class="mb-6 text-2xl font-bold text-gray-800">Profile Settings</h2>
             <div class="flex justify-center items-center mb-6">

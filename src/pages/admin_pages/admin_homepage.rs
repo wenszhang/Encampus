@@ -62,7 +62,7 @@ pub fn AdminHomePage() -> impl IntoView {
     });
 
     view! {
-      <Header text="ENCAMPUS".to_string() logo=None />
+      <Header />
       <div class="mx-6 mt-6 space-x-4">
         <Show when=move || display_class_options.get() fallback=|| ()>
           <ClassOptions
