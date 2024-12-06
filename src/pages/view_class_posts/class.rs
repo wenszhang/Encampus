@@ -153,7 +153,7 @@ pub fn ClassPage() -> impl IntoView {
 
 
             // announcements section
-            // <Suspense fallback=move || {
+            // <Transition fallback=move || {
             //   view! { <p>"Loading announcements..."</p> }
             // }>
             //   {move || {
@@ -165,16 +165,16 @@ pub fn ClassPage() -> impl IntoView {
             //       />
             //     }
             //   }}
-            // </Suspense>
+            // </Transition>
 
 
             <div class="grid grid-cols-3 gap-4">
-              <Suspense fallback=move || view! { <p>"Loading..."</p> }>
+              <Transition fallback=move || view! { <p>"Loading..."</p> }>
                 <FilteredPostsGrid
                   unfiltered_posts=(move || posts().unwrap_or_default()).into_signal()
                   filtered_ids=(move || filtered_post_ids_action.value()().flatten()).into_signal()
                 />
-              </Suspense>
+              </Transition>
             </div>
           </div>
         </div>

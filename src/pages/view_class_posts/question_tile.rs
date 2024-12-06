@@ -44,7 +44,7 @@ pub fn DropDownMenu(
     let (user, _) = expect_logged_in_user!();
     let class_id = {
       let class_params = use_params::<ClassId>();
-      move || class_params().expect("Tried to render class page without class id").class_id
+      move || class_params().expect("Tried to render drop down menu without class id").class_id
     };
     let is_on_my_post = move || user().id == post_author_id;
     let is_instructor = create_resource(move || (class_id(), user().id), move |(class_id, user_id)| {

@@ -1,64 +1,59 @@
-use super::class::ClassId;
+use super::{class::ClassId, focused_post::PostDetails};
 use crate::{
-    data::database::post_functions::edit_post, expect_logged_in_user, on_input, pages::view_class_posts::focused_post::{get_post_details, PostId}, resources::images::svgs::{cancel_icon::CancelIcon, save_icon::SaveIcon}
+    data::database::post_functions::edit_post, expect_logged_in_user, on_input, pages::{global_components::rich_text_box::RichTextBox, view_class_posts::focused_post::{get_post_details, PostId}}, resources::images::svgs::{cancel_icon::CancelIcon, save_icon::SaveIcon}
 };
 use leptos::*;
 use leptos_router::use_params;
 
 #[component]
-pub fn EditPost() -> impl IntoView {
-    let (user, _) = expect_logged_in_user!();
-    let post_id = use_params::<PostId>();
-    let class_id: Memo<Result<ClassId, leptos_router::ParamsError>> = use_params::<ClassId>();
+pub fn EditPostLoader() -> impl IntoView {
+    let post_id = {
+      let post_params = use_params::<PostId>();
+      move || post_params().expect("Tried to render edit post without post id").post_id
+    };
 
-    let post_and_replies = create_resource(post_id, |post_id| async {
-        if let Ok(post_id) = post_id {
-            Some(get_post_details(post_id.post_id).await.unwrap())
-        } else {
-            None
-        }
+    let post_and_replies = create_resource(post_id, |post_id| async move {
+      get_post_details(post_id).await.unwrap()
     });
 
-    let post = move || post_and_replies().flatten().map(|tuple| tuple.0);
+    view! {
+      <Suspense fallback=move || "Loading editor...">
+        {move || post_and_replies().map(|(post, _)| view!{<EditPost post />})}
+      </Suspense>
+    }
+}
+
+#[component]
+fn EditPost(post: PostDetails) -> impl IntoView {
+    let (user, _) = expect_logged_in_user!();
+    let class_id = {
+      let class_params = use_params::<ClassId>();
+      move || class_params().expect("Tried to render edit post without class id").class_id
+    };
 
     let (post_title, set_post_title) = create_signal(
-        post()
-            .as_ref()
-            .map_or_else(|| "".to_string(), |p| p.title.clone()),
+        post.title,
     );
     let (post_contents, set_post_contents) = create_signal(
-        post()
-            .as_ref()
-            .map_or_else(|| "".to_string(), |p| p.title.clone()),
+        post.contents
     );
-    let (private_state, set_private_state) = create_signal(false);
-    let (anonymous_state, set_anonymous_state) = create_signal(false);
+    let (private_state, set_private_state) = create_signal(post.private);
+    let (anonymous_state, set_anonymous_state) = create_signal(post.anonymous);
 
-    let edit_post_action = create_action(move |_| {
-        let post_id = post_id.get().unwrap().post_id;
-        if post_title.get().is_empty() {
-            set_post_title(post().map(|post| post.title).unwrap());
-        }
-        if post_contents.get().is_empty() {
-            set_post_contents(post().map(|post| post.contents).unwrap());
-        }
-
-        let mut private = post().map(|post| post.private).unwrap_or_default();
-        let mut anonymous = post().map(|post| post.anonymous).unwrap_or_default();
-
-        if private_state.get() {
-            private = !(post().map(|post| post.private).unwrap_or_default());
-        }
-
-        if anonymous_state.get() {
-            anonymous = !(post().map(|post| post.anonymous).unwrap_or_default());
-        }
+    let edit_post_action = create_action(move |(user_id, class_id, post_id, post_title, post_contents, private, anonymous): &(i32, i32, i32, String, String, bool, bool)| {
+        let user_id = *user_id;
+        let class_id = *class_id;
+        let post_id = *post_id;
+        let post_title = post_title.clone();
+        let post_contents = post_contents.clone();
+        let private = *private;
+        let anonymous = *anonymous;
         async move {
             match edit_post(
                 post_id,
-                post_title.get(),
-                post_contents.get(),
-                user().id,
+                post_title,
+                post_contents,
+                user_id,
                 private,
                 anonymous,
             )
@@ -67,7 +62,7 @@ pub fn EditPost() -> impl IntoView {
                 Ok(_) => {
                     let navigate = leptos_router::use_navigate();
                     navigate(
-                        format!("/classes/{}/{}", class_id.get().unwrap().class_id, post_id)
+                        format!("/classes/{}/{}", class_id, post_id)
                             .as_str(),
                         Default::default(),
                     );
@@ -79,7 +74,6 @@ pub fn EditPost() -> impl IntoView {
         }
     });
 
-
     view! {
       <DarkenedCard class="flex flex-col gap-2 p-5">
         <p>"Edit Post"</p>
@@ -89,14 +83,14 @@ pub fn EditPost() -> impl IntoView {
           <textarea
             class="p-2 w-full h-12 rounded-t-lg border border-gray-300 resize-none"
             on:input=on_input!(set_post_title)
-            prop:value=move || post().map(|post| post.title)
+            prop:value=post_title
           ></textarea>
           <p>"Contents:"</p>
-          <textarea
-            class="p-2 w-full h-96 rounded-b-lg border border-gray-300 resize-none"
-            on:input=on_input!(set_post_contents)
-            prop:value=move || post().map(|post| post.contents)
-          ></textarea>
+          <RichTextBox
+            id="edit_post_rich_text_box".to_string()
+            set_value=set_post_contents
+            value=post_contents
+          />
         </div>
 
           <div class="flex gap-5 justify-end">
@@ -141,7 +135,7 @@ pub fn EditPost() -> impl IntoView {
         on:click=move |_| {
           let navigate = leptos_router::use_navigate();
           navigate(
-            format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
+            format!("/classes/{}", class_id()).as_str(),
             Default::default(),
           );
         }
@@ -154,7 +148,7 @@ pub fn EditPost() -> impl IntoView {
       type="submit"
         class="py-3 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:ring-offset-coolBlue bg-coolBlue hover:bg-coolBlue-HOVER focus:outline-none inline-flex items-center gap-2"
         on:click=move |_| {
-          edit_post_action.dispatch(());
+          edit_post_action.dispatch((user().id, class_id(), post.post_id, post_title(), post_contents(), private_state(), anonymous_state()));
         }
       >
         Save Changes

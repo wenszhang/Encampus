@@ -9,8 +9,10 @@ use leptos_router::{use_params, A};
 #[component]
 pub fn Sidebar() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
-    let curr_class_id = use_params::<ClassId>();
-    let class_id_val = curr_class_id.get_untracked().unwrap().class_id;
+    let class_id = {
+      let class_params = use_params::<ClassId>();
+      move || class_params().expect("Tried to render class page without class id").class_id
+    };
 
     let courses = create_resource(
         || {},
@@ -22,7 +24,7 @@ pub fn Sidebar() -> impl IntoView {
 
     view! {
       <div class="sticky top-0 h-screen w-64 bg-gray-800 text-white">
-        <ExpandedView courses class_id_val />
+        {move || view! {<ExpandedView courses class_id_val=class_id() />}}
       </div>
     }
     .into_view()
@@ -62,7 +64,6 @@ fn ExpandedView(courses: Resource<(), Vec<ClassInfo>>, class_id_val: i32) -> imp
                 <li class="py-2">
                   <A
                     href=format!("/classes/{}", class.id)
-                    target="_self"
                     class="block py-2 px-4 text-white rounded-md hover:bg-gray-700"
                   >
                     {class.name}

@@ -78,15 +78,13 @@ pub struct AddReplyInfo {
 pub fn FocusedPost() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
     // Fetch post id from route in the format of "class/:class_id/:post_id"
-    let post_id = move || {
-        use_params::<PostId>()()
-            .expect("Tried to render FocusedPost without a post_id in the route")
-            .post_id
+    let post_id = {
+        let post_params = use_params::<PostId>();
+        move || post_params().expect("Tried to render focused post without post id").post_id
     };
-    let class_id = move || {
-        use_params::<ClassId>()()
-            .expect("Tried to render FocusedPost without a class_id in the route")
-            .class_id
+    let class_id = {
+        let class_params = use_params::<ClassId>();
+        move || class_params().expect("Tried to render focused post without class id").class_id
     };
 
     let post_and_replies = create_resource(post_id, |post_id| async move {
@@ -218,7 +216,10 @@ where
     let (user, _) = expect_logged_in_user!();
     let (reply_contents, set_reply_contents) = create_signal(String::default());
     let (reply_anonymous_state, set_reply_anonymous_state) = create_signal(false);
-    let class_id: Memo<Result<ClassId, leptos_router::ParamsError>> = use_params::<ClassId>();
+    let class_id = {
+        let class_params = use_params::<ClassId>();
+        move || class_params().expect("Tried to render create reply without class id").class_id
+    };
 
     let (notification_details, set_notification_details) =
         create_signal(None::<NotificationDetails>);
@@ -296,7 +297,7 @@ where
                     on:click=move |_| {
                         let navigate = leptos_router::use_navigate();
                         navigate(
-                            format!("/classes/{}", class_id.get().unwrap().class_id).as_str(),
+                            format!("/classes/{}", class_id()).as_str(),
                             Default::default(),
                         );
                     }

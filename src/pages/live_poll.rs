@@ -12,11 +12,14 @@ use leptos_router::use_params;
 #[component]
 pub fn LivePoll() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
-    let class_id = use_params::<ClassId>();
+    let class_id = {
+      let class_params = use_params::<ClassId>();
+      move || class_params().expect("Tried to render class page without class id").class_id
+    };
 
     // Modified polls resource to filter for students
     let polls_resource = create_resource(class_id, move |class_id| async move {
-        let course_id = class_id.unwrap().class_id;
+        let course_id = class_id;
         // First check if user is instructor
         let is_instructor = check_user_is_instructor(user().id, course_id)
             .await
@@ -57,7 +60,7 @@ pub fn LivePoll() -> impl IntoView {
     let is_instructor = create_resource(class_id, move |class_id| {
         let user_id = user().id;
         async move {
-            check_user_is_instructor(user_id, class_id.unwrap().class_id)
+            check_user_is_instructor(user_id, class_id)
                 .await
                 .unwrap_or(false)
         }
@@ -65,7 +68,7 @@ pub fn LivePoll() -> impl IntoView {
 
     let create_new_poll = move |question: String, answers: Vec<String>| {
         spawn_local(async move {
-            let course_id = class_id().unwrap().class_id;
+            let course_id = class_id();
             if (create_poll(question, course_id, answers).await).is_ok() {
                 polls_resource.refetch();
             }

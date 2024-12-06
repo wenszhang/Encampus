@@ -9,12 +9,6 @@ pub fn generate_answered_unanswered_histogram(
     unresolved: i32,
     resolved: i32,
 ) -> Result<(), JsValue> {
-    leptos::logging::error!(
-        "Generating histogram with unanswered: {}, answered: {}",
-        unresolved,
-        resolved
-    );
-
     // Retrieve the canvas element by ID
     let canvas = web_sys::window()
         .unwrap()

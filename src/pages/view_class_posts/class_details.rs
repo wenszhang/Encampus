@@ -7,43 +7,39 @@ use leptos_router::{use_navigate, use_params};
 
 #[component]
 pub fn ClassDetails() -> impl IntoView {
-    let class_id_result = use_params::<ClassId>();
+    let class_id = {
+        let class_params = use_params::<ClassId>();
+        move || class_params().expect("Tried to render class details without class id").class_id
+    };
     let navigate = use_navigate();
 
     // Fetch the class name based on class ID
-    let class_name = create_local_resource(class_id_result, |class_id_result| async {
-        match class_id_result {
-            Ok(class_id) => get_class_name(class_id.class_id)
-                .await
-                .unwrap_or("Class not found".to_string()),
-            Err(_) => "Invalid class ID".to_string(),
-        }
+    let class_name = create_local_resource(class_id, |class_id| async move {
+        get_class_name(class_id)
+            .await
+            .unwrap_or("Class not found".to_string())
     });
 
     // Fetch the list of users enrolled in the class with their roles
-    let enrolled_users = create_local_resource(class_id_result, |class_id_result| async {
-        match class_id_result {
-            Ok(class_id) => get_users_enrolled_in_class(class_id.class_id)
-                .await
-                .unwrap_or_default(),
-            Err(_) => vec![],
-        }
+    let enrolled_users = create_local_resource(class_id, |class_id| async move {
+        get_users_enrolled_in_class(class_id)
+            .await
+            .unwrap_or_default()
     });
 
     // Canvas ID
     let canvas_id = "question-resolution-chart";
 
     create_effect(move |_| {
-        if let Ok(class_id) = class_id_result.get() {
-            spawn_local(async move {
-                let total_questions =
-                    get_total_questions(class_id.class_id).await.unwrap_or(0) as i32;
-                let resolved = get_resolved_questions(class_id.class_id).await.unwrap_or(0) as i32;
-                let unresolved = total_questions - resolved;
+        let class_id = class_id(); 
+        spawn_local(async move {
+            let total_questions =
+                get_total_questions(class_id).await.unwrap_or(0) as i32;
+            let resolved = get_resolved_questions(class_id).await.unwrap_or(0) as i32;
+            let unresolved = total_questions - resolved;
 
-                let _ = generate_answered_unanswered_histogram(canvas_id, unresolved, resolved);
-            });
-        }
+            let _ = generate_answered_unanswered_histogram(canvas_id, unresolved, resolved);
+        });
     });
 
     view! {
@@ -53,11 +49,7 @@ pub fn ClassDetails() -> impl IntoView {
                 // Close button
                 <button
                 class="absolute top-4 right-4 w-8 h-8 bg-red-500 text-white rounded-full flex items-center justify-center hover:bg-red-600 transition-colors duration-200 shadow-lg z-50"
-                on:click=move |_| {
-                        if let Ok(class_id) = class_id_result.get() {
-                            navigate(&format!("/classes/{}", class_id.class_id), Default::default());
-                        }
-                    }
+                on:click=move |_| navigate(format!("/classes/{}", class_id()).as_str(), Default::default())
                 >
                     <span class="text-xl font-bold leading-none">"×"</span>
                 </button>
