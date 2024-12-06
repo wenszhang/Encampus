@@ -85,6 +85,7 @@ pub fn UserProfile() -> impl IntoView {
             <h2 class="mb-6 text-2xl font-bold text-gray-800">Profile Settings</h2>
             <div class="flex justify-center items-center mb-6">
               <div class="flex overflow-hidden justify-center items-center w-24 h-24 rounded-full bg-customBlue">
+                // Profile icon
                 <img
                   src="/images/user_profile/UserProfileIcon.svg"
                   alt="User Profile Icon"
