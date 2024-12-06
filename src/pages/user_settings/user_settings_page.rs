@@ -8,7 +8,7 @@ use crate::pages::global_components::notification::{
 use crate::pages::global_components::sidebar::Sidebar;
 use leptos::ev::SubmitEvent;
 use leptos::{
-    component, create_action, create_effect, create_signal, view, IntoView, Signal,
+    component, create_action, create_effect, create_signal, view, IntoView,
     SignalGetUntracked, Suspense,
 };
 use leptos_router::use_navigate;
@@ -99,7 +99,7 @@ pub fn UserSettings() -> impl IntoView {
         <Sidebar />
         <div class="flex-1">
           <Suspense fallback=move || view! {}>
-            <Header text="User Settings".to_string() logo=None class_id=Signal::derive(|| None) />
+            <Header text="User Settings".to_string() logo=None />
           </Suspense>
           <div class="p-6 mx-auto mt-8 max-w-2xl bg-white rounded-lg shadow-md user-settings">
             <h2 class="mb-6 text-2xl font-bold text-gray-800">Account Settings</h2>

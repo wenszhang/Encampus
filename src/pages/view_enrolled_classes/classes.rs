@@ -1,9 +1,8 @@
 /**
 * Page getting and displaying all classes registered to the user
 */
-use leptos::{component, create_resource, view, For, IntoView, Signal, Suspense};
+use leptos::{component, create_resource, view, For, IntoView, Suspense};
 use leptos::{create_effect, leptos_dom};
-
 use crate::data::database::class_functions::{get_users_classes, ClassInfo};
 use crate::expect_logged_in_user;
 use crate::pages::global_components::header::Header;
@@ -57,7 +56,7 @@ pub fn ClassesPage() -> impl IntoView {
     );
 
     view! {
-      <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
+      <Header text="ENCAMPUS".to_string() logo=None />
       <div class="px-10 mt-10">
         <h1 class="text-3xl font-bold leading-tight text-gray-900">Your Courses</h1>
       </div>

@@ -1,3 +1,4 @@
+use std::collections::HashSet;
 use super::question_tile::QuestionTile;
 use crate::data::database::announcement_functions::get_announcement_list;
 use crate::data::database::class_functions::get_class_name;
@@ -12,7 +13,6 @@ use crate::pages::global_components::sidebar::Sidebar;
 use crate::pages::view_class_posts::create_post::CreatePost;
 use crate::resources::images::svgs::cancel_icon::CancelIcon;
 use crate::resources::images::svgs::magnifying_glass::MagnifyingGlass;
-
 use leptos::*;
 use leptos_router::{use_params, Outlet, Params};
 
@@ -34,56 +34,55 @@ pub fn ClassPage() -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
 
     // Fetch class id from route in the format of "class/:class_id"
-    let class_id = use_params::<ClassId>();
-    let (post_list, set_posts) = create_signal::<Vec<Post>>(vec![]);
-    let (filter_keywords, set_filter_keywords) = create_signal("".to_string());
-
-    let on_input = |setter: WriteSignal<String>| {
-        move |ev| {
-            setter(event_target_value(&ev));
-        }
+    let class_id = {
+      let class_params = use_params::<ClassId>();
+      move || class_params().expect("Tried to render class page without class id").class_id
     };
+     
+    let (is_visible, set_is_visible) = create_signal(false);
 
-    let post_data = PostFetcher {
-        class_id: class_id.get().unwrap().class_id,
+    let filter_input_node: NodeRef<html::Input> = NodeRef::new();
+
+    let post_data = move || PostFetcher {
+        class_id: class_id(),
         user_id: user().id,
     };
     let posts = create_resource(
-        move || (post_data),
+      post_data,
         |post_data| async move {
             get_posts(post_data.class_id, post_data.user_id)
                 .await
                 .unwrap_or_default()
         },
     );
-    provide_context(posts);
+    provide_context(posts); // This is not great because resources should be very carefully managed and used in <suspense> or <transition> tags
 
-    let filtered_posts_action = create_action(move |_| async move {
-        if filter_keywords.get() == "" {
-            set_posts(posts.get().unwrap());
-            return;
+    let filtered_post_ids_action = create_action(|(filter_string, class_id, user_id): &(String, i32, i32)| {
+      let filter_keywords = filter_string.clone();
+      let class_id = *class_id;
+      let user_id = *user_id;
+      async move {
+        if filter_keywords.is_empty() {
+            return None;
         }
-        if let Ok(new_posts) = get_search_posts(
-            class_id.get().unwrap().class_id,
-            user().id,
-            filter_keywords.get(),
+        get_search_posts(
+            class_id,
+            user_id,
+            filter_keywords,
         )
-        .await
-        {
-            set_posts(new_posts);
-        }
-    });
+        .await.ok()
+    }});
 
-    let class_name = create_local_resource(class_id, |class_id| async {
-        get_class_name(class_id.unwrap().class_id)
+    let class_name = create_local_resource(class_id, |class_id| async move  {
+        get_class_name(class_id)
             .await
             .unwrap_or_else(|_| "Failed".to_string())
     });
 
     let announcements = create_resource(
-        move || class_id.get().map(|id| id.class_id),
+        class_id,
         |class_id| async move {
-            get_announcement_list(class_id.unwrap())
+            get_announcement_list(class_id)
                 .await
                 .unwrap_or_else(|_| vec![])
         },
@@ -102,13 +101,8 @@ pub fn ClassPage() -> impl IntoView {
             format!("{} - {}", current_class_name, question_title())
         };
         leptos_dom::document().set_title(&title);
-
-        if let Some(fetched_posts) = posts.get() {
-            set_posts(fetched_posts.clone()); // Set the signal to the fetched posts
-        }
     });
 
-    let (is_visible, set_is_visible) = create_signal(false);
 
     view! {
       <div class="flex">
@@ -118,7 +112,6 @@ pub fn ClassPage() -> impl IntoView {
             <Header
               text=class_name().unwrap_or_default()
               logo=None
-              class_id=(move || class_id().ok().map(|id| id.class_id)).into_signal()
             />
           </Suspense>
           // <button class="pt-7 pr-1">
@@ -133,22 +126,22 @@ pub fn ClassPage() -> impl IntoView {
                   type="text"
                   placeholder="Search posts by keywords..."
                   class="py-1.5 pr-16 pl-4 w-full bg-white border-none focus:outline-none"
-                  on:input=on_input(set_filter_keywords)
+                  node_ref=filter_input_node
                   on:keydown=move |ev: web_sys::KeyboardEvent| {
+                    let filter_keywords = event_target_value(&ev);
                     if ev.key() == "Enter" {
-                      if filter_keywords.get() != "" {
-                        filtered_posts_action.dispatch(filter_keywords.get());
+                      if filter_keywords.is_empty() {
+                        filtered_post_ids_action.value().set(None);
                       } else {
-                        set_posts(posts.get().unwrap());
+                        filtered_post_ids_action.dispatch((filter_keywords, class_id(), user().id));
                       }
                     }
                   }
-                  prop:value=filter_keywords
                 />
                 <button
                   class="flex absolute top-0 right-0 bottom-0 justify-center items-center bg-gradient-to-r rounded-r-full transition-all duration-200 w-[4rem] bg-[#AAAA] hover:bg-[#999999]"
                   on:click=move |_| {
-                    filtered_posts_action.dispatch(filter_keywords.get());
+                  filtered_post_ids_action.dispatch((filter_input_node.get().expect("filter input above this button should exist").value(), class_id(), user().id));
                   }
                 >
                   <MagnifyingGlass size="2em" />
@@ -185,51 +178,74 @@ pub fn ClassPage() -> impl IntoView {
             </Show>
             // Gets replaced with the focused post if there's one in the route. See router
             <Outlet />
+
+
             // announcements section
-            <Suspense fallback=move || {
-              view! { <p>"Loading announcements..."</p> }
-            }>
-              {move || {
-                let ann_list = announcements().unwrap_or_default();
-                view! {
-                  <Announcements
-                    announcements=ann_list
-                    class_id=move || class_id().unwrap_or_default().class_id
-                  />
-                }
-              }}
-            </Suspense>
+            // <Suspense fallback=move || {
+            //   view! { <p>"Loading announcements..."</p> }
+            // }>
+            //   {move || {
+            //     let ann_list = announcements().unwrap_or_default();
+            //     view! {
+            //       <Announcements
+            //         announcements=ann_list
+            //         class_id=move || class_id()
+            //       />
+            //     }
+            //   }}
+            // </Suspense>
+
+
             <div class="grid grid-cols-3 gap-4">
               <Suspense fallback=move || view! { <p>"Loading..."</p> }>
-                <For each=move || post_list.get() key=|post| post.post_id let:post>
-                  {
-                    let private = post.private;
-                    post
-                      .resolved
-                      .then(|| {
-                        view! {
-                          <QuestionTile
-                            post=post.clone()
-                            is_resolved=(|| false).into_signal()
-                            is_private=(move || private).into_signal()
-                          />
-                        }
-                      })
-                      .unwrap_or_else(|| {
-                        view! {
-                          <QuestionTile
-                            post=post.clone()
-                            is_resolved=(|| true).into_signal()
-                            is_private=(move || private).into_signal()
-                          />
-                        }
-                      })
-                  }
-                </For>
+                <FilteredPostsGrid
+                  unfiltered_posts=(move || posts().unwrap_or_default()).into_signal()
+                  filtered_ids=(move || filtered_post_ids_action.value()().flatten()).into_signal()
+                />
               </Suspense>
             </div>
           </div>
         </div>
       </div>
     }.into_view()
+}
+
+#[component]
+fn FilteredPostsGrid(
+    unfiltered_posts: Signal<Vec<Post>>, 
+    filtered_ids: Signal<Option<HashSet<i32>>>,
+) -> impl IntoView {
+  let filtered_posts = move || 
+    match filtered_ids.get() {
+      Some(ids) => unfiltered_posts().into_iter().filter(|post| ids.contains(&post.post_id)).collect(),
+      None => unfiltered_posts()
+    };
+
+  view! {
+    <For each=filtered_posts key=|post| post.post_id let:post>
+      {
+        let private = post.private;
+        post
+          .resolved
+          .then(|| {
+            view! {
+              <QuestionTile
+                post=post.clone()
+                is_resolved=(|| false).into_signal()
+                is_private=(move || private).into_signal()
+              />
+            }
+          })
+          .unwrap_or_else(|| {
+            view! {
+              <QuestionTile
+                post=post.clone()
+                is_resolved=(|| true).into_signal()
+                is_private=(move || private).into_signal()
+              />
+            }
+          })
+      }
+    </For>
+  }
 }

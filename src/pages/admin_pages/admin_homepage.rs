@@ -11,7 +11,7 @@ use crate::on_input;
 use crate::pages::global_components::header::Header;
 use crate::pages::register_page::NewUser;
 use leptos::*;
-use leptos::{component, create_resource, view, For, IntoView, Signal};
+use leptos::{component, create_resource, view, For, IntoView};
 use leptos_router::A;
 use std::collections::HashMap;
 
@@ -62,7 +62,7 @@ pub fn AdminHomePage() -> impl IntoView {
     });
 
     view! {
-      <Header text="ENCAMPUS".to_string() logo=None class_id=Signal::derive(|| None) />
+      <Header text="ENCAMPUS".to_string() logo=None />
       <div class="mx-6 mt-6 space-x-4">
         <Show when=move || display_class_options.get() fallback=|| ()>
           <ClassOptions

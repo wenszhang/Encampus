@@ -1,11 +1,11 @@
-#[allow(unused_imports)] // Suppress UserID - false compiler warning due to RowToStruct
-use super::user_functions::UserId;
 use crate::pages::view_class_posts::create_post::AddPostInfo;
 use leptos::{server, ServerFnError};
 use serde::{Deserialize, Serialize};
+use std::collections::HashSet;
 
 cfg_if::cfg_if! {
     if #[cfg(feature = "ssr")] {
+        use super::user_functions::UserId;
         use leptos::logging::error;
         use leptos::{server_fn::error::NoCustomError, use_context};
         use sqlx::postgres::PgPool;
@@ -180,12 +180,26 @@ pub async fn get_search_posts(
     class_id: i32,
     user_id: i32,
     filter_keyword: String,
-) -> Result<Vec<Post>, ServerFnError> {
+) -> Result<HashSet<i32>, ServerFnError> {
     let pool = use_context::<PgPool>().ok_or(ServerFnError::<NoCustomError>::ServerError(
         "Unable to complete Request".to_string(),
     ))?;
 
-    let posts: Vec<Post> = sqlx::query_as("select title, postid as post_id, resolved, private, authorid as author_id, endorsed, last_bumped, created_at from posts where to_tsvector(title || ' ' || contents) @@ to_tsquery($3) and classid = $1 and removed = false and ((posts.classid = $1 and private = false) or (posts.classid = $1 and authorid = $2 and private = true) or (classid = $1 and (select instructorid from classes where courseid = $1) = $2)) ORDER BY timestamp desc")
+    let posts: Vec<i32> = sqlx::query_scalar("
+        SELECT
+            postid
+        FROM posts
+        WHERE to_tsvector(title || ' ' || CONTENTS) @@ to_tsquery($3)
+        AND classid = $1
+        AND removed = FALSE
+        AND (PRIVATE = FALSE
+            OR (authorid = $2
+                AND PRIVATE = TRUE)
+            OR (
+                    (SELECT instructorid
+                    FROM classes
+                    WHERE courseid = $1) = $2))
+        ORDER BY timestamp DESC")
         .bind(class_id)
         .bind(user_id)
         .bind(filter_keyword)
@@ -193,7 +207,9 @@ pub async fn get_search_posts(
         .await
         .expect("No posts found");
 
-    Ok(posts)
+    let set_of_filtered_post_ids: HashSet<i32> = posts.into_iter().collect();
+
+    Ok(set_of_filtered_post_ids)
 }
 
 #[server(EditPost)]
