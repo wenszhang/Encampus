@@ -1,9 +1,6 @@
 use super::class::ClassId;
 use crate::{
-    data::database::post_functions::edit_post,
-    expect_logged_in_user,
-    pages::view_class_posts::focused_post::{get_post_details, PostId},
-    resources::images::svgs::{cancel_icon::CancelIcon, save_icon::SaveIcon},
+    data::database::post_functions::edit_post, expect_logged_in_user, on_input, pages::view_class_posts::focused_post::{get_post_details, PostId}, resources::images::svgs::{cancel_icon::CancelIcon, save_icon::SaveIcon}
 };
 use leptos::*;
 use leptos_router::use_params;
@@ -82,11 +79,6 @@ pub fn EditPost() -> impl IntoView {
         }
     });
 
-    let on_input = |setter: WriteSignal<String>| {
-        move |ev| {
-            setter(event_target_value(&ev));
-        }
-    };
 
     view! {
       <DarkenedCard class="flex flex-col gap-2 p-5">
@@ -96,13 +88,13 @@ pub fn EditPost() -> impl IntoView {
           <p>"Title:"</p>
           <textarea
             class="p-2 w-full h-12 rounded-t-lg border border-gray-300 resize-none"
-            on:input=on_input(set_post_title)
+            on:input=on_input!(set_post_title)
             prop:value=move || post().map(|post| post.title)
           ></textarea>
           <p>"Contents:"</p>
           <textarea
             class="p-2 w-full h-96 rounded-b-lg border border-gray-300 resize-none"
-            on:input=on_input(set_post_contents)
+            on:input=on_input!(set_post_contents)
             prop:value=move || post().map(|post| post.contents)
           ></textarea>
         </div>
@@ -160,7 +152,7 @@ pub fn EditPost() -> impl IntoView {
     </div>
       <button
       type="submit"
-        class="py-3 px-4 text-white rounded-full focus:ring-2 focus:ring-2 focus:ring-offset-2 focus:ring-offset-coolBlue bg-coolBlue hover:bg-coolBlue-HOVER focus:outline-none inline-flex items-center gap-2"
+        class="py-3 px-4 text-white rounded-full focus:ring-2 focus:ring-offset-2 focus:ring-offset-coolBlue bg-coolBlue hover:bg-coolBlue-HOVER focus:outline-none inline-flex items-center gap-2"
         on:click=move |_| {
           edit_post_action.dispatch(());
         }

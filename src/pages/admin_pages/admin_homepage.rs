@@ -7,6 +7,7 @@ use crate::data::database::user_functions::{
     add_user, delete_user, get_users, get_users_by_role, update_user, update_user_without_password,
 };
 use crate::data::global_state::User;
+use crate::on_input;
 use crate::pages::global_components::header::Header;
 use crate::pages::register_page::NewUser;
 use leptos::*;
@@ -534,12 +535,6 @@ fn AddNewUser(
     let (password, set_password) = create_signal("".to_string());
     let (role, set_role) = create_signal("Student".to_string()); // Set to student by default
 
-    let on_input = |setter: WriteSignal<String>| {
-        move |ev| {
-            setter(event_target_value(&ev));
-        }
-    };
-
     let add_user_action = create_action(move |(user, password): &(User, String)| {
         let user = user.clone();
         let password = password.clone();
@@ -582,7 +577,7 @@ fn AddNewUser(
             <input
               type="text"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              on:input=on_input(set_first_name)
+              on:input=on_input!(set_first_name)
               prop:value=first_name
             />
           </div>
@@ -591,7 +586,7 @@ fn AddNewUser(
             <input
               type="text"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              on:input=on_input(set_last_name)
+              on:input=on_input!(set_last_name)
               prop:value=last_name
             />
           </div>
@@ -600,7 +595,7 @@ fn AddNewUser(
             <input
               type="text"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              on:input=on_input(set_username)
+              on:input=on_input!(set_username)
               prop:value=username
             />
           </div>
@@ -609,7 +604,7 @@ fn AddNewUser(
             <input
               type="password"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              on:input=on_input(set_password)
+              on:input=on_input!(set_password)
               prop:value=password
             />
           </div>
@@ -680,12 +675,6 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
             .unwrap();
     });
 
-    let on_input = |setter: WriteSignal<String>| {
-        move |ev| {
-            setter(event_target_value(&ev));
-        }
-    };
-
     view! {
       <div class="p-6 bg-white rounded-lg shadow-md">
         <div class="flex justify-between items-start mb-4">
@@ -705,7 +694,7 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
             <input
               type="text"
               class="block py-2 px-3 mt-1 w-full rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              on:input=on_input(set_class_name)
+              on:input=on_input!(set_class_name)
               prop:value=class_name
             />
           </div>
@@ -733,7 +722,7 @@ fn AddClass(display_add_class: WriteSignal<bool>) -> impl IntoView {
             <label class="block text-sm font-medium text-gray-700">"Class Description"</label>
             <textarea
               class="block py-2 px-3 mt-1 w-full h-24 rounded-md border border-gray-300 shadow-sm sm:text-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none"
-              on:input=on_input(set_description)
+              on:input=on_input!(set_description)
               prop:value=description
             />
           </div>

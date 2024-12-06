@@ -3,8 +3,8 @@
  * users to create a new post.
  */
 use super::class::ClassId;
+use crate::on_input;
 use crate::resources::images::svgs::create_post_icon::CreatePostIcon;
-
 use crate::{
     data::database::post_functions::{add_post, Post, PostFetcher},
     expect_logged_in_user,
@@ -33,11 +33,6 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
     let class_id = use_params::<ClassId>();
     let posts = expect_context::<Resource<PostFetcher, Vec<Post>>>();
 
-    let on_input = |setter: WriteSignal<String>| {
-        move |ev| {
-            setter(event_target_value(&ev));
-        }
-    };
 
     let (anonymous_state, set_anonymous_state) = create_signal(false);
     let (private_state, set_private_state) = create_signal(false);
@@ -85,7 +80,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
           <div class="p-2">
             <textarea
               class="p-2 w-full h-12 rounded-lg border resize-none border-slate-400"
-              on:input=on_input(set_post_title)
+              on:input=on_input!(set_post_title)
               prop:value=post_title
             ></textarea>
           </div>
