@@ -109,7 +109,7 @@ pub fn CreatePost(on_new_post: impl Fn() + 'static) -> impl IntoView {
                 prop:checked=ai_response
                 on:change=move |_| set_ai_response(!ai_response())
               />
-              <div class="flex justify-evenly items-center w-14 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-blue-500">
+              <div class="flex justify-evenly items-center w-14 h-8 text-xs bg-gray-500 rounded-full transition-colors peer-checked:bg-gradient-to-r peer-checked:from-blue-400 peer-checked:to-purple-600">
                 <span class="text-white [&:not(:peer-checked)]:invisible">"On"</span>
                 <span class="text-white peer-checked:invisible">"Off"</span>
               </div>
