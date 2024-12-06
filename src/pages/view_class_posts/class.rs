@@ -150,24 +150,19 @@ pub fn ClassPage() -> impl IntoView {
             </Show>
             // Gets replaced with the focused post if there's one in the route. See router
             <Outlet />
-
-
             // announcements section
-            // <Transition fallback=move || {
-            //   view! { <p>"Loading announcements..."</p> }
-            // }>
-            //   {move || {
-            //     let ann_list = announcements().unwrap_or_default();
-            //     view! {
-            //       <Announcements
-            //         announcements=ann_list
-            //         class_id=move || class_id()
-            //       />
-            //     }
-            //   }}
-            // </Transition>
-
-
+            <Transition fallback=move || {
+              view! { <p>"Loading announcements..."</p> }
+            }>
+              {move || {
+                let ann_list = announcements().unwrap_or_default();
+                view! {
+                  <Announcements
+                    announcements=ann_list
+                  />
+                }
+              }}
+            </Transition>
             <div class="grid grid-cols-3 gap-4">
               <Transition fallback=move || view! { <p>"Loading..."</p> }>
                 <FilteredPostsGrid

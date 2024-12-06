@@ -3,11 +3,13 @@ use crate::data::database::announcement_functions::{
 };
 use crate::data::database::class_functions::check_user_is_instructor;
 use crate::expect_logged_in_user;
+use crate::pages::view_class_posts::class::ClassId;
 use crate::resources::images::svgs::announcement_mic::AnnouncementMic;
 use crate::resources::images::svgs::announcement_mic_2::AnnouncementMicAlt;
 use crate::resources::images::svgs::dots_icon::DotsIcon;
 use crate::resources::images::svgs::remove_icon::RemoveIcon;
 use leptos::*;
+use leptos_router::use_params;
 
 #[component]
 pub fn AddAnnouncementModal(
@@ -17,9 +19,11 @@ pub fn AddAnnouncementModal(
     set_title: WriteSignal<String>,
     contents: ReadSignal<String>,
     set_contents: WriteSignal<String>,
-    on_submit: Action<AddAnnouncementInfo, ()>,
+    on_submit: Action<(i32, AddAnnouncementInfo), ()>,
     class_id: impl Fn() -> i32 + 'static + Copy,
 ) -> impl IntoView {
+    let (user, _) = expect_logged_in_user!();
+
     view! {
         {move || if show.get() {
             view! {
@@ -73,7 +77,7 @@ pub fn AddAnnouncementModal(
                                                 contents: contents.get(),
                                                 class_id: class_id(),
                                             };
-                                            on_submit.dispatch(new_announcement);
+                                            on_submit.dispatch((user().id, new_announcement));
                                             set_show.set(false);
                                             set_title.set(String::new());
                                             set_contents.set(String::new());
@@ -90,7 +94,7 @@ pub fn AddAnnouncementModal(
         } else {
             view! { <div></div> }
         }}
-    }
+    }.into_view()
 }
 
 #[component]
@@ -110,7 +114,7 @@ pub fn AnnouncementDropDownMenu(
                         <div class="p-1">
                             <button
                                 class="inline-flex items-center p-2 w-full text-sm leading-tight text-red-500 rounded-md hover:text-red-500 hover:bg-gray-100"
-                                on:click=move |_| delete_action.dispatch(announcement_id)
+                                on:mousedown=move |_| delete_action.dispatch(announcement_id)
                             >
                                 <RemoveIcon size="20px" />
                                 <span class="ml-2">Remove</span>
@@ -128,9 +132,14 @@ pub fn AnnouncementDropDownMenu(
 #[component]
 pub fn Announcements(
     announcements: Vec<AnnouncementInfo>,
-    class_id: impl Fn() -> i32 + 'static + Copy,
 ) -> impl IntoView {
     let (user, _) = expect_logged_in_user!();
+    // Fetch class id from route in the format of "class/:class_id"
+    let class_id = {
+        let class_params = use_params::<ClassId>();
+        move || class_params().expect("Tried to render class page without class id").class_id
+      };
+
     let is_instructor = create_resource(
         move || (class_id(), user().id),
         move |(class_id, user_id)| async move {
@@ -150,10 +159,11 @@ pub fn Announcements(
         announcements
     });
 
-    let add_announcement_action = create_action(move |announcement_info: &AddAnnouncementInfo| {
+    let add_announcement_action = create_action(move |(user_id, announcement_info): &(i32, AddAnnouncementInfo)| {
         let announcement_info = announcement_info.clone();
+        let user_id = *user_id;
         async move {
-            match post_announcement(announcement_info, user().id).await {
+            match post_announcement(announcement_info, user_id).await {
                 Ok(announcement) => {
                     set_sorted_announcements
                         .update(|announcements| announcements.insert(0, announcement));
@@ -240,11 +250,11 @@ pub fn Announcements(
                                                             <div class="flex absolute top-1 right-2 z-20 items-center">
                                                                 <button
                                                                     class="rounded-lg bg-card-header hover:shadow-customInset"
-                                                                    // class="rounded-lg bg-blue-50 hover:shadow-customInset"
                                                                     on:click=move |e| {
                                                                         e.stop_propagation();
-                                                                        set_menu_visible.update(|value| *value = !*value);
                                                                         }
+                                                                    on:focusin=move |_| set_menu_visible.set(true)
+                                                                    on:focusout=move |_| set_menu_visible.set(false)
                                                                 >
                                                                     <DotsIcon size="36px"/>
                                                                 </button>
